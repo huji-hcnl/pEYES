@@ -1,9 +1,24 @@
 from typing import Union, Sequence
 
+import numpy as np
 import pandas as pd
 
+import src.pEYES.constants as cnst
 from src.pEYES._DataModels.EventLabelEnum import EventLabelEnum
 from src.pEYES._DataModels.Event import BaseEvent
+
+
+def calculate_sampling_rate(ms: np.ndarray) -> float:
+    """
+    Calculates the sampling rate of the given timestamps in Hz.
+    :param ms: timestamps in milliseconds (floating-point, not integer)
+    """
+    if len(ms) < 2:
+        raise ValueError("timestamps must be of length at least 2")
+    sr = cnst.MILLISECONDS_PER_SECOND / np.median(np.diff(ms))
+    if not np.isfinite(sr):
+        raise RuntimeError("Error calculating sampling rate")
+    return sr
 
 
 def parse_label(
