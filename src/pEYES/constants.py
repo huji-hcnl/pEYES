@@ -23,6 +23,7 @@ VIEWER_DISTANCE_STR = "viewer_distance"
 PIXEL_SIZE_STR = "pixel_size"
 IS_OUTLIER_STR = "is_outlier"
 
+T, X, Y = "t", "x", "y"
 TIME_STR = "time"
 COLOR_STR = "color"
 DURATION_STR = "duration"
