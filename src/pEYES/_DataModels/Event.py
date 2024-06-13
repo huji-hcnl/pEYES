@@ -1,11 +1,12 @@
 from abc import ABC
-from typing import final, Tuple, List
+from typing import final, List, Optional
 
 import numpy as np
 import pandas as pd
 
 import src.pEYES.config as cnfg
 from src.pEYES.helpers.pixel_utils import *
+from src.pEYES.helpers.vector_utils import get_chunk_indices
 from src.pEYES._DataModels.EventLabelEnum import EventLabelEnum
 
 
@@ -37,6 +38,65 @@ class BaseEvent(ABC):
         self._pupil = samples[:, 3]
         self._viewer_distance = viewer_distance
         self._pixel_size = pixel_size
+
+    @staticmethod
+    @final
+    def make(
+            label: EventLabelEnum,
+            t: np.ndarray,
+            x: np.ndarray = None,
+            y: np.ndarray = None,
+            pupil: np.ndarray = None,
+            viewer_distance: float = np.nan,
+            pixel_size: float = np.nan,
+    ) -> Optional["BaseEvent"]:
+        """  Creates a single Event from the given data.  """
+        if label == EventLabelEnum.UNDEFINED:
+            return None
+        if label == EventLabelEnum.FIXATION:
+            return FixationEvent(t, x, y, pupil, viewer_distance, pixel_size)
+        if label == EventLabelEnum.SACCADE:
+            return SaccadeEvent(t, x, y, pupil, viewer_distance, pixel_size)
+        if label == EventLabelEnum.PSO:
+            return PSOEvent(t, x, y, pupil, viewer_distance, pixel_size)
+        if label == EventLabelEnum.SMOOTH_PURSUIT:
+            return SmoothPursuitEvent(t, x, y, pupil, viewer_distance, pixel_size)
+        if label == EventLabelEnum.BLINK:
+            return BlinkEvent(t, x, y, pupil, viewer_distance, pixel_size)
+        raise ValueError(f"Invalid event type: {label}")
+
+    @staticmethod
+    @final
+    def make_multiple(
+            labels: np.ndarray,
+            t: np.ndarray,
+            x: np.ndarray = None,
+            y: np.ndarray = None,
+            pupil: np.ndarray = None,
+            viewer_distance: float = np.nan,
+            pixel_size: float = np.nan,
+    ) -> list["BaseEvent"]:
+        if len(labels) != len(t):
+            raise ValueError("Length of `labels` and `t` must be the same")
+        same_label_chunk_idxs = get_chunk_indices(labels)
+        events = []
+        for idx_group in same_label_chunk_idxs:
+            event_label = EventLabelEnum(labels[idx_group[0]])
+            if event_label == EventLabelEnum.UNDEFINED:
+                # ignore undefined samples
+                continue
+            new_event = BaseEvent.make(
+                label=event_label,
+                t=t[idx_group],
+                x=x[idx_group] if x is not None else None,
+                y=y[idx_group] if y is not None else None,
+                pupil=pupil[idx_group] if pupil is not None else None,
+                viewer_distance=viewer_distance,
+                pixel_size=pixel_size
+            )
+            if new_event is not None:
+                events.append(new_event)
+        return events
 
     @final
     def velocities(self, unit: str = 'px') -> np.ndarray:

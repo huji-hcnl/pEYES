@@ -25,6 +25,10 @@ class TestEvent(unittest.TestCase):
         self.assertFalse(f1 == f3)
         self.assertEqual(str(f1), "FIXATION(19.00ms)")
 
+    def test_make(self):
+        # TODO
+        self.assertTrue(True)
+
     def test_properties(self):
         fix_x, fix_y = np.full(21, 40), np.hstack([np.arange(50, 0, -5), np.arange(0, 51, 5)])
         t = np.arange(21)
