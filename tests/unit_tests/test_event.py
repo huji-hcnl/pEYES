@@ -2,7 +2,9 @@ import unittest
 
 import numpy as np
 
-from src.pEYES._DataModels.Event import FixationEvent
+import src.pEYES.constants as cnst
+import src.pEYES.config as cnfg
+from src.pEYES._DataModels.Event import FixationEvent, SaccadeEvent
 from src.pEYES._DataModels.EventLabelEnum import EventLabelEnum
 from src.pEYES.helpers.pixel_utils import pixels_to_visual_angle
 
@@ -61,3 +63,18 @@ class TestEvent(unittest.TestCase):
         self.assertEqual(f1.time_overlap(f2, normalize=True), 0.5)
         self.assertEqual(f1.time_iou(f2), 1/3)
         self.assertEqual(f1.time_l2(f2), 10 * np.sqrt(2))
+
+    def test_duration_outliers(self):
+        t = np.arange(21)
+        s = SaccadeEvent(t=t)
+        self.assertFalse(s.is_outlier)
+        f = FixationEvent(t=t)
+        self.assertTrue(f.is_outlier)
+        self.assertEqual(f.get_outlier_reasons(), [cnst.MIN_DURATION_STR])
+        f.set_min_duration(10)
+        self.assertFalse(f.is_outlier)
+        s.set_max_duration(10)
+        self.assertTrue(s.is_outlier)
+        self.assertEqual(s.get_outlier_reasons(), [cnst.MAX_DURATION_STR])
+        self.assertRaises(ValueError, s.set_max_duration, -1)
+        self.assertRaises(ValueError, s.set_min_duration, 20)

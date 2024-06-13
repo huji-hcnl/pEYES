@@ -120,7 +120,7 @@ class BaseEvent(ABC):
     @classmethod
     @final
     def get_max_duration(cls) -> float:
-        return cnfg.EVENT_MAPPING[cls._LABEL][cnst.MIN_DURATION_STR]
+        return cnfg.EVENT_MAPPING[cls._LABEL][cnst.MAX_DURATION_STR]
 
     @classmethod
     @final
