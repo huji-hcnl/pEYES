@@ -5,8 +5,8 @@ import numpy as np
 import pandas as pd
 
 import src.pEYES.config as cnfg
-from src.pEYES.helpers.pixel_utils import *
-from src.pEYES.helpers.vector_utils import get_chunk_indices
+from src.pEYES._utils.pixel_utils import *
+from src.pEYES._utils.vector_utils import get_chunk_indices
 from src.pEYES._DataModels.EventLabelEnum import EventLabelEnum
 
 

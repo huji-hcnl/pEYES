@@ -2,7 +2,7 @@ import unittest
 
 import numpy as np
 
-from src.pEYES.helpers.pixel_utils import *
+from src.pEYES._utils.pixel_utils import *
 import src.pEYES.constants as cnst
 
 

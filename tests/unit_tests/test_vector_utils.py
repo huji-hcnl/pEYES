@@ -2,7 +2,7 @@ import unittest
 
 import numpy as np
 
-from src.pEYES.helpers.vector_utils import *
+from src.pEYES._utils.vector_utils import *
 
 
 class TestVectorUtils(unittest.TestCase):
