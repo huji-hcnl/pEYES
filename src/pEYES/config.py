@@ -41,3 +41,7 @@ EVENT_MAPPING = {
         cnst.MAX_DURATION_STR: 2000
     }
 }
+
+MIN_EVENT_DURATION = min([
+    EVENT_MAPPING[e][cnst.MIN_DURATION_STR] for e in EVENT_MAPPING.keys() if e != EventLabelEnum.UNDEFINED
+])
