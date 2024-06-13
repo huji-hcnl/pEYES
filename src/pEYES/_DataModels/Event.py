@@ -140,6 +140,11 @@ class BaseEvent(ABC):
 
     @final
     @property
+    def num_samples(self) -> int:
+        return len(self._t)
+
+    @final
+    @property
     def is_outlier(self) -> bool:
         return len(self.get_outlier_reasons()) > 0
 
@@ -291,6 +296,9 @@ class BaseEvent(ABC):
 
     def __repr__(self) -> str:
         return self.__str__()
+
+    def __len__(self) -> int:
+        return self.num_samples
 
 
 class FixationEvent(BaseEvent):
