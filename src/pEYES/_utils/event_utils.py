@@ -1,4 +1,4 @@
-from typing import Union, Sequence
+from typing import Union, Sequence, Optional
 
 import numpy as np
 import pandas as pd
@@ -22,7 +22,7 @@ def calculate_sampling_rate(ms: np.ndarray) -> float:
 
 
 def parse_label(
-        val: Union[EventLabelEnum, BaseEvent, int, str, float],
+        val: Optional[Union[EventLabelEnum, BaseEvent, int, str, float]],
         safe: bool = True
 ) -> EventLabelEnum:
     """
@@ -46,12 +46,12 @@ def parse_label(
             return EventLabelEnum(int(val))
         raise TypeError(f"Incompatible type: {type(val)}")
     except Exception as err:
-        if safe and (isinstance(err, ValueError) or isinstance(err, TypeError)):
+        if safe and (isinstance(err, ValueError) or isinstance(err, KeyError) or isinstance(err, TypeError)):
             return EventLabelEnum.UNDEFINED
         raise err
 
 
-def count_labels(data: Sequence[Union[EventLabelEnum, BaseEvent]]) -> pd.Series:
+def count_labels(data: Optional[Sequence[Union[EventLabelEnum, BaseEvent]]]) -> pd.Series:
     """
     Counts the number of same-type labels/events in the given data, and fills in missing labels with 0 counts.
     Returns a Series with the counts of each GazEventTypeEnum label.
