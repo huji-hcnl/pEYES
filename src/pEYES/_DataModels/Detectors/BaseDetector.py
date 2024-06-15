@@ -90,7 +90,7 @@ class BaseDetector(ABC):
     @final
     def _detect_blinks(self, x: np.ndarray, y: np.ndarray) -> np.ndarray:
         """
-        Detects blink candidates in the given gaze data:
+        Detects blink candidates in the given data:
         1. Identifies samples where x or y are missing as blinks
         2. Ignores chunks of blinks that are shorter than the minimum event duration
         3. Merges consecutive blink chunks separated by less than the minimum event duration

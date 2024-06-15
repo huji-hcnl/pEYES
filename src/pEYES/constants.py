@@ -22,6 +22,7 @@ SUBJECT_ID_STR, TRIAL_ID_STR = f"{SUBJECT_STR}_{ID_STR}", f"{TRIAL_STR}_{ID_STR}
 VIEWER_DISTANCE_STR = "viewer_distance"
 PIXEL_SIZE_STR = "pixel_size"
 IS_OUTLIER_STR = "is_outlier"
+SAMPLING_RATE_STR = "sampling_rate"
 
 T, X, Y = "t", "x", "y"
 TIME_STR = "time"
