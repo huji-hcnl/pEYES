@@ -46,13 +46,31 @@ class TestPixelUtils(unittest.TestCase):
         self.assertRaises(AssertionError, calculate_velocities, x_coords, y_coords1, t_coords3)
 
     def test_pixels_to_visual_angle(self):
-        self.assertEqual(0, pixels_to_visual_angle(num_px=0, d=self.D, pixel_size=self.PS))
-        self.assertEqual(45, pixels_to_visual_angle(num_px=1, d=self.D, pixel_size=self.PS))
-        self.assertEqual(np.pi / 4, pixels_to_visual_angle(num_px=1, d=self.D, pixel_size=self.PS, use_radians=True))
-        self.assertTrue(np.isnan(pixels_to_visual_angle(num_px=np.inf, d=self.D, pixel_size=self.PS)))
-        self.assertRaises(ValueError, pixels_to_visual_angle, num_px=-1, d=self.D, pixel_size=self.PS)
-        self.assertRaises(ValueError, pixels_to_visual_angle, num_px=1, d=-1, pixel_size=self.PS)
-        self.assertRaises(ValueError, pixels_to_visual_angle, num_px=1, d=self.D, pixel_size=-1)
+        self.assertEqual(0, pixels_to_visual_angle(num_px=0, d=1, pixel_size=1))
+        self.assertEqual(90, pixels_to_visual_angle(num_px=2, d=1, pixel_size=1))
+        self.assertEqual(np.pi / 2, pixels_to_visual_angle(num_px=2, d=1, pixel_size=1, use_radians=True))
+        self.assertTrue(np.isclose(60, pixels_to_visual_angle(num_px=2*np.sqrt(1/3), d=1, pixel_size=1)))
+        self.assertTrue(np.isclose(
+            np.pi * 2/3, pixels_to_visual_angle(num_px=2*np.sqrt(3), d=1, pixel_size=1, use_radians=True))
+        )
+        self.assertTrue(np.isnan(pixels_to_visual_angle(num_px=np.inf, d=1, pixel_size=1)))
+        self.assertRaises(ValueError, pixels_to_visual_angle, num_px=-1, d=1, pixel_size=1)
+        self.assertRaises(ValueError, pixels_to_visual_angle, num_px=1, d=-1, pixel_size=1)
+        self.assertRaises(ValueError, pixels_to_visual_angle, num_px=1, d=1, pixel_size=-1)
+
+    def test_visual_angle_to_pixels(self):
+        self.assertEqual(0, visual_angle_to_pixels(angle=0, d=1, pixel_size=1))
+        self.assertTrue(np.isclose(2, visual_angle_to_pixels(angle=90, d=1, pixel_size=1)))
+        self.assertTrue(np.isclose(2, visual_angle_to_pixels(angle=np.pi / 2, d=1, pixel_size=1, use_radians=True)))
+        self.assertTrue(np.isclose(2*np.sqrt(1/3), visual_angle_to_pixels(angle=60, d=1, pixel_size=1)))
+        self.assertTrue(np.isclose(
+            -2*np.sqrt(3), visual_angle_to_pixels(
+                angle=-np.pi * 2/3, d=1, pixel_size=1, use_radians=True, keep_sign=True
+            ))
+        )
+        self.assertTrue(np.isnan(visual_angle_to_pixels(angle=np.inf, d=1, pixel_size=1)))
+        self.assertRaises(ValueError, visual_angle_to_pixels, angle=1, d=-1, pixel_size=1)
+        self.assertRaises(ValueError, visual_angle_to_pixels, angle=1, d=1, pixel_size=-1)
 
     def test_calculate_azimuth(self):
         # angles are counter-clockwise from the positive x-axis, with y-axis pointing down

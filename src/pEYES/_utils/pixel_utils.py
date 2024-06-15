@@ -43,11 +43,40 @@ def pixels_to_visual_angle(num_px: float, d: float, pixel_size: float, use_radia
         return np.nan
     if (np.array([num_px, d, pixel_size]) < 0).any():
         raise ValueError("arguments `num_px`, `d` and `pixel_size` must be non-negative numbers")
-    cm_dist = num_px * pixel_size
-    angle = np.arctan(cm_dist / d)
-    if not use_radians:
-        angle = np.rad2deg(angle)
-    return angle
+    full_edge_cm = num_px * pixel_size
+    half_angle = np.arctan(full_edge_cm / (2 * d))
+    angle = 2 * half_angle
+    if use_radians:
+        return angle
+    return np.rad2deg(angle)
+
+
+def visual_angle_to_pixels(
+        angle: float, d: float, pixel_size: float, use_radians: bool = False, keep_sign: bool = False
+) -> float:
+    """
+    Calculates the number of pixels that are equivalent to a visual angle `angle`, given that the viewer is sitting at
+    a distance of `d` centimeters from the screen, and that the size of each pixel is `pixel_size` centimeters.
+    See details on calculations in Kaiser, Peter K. "Calculation of Visual Angle". The Joy of Visual Perception: A Web
+        Book: http://www.yorku.ca/eye/visangle.htm
+    :param angle: the visual angle (degrees/radians).
+    :param d: the distance of the viewer from the screen (cm).
+    :param pixel_size: the size of each pixel (cm).
+    :param use_radians: if True, `angle` is in radians; otherwise, it is in degrees.
+    :param keep_sign: if True, returns a negative number if `angle` is negative. Otherwise, returns the absolute value.
+    :return: the number of pixels that correspond to the given visual angle. If `angle` is not finite, returns np.nan.
+    """
+    if not np.isfinite([angle, d, pixel_size]).all():
+        return np.nan
+    if (np.array([d, pixel_size]) <= 0).any():
+        raise ValueError("Arguments `d` and `pixel_size` must be positive numbers")
+    if angle == 0:
+        return 0
+    abs_angle = abs(angle) if use_radians else np.deg2rad(abs(angle))
+    half_edge_cm = d * np.tan(abs_angle / 2)        # half the edge size in cm
+    edge_pixels = 2 * half_edge_cm / pixel_size     # full edge size in pixels
+    edge_pixels = np.sign(angle) * edge_pixels if keep_sign else edge_pixels
+    return edge_pixels
 
 
 def calculate_azimuth(
