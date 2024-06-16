@@ -3,7 +3,6 @@ from abc import ABC, abstractmethod
 from typing import final, Dict
 
 import numpy as np
-import pandas as pd
 import remodnav
 from overrides import override
 from scipy.signal import savgol_filter
