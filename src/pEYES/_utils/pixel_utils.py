@@ -5,6 +5,13 @@ import numpy as np
 import src.pEYES.constants as cnst
 
 
+def calculate_pixel_size(width: float, height: float, resolution: Tuple[int, int]) -> float:
+    """ Calculates the approximate length of one pixel in centimeters (assuming square pixels): cm/px """
+    diagonal_length = np.sqrt(np.power(width, 2) + np.power(height, 2))  # size of diagonal in centimeters
+    diagonal_pixels = np.sqrt(np.power(resolution[0], 2) + np.power(resolution[1], 2))  # size of diagonal in pixels
+    return diagonal_length / diagonal_pixels
+
+
 def calculate_velocities(xs: np.ndarray, ys: np.ndarray, ts: np.ndarray) -> np.ndarray:
     """
     Calculates the velocity between subsequent pixels in the given x and y coordinates, in pixels per second.
