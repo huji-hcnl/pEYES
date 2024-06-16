@@ -1,9 +1,10 @@
 import copy
 from abc import ABC, abstractmethod
-from typing import final
+from typing import final, Dict
 
 import numpy as np
 import pandas as pd
+import remodnav
 from overrides import override
 from scipy.signal import savgol_filter
 
@@ -34,18 +35,18 @@ class BaseDetector(ABC):
 
     _DEFAULT_MISSING_VALUE = np.nan
     _DEFAULT_MIN_EVENT_DURATION = cnfg.MIN_EVENT_DURATION
-    _DEFAULT_PAD_BLINKS = 0  # ms
-    _DEFAULT_VIEWER_DISTANCE = np.nan  # cm
-    _DEFAULT_PIXEL_SIZE = np.nan  # cm
-    _MINIMUM_SAMPLES_IN_EVENT = 2  # minimum number of samples in an event
+    _DEFAULT_PAD_BLINKS_MS = 0      # ms
+    _MINIMUM_SAMPLES_IN_EVENT = 2   # minimum number of samples in an event
 
     def __init__(
             self,
             missing_value: float = _DEFAULT_MISSING_VALUE,
             min_event_duration: float = _DEFAULT_MIN_EVENT_DURATION,
+            pad_blinks_ms: float = _DEFAULT_PAD_BLINKS_MS,
     ):
         self._missing_value = missing_value
         self._min_event_duration = min_event_duration
+        self._pad_blinks_ms = pad_blinks_ms
         self._sr = np.nan  # sampling rate calculated in the detect method
         self._metadata = {}  # additional metadata
 
@@ -54,14 +55,13 @@ class BaseDetector(ABC):
             t: np.ndarray,
             x: np.ndarray,
             y: np.ndarray,
-            pad_blinks_ms: float = _DEFAULT_PAD_BLINKS,
-            viewer_distance_cm: float = _DEFAULT_VIEWER_DISTANCE,
-            pixel_size_cm: float = _DEFAULT_PIXEL_SIZE,
+            viewer_distance_cm: float,
+            pixel_size_cm: float,
     ) -> (np.ndarray, dict):
         t, x, y = self._verify_inputs(t, x, y)
         self._sr = calculate_sampling_rate(t)
         labels = np.full_like(t, EventLabelEnum.UNDEFINED)
-        is_blink = self._detect_blinks(x, y, pad_blinks_ms)
+        is_blink = self._detect_blinks(x, y)
         # detect blinks and replace blink-samples with NaN
         labels[is_blink] = EventLabelEnum.BLINK
         x_copy, y_copy = copy.deepcopy(x), copy.deepcopy(y)
@@ -85,7 +85,7 @@ class BaseDetector(ABC):
             y: np.ndarray,
             labels: np.ndarray,
             viewer_distance_cm: float,
-            pixel_size_cm: float
+            pixel_size_cm: float,
     ) -> np.ndarray:
         raise NotImplementedError
 
@@ -97,6 +97,11 @@ class BaseDetector(ABC):
     @property
     def missing_value(self) -> float:
         return self._missing_value
+
+    @final
+    @property
+    def sr(self) -> float:
+        return self._sr
 
     @final
     @property
@@ -115,14 +120,18 @@ class BaseDetector(ABC):
 
     @final
     @property
-    def sr(self) -> float:
-        return self._sr
+    def pad_blinks_ms(self) -> float:
+        return self._pad_blinks_ms
+
+    @final
+    @property
+    def pad_blinks_samples(self) -> int:
+        return self._calc_num_samples(self.pad_blinks_ms, self.sr)
 
     def _detect_blinks(
             self,
             x: np.ndarray,
             y: np.ndarray,
-            pad_by_ms: float = _DEFAULT_PAD_BLINKS,
     ) -> np.ndarray:
         """
         Detects blink candidates in the given data:
@@ -145,9 +154,9 @@ class BaseDetector(ABC):
         # ignore blinks if they are shorter than the minimum event duration:
         is_blink = reset_short_chunks(is_blink, self.min_event_samples, False)
         # pad remaining blinks by the given amount:
-        if pad_by_ms == 0:
+        pad_samples = self.pad_blinks_samples
+        if pad_samples == 0:
             return is_blink
-        pad_samples = self._calc_num_samples(pad_by_ms, self.sr)
         for i, val in enumerate(is_blink):
             if val:
                 start = max(0, i - pad_samples)
@@ -224,8 +233,9 @@ class IVTDetector(BaseDetector, IThresholdDetector):
             saccade_velocity_threshold: float = _DEFAULT_SACCADE_VELOCITY_THRESHOLD,
             missing_value: float = BaseDetector._DEFAULT_MISSING_VALUE,
             min_event_duration: float = BaseDetector._DEFAULT_MISSING_VALUE,
+            pad_blinks_ms: float = BaseDetector._DEFAULT_PAD_BLINKS_MS,
     ):
-        super().__init__(missing_value, min_event_duration)
+        super().__init__(missing_value, min_event_duration, pad_blinks_ms)
         if saccade_velocity_threshold <= 0:
             raise ValueError("Saccade velocity threshold must be positive")
         self._saccade_velocity_threshold = saccade_velocity_threshold
@@ -241,7 +251,7 @@ class IVTDetector(BaseDetector, IThresholdDetector):
             y: np.ndarray,
             labels: np.ndarray,
             viewer_distance_cm: float,
-            pixel_size_cm: float
+            pixel_size_cm: float,
     ) -> np.ndarray:
         if not np.isfinite(viewer_distance_cm) or viewer_distance_cm <= 0:
             raise ValueError("Viewer distance must be a positive finite number")
@@ -275,8 +285,9 @@ class IVVTDetector(IVTDetector):
             smooth_pursuit_velocity_threshold: float = _DEFAULT_SMOOTH_PURSUIT_VELOCITY_THRESHOLD,
             missing_value: float = BaseDetector._DEFAULT_MISSING_VALUE,
             min_event_duration: float = BaseDetector._DEFAULT_MISSING_VALUE,
+            pad_blinks_ms: float = BaseDetector._DEFAULT_PAD_BLINKS_MS,
     ):
-        super().__init__(saccade_velocity_threshold, missing_value, min_event_duration)
+        super().__init__(saccade_velocity_threshold, missing_value, min_event_duration, pad_blinks_ms)
         if smooth_pursuit_velocity_threshold <= 0:
             raise ValueError("Smooth pursuit velocity threshold must be positive")
         self._smooth_pursuit_velocity_threshold = smooth_pursuit_velocity_threshold
@@ -292,7 +303,7 @@ class IVVTDetector(IVTDetector):
             y: np.ndarray,
             labels: np.ndarray,
             viewer_distance_cm: float,
-            pixel_size_cm: float
+            pixel_size_cm: float,
     ) -> np.ndarray:
         labels = super()._detect_impl(t, x, y, labels, viewer_distance_cm, pixel_size_cm)
         labels[labels == EventLabelEnum.FIXATION] = EventLabelEnum.UNDEFINED  # reset fixation labels
@@ -340,8 +351,9 @@ class IDTDetector(BaseDetector, IThresholdDetector):
             window_duration: float = _DEFAULT_WINDOW_DURATION,
             missing_value: float = BaseDetector._DEFAULT_MISSING_VALUE,
             min_event_duration: float = BaseDetector._DEFAULT_MISSING_VALUE,
+            pad_blinks_ms: float = BaseDetector._DEFAULT_PAD_BLINKS_MS,
     ):
-        super().__init__(missing_value, min_event_duration)
+        super().__init__(missing_value, min_event_duration, pad_blinks_ms)
         if dispersion_threshold <= 0:
             raise ValueError("Dispersion threshold must be positive")
         self._dispersion_threshold = dispersion_threshold
@@ -362,7 +374,7 @@ class IDTDetector(BaseDetector, IThresholdDetector):
             y: np.ndarray,
             labels: np.ndarray,
             viewer_distance_cm: float,
-            pixel_size_cm: float
+            pixel_size_cm: float,
     ) -> np.ndarray:
         labels = np.asarray(copy.deepcopy(labels), dtype=EventLabelEnum)
         ws = self._calculate_window_size_samples(t)
@@ -445,8 +457,9 @@ class EngbertDetector(BaseDetector):
             deriv_window_size: int = _DEFAULT_DERIVATION_WINDOW_SIZE,
             missing_value: float = BaseDetector._DEFAULT_MISSING_VALUE,
             min_event_duration: float = BaseDetector._DEFAULT_MIN_EVENT_DURATION,
+            pad_blinks_ms: float = BaseDetector._DEFAULT_PAD_BLINKS_MS,
     ):
-        super().__init__(missing_value, min_event_duration)
+        super().__init__(missing_value, min_event_duration, pad_blinks_ms)
         self._lambda_param = lambda_param
         if self._lambda_param <= 0:
             raise ValueError("Lambda parameter must be positive")
@@ -469,7 +482,7 @@ class EngbertDetector(BaseDetector):
             y: np.ndarray,
             labels: np.ndarray,
             viewer_distance_cm: float,
-            pixel_size_cm: float
+            pixel_size_cm: float,
     ) -> np.ndarray:
         labels = np.asarray(copy.deepcopy(labels), dtype=EventLabelEnum)
         x_velocity = self._axial_velocities_px(x)
@@ -524,25 +537,77 @@ class EngbertDetector(BaseDetector):
 
 
 class NHDetector(BaseDetector):
+    """
+    Implements the algorithm described by Nyström & Holmqvist in
+        Nyström, M., Holmqvist, K. An adaptive algorithm for fixation, saccade, and glissade detection in eyetracking
+        data. Behavior Research Methods 42, 188–204 (2010).
+    The code is based on the Matlab implementation available in https://github.com/dcnieho/NystromHolmqvist2010, which
+    was developed for the following article:
+        Niehorster, D. C., Siu, W. W., & Li, L. (2015). Manual tracking enhances smooth pursuit eye movements. Journal
+        of vision, 15(15), 11-11.
 
-    _DEFAULT_FILTER_DURATION_MS = 2 * cnfg.EVENT_MAPPING[cnfg.EventLabelEnum.SACCADE][cnst.MIN_DURATION_STR]    # 20ms
-    _DEFAULT_FILTER_POLYORDER = 2
-    _DEFAULT_SACCADE_MAX_VELOCITY = 1000        # deg/s
-    _DEFAULT_SACCADE_MAX_ACCELARATION = 100000  # deg/s^2
-    _DEFAULT_ALPHA_PARAM = 0.7  # weight of saccade onset threshold when detecting saccade offset
+    General algorithm:
+        1. Calculate angular velocity & acceleration
+        2. Denoise the data using SAVGOL filter
+        3. Saccade Detection:
+            3a. Detect velocity peaks
+            3b. Detect saccade onset and offset surrounding each peak
+            3c. Ignore saccades that are too short
+        4. PSO (Glissade) Detection:
+            4a. Detect samples with velocity exceeding the PSO threshold, that shortly follow a saccade offset
+            4b. Find PSO offset
+        5. Fixation Detection:
+            5a. Detect samples that are not part of a saccade, PSO or noise
+            5b. Ignore fixations that are too short
+    """
+
+    _DEFAULT_FILTER_DURATION_MS = 2 * cnfg.EVENT_MAPPING[EventLabelEnum.SACCADE][cnst.MIN_DURATION_STR]     # 20ms
+    _DEFAULT_FILTER_POLYORDER = 2                                                                           # unitless
+    _DEFAULT_SACCADE_MAX_VELOCITY = 1000                                                                    # deg/s
+    _DEFAULT_SACCADE_MAX_ACCELERATION = 100000                                                              # deg/s^2
+    _DEFAULT_MIN_SACCADE_DURATION_MS = cnfg.EVENT_MAPPING[EventLabelEnum.SACCADE][cnst.MIN_DURATION_STR]    # 20ms
+    _DEFAULT_MIN_FIXATION_DURATION_MS = cnfg.EVENT_MAPPING[EventLabelEnum.FIXATION][cnst.MIN_DURATION_STR]  # 50ms
+    _DEFAULT_MAX_PSO_DURATION_MS = cnfg.EVENT_MAPPING[EventLabelEnum.PSO][cnst.MAX_DURATION_STR]            # 20ms
+    _DEFAULT_ALPHA_PARAM = 0.7                                                                              # unitless
+
+    __SACCADE_PEAK_VELOCITY_THRESHOLD_STR = "saccade_peak_velocity_threshold"
+    __SACCADE_ONSET_VELOCITY_THRESHOLD_STR = "saccade_onset_velocity_threshold"
 
     def __init__(
             self,
             filter_duration_ms: float = _DEFAULT_FILTER_DURATION_MS,
             filter_polyorder: int = _DEFAULT_FILTER_POLYORDER,
             saccade_max_velocity: float = _DEFAULT_SACCADE_MAX_VELOCITY,
-            saccade_max_acceleration: float = _DEFAULT_SACCADE_MAX_ACCELARATION,
+            saccade_max_acceleration: float = _DEFAULT_SACCADE_MAX_ACCELERATION,
+            min_saccade_duration: float = _DEFAULT_MIN_SACCADE_DURATION_MS,
+            min_fixation_duration: float = _DEFAULT_MIN_FIXATION_DURATION_MS,
+            max_pso_duration: float = _DEFAULT_MAX_PSO_DURATION_MS,
             alpha_param: float = _DEFAULT_ALPHA_PARAM,
+            ignore_short_peak_durations: bool = True,   # whether to exclude sporadic samples from the calculation (default is True)
             allow_high_psos: bool = True,
             missing_value: float = BaseDetector._DEFAULT_MISSING_VALUE,
             min_event_duration: float = BaseDetector._DEFAULT_MIN_EVENT_DURATION,
+            pad_blinks_ms: float = BaseDetector._DEFAULT_PAD_BLINKS_MS,
     ):
-        super().__init__(missing_value, min_event_duration)
+        """
+        Initialize a new Nyström & Holmqvist gaze event detector
+        :param filter_duration_ms: Savitzky-Golay filter's duration (ms)
+        :param filter_polyorder: Savitzky-Golay filter's polynomial order
+        :param saccade_max_velocity: maximum saccade velocity (deg/s)
+        :param saccade_max_acceleration: maximum saccade acceleration (deg/s^2)
+        :param min_saccade_duration: minimum saccade duration (ms)
+        :param min_fixation_duration: minimum fixation duration (ms)
+        :param max_pso_duration: maximum PSO duration (ms)
+        :param alpha_param: weight of saccade onset threshold when detecting saccade offset
+        :param ignore_short_peak_durations: if True, excludes sporadic instances where velocity is above the PT, when
+            detecting saccade peaks
+        :param allow_high_psos: if True, includes PSOs with maximum velocity exceeding saccades' peak threshold (PT),
+            given that the PSO's max velocity is still lower than the preceding saccade's max velocity
+        :param missing_value: the value that indicates missing data in the gaze data, default is np.NaN
+        :param min_event_duration: minimum duration of a gaze event (ms) default is 5 ms
+        :param pad_blinks_ms: padding duration for blinks (ms), default is 0 ms
+        """
+        super().__init__(missing_value, min_event_duration, pad_blinks_ms)
         self._filter_duration = filter_duration_ms
         if self._filter_duration <= 0:
             raise ValueError("Filter duration must be positive")
@@ -555,10 +620,20 @@ class NHDetector(BaseDetector):
         self._saccade_max_acceleration = saccade_max_acceleration
         if self._saccade_max_acceleration <= 0:
             raise ValueError("Saccade max acceleration must be positive")
+        self._min_saccade_duration = max(min_saccade_duration, self._min_event_duration)
+        if self._min_saccade_duration < 0:
+            raise ValueError("Minimum saccade duration must be non-negative")
+        self._min_fixation_duration = max(min_fixation_duration, self._min_event_duration)
+        if self._min_fixation_duration < 0:
+            raise ValueError("Minimum fixation duration must be non-negative")
+        self._max_pso_duration = max(max_pso_duration, self._min_event_duration)
+        if self._max_pso_duration < 0:
+            raise ValueError("Maximum PSO duration must be non-negative")
         self._alpha_param = alpha_param
         if not 0 <= self._alpha_param <= 1:
             raise ValueError("Alpha parameter must be between 0 and 1")
         self._beta_param = 1 - alpha_param
+        self._ignore_short_peak_durations = ignore_short_peak_durations
         self._allow_high_psos = allow_high_psos
 
     def _detect_impl(
@@ -568,12 +643,10 @@ class NHDetector(BaseDetector):
             y: np.ndarray,
             labels: np.ndarray,
             viewer_distance_cm: float,
-            pixel_size_cm: float
+            pixel_size_cm: float,
     ) -> np.ndarray:
-        labels = np.asarray(copy.deepcopy(labels), dtype=EventLabelEnum)
-
         # detect noise:
-        v, a = self._velocities_and_accelerations(x, y, viewer_distance_cm, pixel_size_cm)
+        v, a = self._velocities_and_accelerations(x, y, viewer_distance_cm, pixel_size_cm)  # deg/s, deg/s^2
         is_noise = self._detect_noise(v, a)
 
         # denoise the data:
@@ -583,28 +656,30 @@ class NHDetector(BaseDetector):
         v_copy[is_noise] = np.nan
         a_copy[is_noise] = np.nan
 
-        #
-        # TODO: implement the rest of the algorithm - start from here
-        #
-
-        # detect saccades and PSOs
-        peak_threshold, onset_threshold = self._estimate_saccade_thresholds(v_copy)  # global velocity thresholds
-        saccades_info = self._detect_saccades(
+        # detect start & end indices of saccades and PSOs:
+        peak_threshold, onset_threshold = self._calculate_saccade_thresholds(v_copy)  # PT, OnT velocity thresholds
+        saccades_info = self._extract_saccade_info(
             v_copy, peak_threshold, onset_threshold
-        )   # saccade id -> (onset-idx, peak-idx, offset-idx, offset-threshold-velocity)
+        )  # saccade id -> (onset-idx, peak-idx, offset-idx, offset-threshold-velocity)
         psos_info = self._detect_psos(
             v_copy, saccades_info, peak_threshold, onset_threshold
-        )   # saccade id -> (start_idx, end_idx, pso_type)
+        )  # saccade id -> (start_idx, end_idx, pso_type)
 
-        # save results
-        candidates = self._classify_samples(is_noise, saccades_info, psos_info)
-        df = self.data[cnst.GAZE]
-        df[cnst.VELOCITY] = v
-        df[cnst.ACCELERATION] = a
-        self.data[cnst.GAZE] = df
-        self.data["saccade_peak_threshold"] = peak_threshold
-        self.data["saccade_onset_threshold"] = onset_threshold
-        return candidates
+        # save and return results
+        labels = self._classify_samples(
+            labels, is_noise, saccades_info, psos_info, self._allow_high_psos
+        )
+        self._metadata.update({
+            f"{self.__SACCADE_PEAK_VELOCITY_THRESHOLD_STR}_deg": peak_threshold,
+            f"{self.__SACCADE_PEAK_VELOCITY_THRESHOLD_STR}_px": visual_angle_to_pixels(
+                peak_threshold, viewer_distance_cm, pixel_size_cm, use_radians=False, keep_sign=False
+            ),
+            f"{self.__SACCADE_ONSET_VELOCITY_THRESHOLD_STR}_deg": onset_threshold,
+            f"{self.__SACCADE_ONSET_VELOCITY_THRESHOLD_STR}_px": visual_angle_to_pixels(
+                onset_threshold, viewer_distance_cm, pixel_size_cm, use_radians=False, keep_sign=False
+            ),
+        })
+        return labels
 
     @property
     def filter_duration_ms(self) -> float:
@@ -631,8 +706,16 @@ class NHDetector(BaseDetector):
         return self._beta_param
 
     @property
+    def ignore_short_peak_durations(self) -> bool:
+        return self._ignore_short_peak_durations
+
+    @property
     def is_high_psos_allowed(self) -> bool:
         return self._allow_high_psos
+
+    @property
+    def min_fixation_samples(self) -> int:
+        return self._calc_num_samples(self._min_fixation_duration, self.sr)
 
     def _velocities_and_accelerations(self, x: np.ndarray, y: np.ndarray, vd, ps) -> (np.ndarray, np.ndarray):
         """
@@ -690,3 +773,411 @@ class NHDetector(BaseDetector):
                 end += 1
             is_noise[start:end] = True
         return is_noise
+
+    def _calculate_saccade_thresholds(self, v: np.ndarray, max_iters: int = 100) -> (float, float):
+        """
+        Calculates the threshold velocities for saccade peaks (PT) and saccade onsets (OnT):
+        1. Initialize PT as the maximal value (in range 75-300 deg/s) that has at least one sample with higher velocity.
+        2. Iteratively update PT until convergence:
+            a. Find samples with velocity below PT.
+            b. If enforce_min_dur is True:
+                - ignore samples that aren't part of a chunk of length >= min_fixation_samples.
+                - chunks of sufficient length are shortened by min_saccade_samples // 3 samples at each edge, to avoid
+                    contamination from saccades.
+            c. Calculate mean & std of velocity below PT.
+            d. Update PT = mean + 6 * std
+        3. After convergence, calculate OnT as the mean velocity of samples below PT + 3 * std of velocity below PT.
+        See more details in https://shorturl.at/wyCH7.
+
+        :param v: angular velocities of the gaze data (deg/s)
+        :param max_iters: maximum number of iterations (default is 100)
+        :return:
+            pt (float) - threshold velocity for detecting saccade peaks
+            ont (float) - threshold velocity for detecting saccade onsets
+        """
+        # find the starting PT value, by making sure there are at least 1 peak with higher velocity
+        start_pt_options = np.arange(300, 74, -25)
+        is_v_above_pt = (v > start_pt_options[:, np.newaxis]).any(axis=1)
+        pt = start_pt_options[np.argmin(is_v_above_pt)] if any(is_v_above_pt) else np.median(start_pt_options)
+        # iteratively update PT value until convergence
+        pt_prev = 0
+        is_below_pt = v <= pt
+        min_chunk_size = self.min_fixation_samples
+        num_edge_sample_to_drop = self._calc_num_samples(self._min_saccade_duration // 3, self.sr)
+        while abs(pt - pt_prev) > 1 and max_iters > 0:
+            pt_prev = pt
+            max_iters -= 1
+            is_below_pt = v <= pt
+            if self.ignore_short_peak_durations:
+                # only consider samples that are part of a chunk of length >= min_fixation_samples:
+                chunks_below_pt = [
+                    ch for ch in get_chunk_indices(is_below_pt) if  is_below_pt[ch[0]] and len(ch) >= min_chunk_size
+                ]
+                # drop samples at the edges of each chunk to avoid contamination from saccades:
+                chunks_below_pt = [ch[num_edge_sample_to_drop: -num_edge_sample_to_drop] for ch in chunks_below_pt]
+                # concatenate the chunks to get the final boolean array:
+                is_below_pt = np.concatenate(chunks_below_pt)
+            mu = np.nanmean(v[is_below_pt])
+            sigma = np.nanstd(v[is_below_pt])
+            pt = mu + 6 * sigma
+        if max_iters == 0:
+            raise RuntimeError("Failed to converge on PT_1 value for saccade detection")
+        ont = np.nanmean(v[is_below_pt]) + 3 * np.nanstd(v[is_below_pt])
+        return pt, ont
+
+    def _extract_saccade_info(
+            self, v: np.ndarray, pt: float, ont: float, min_peak_samples: int = 2
+    ) -> Dict[int, Tuple[int, int, int, float]]:
+        """
+        Detects saccades in the gaze data based on the angular velocity:
+        1. Detect samples with velocity exceeding the saccade peak threshold (PT)
+        2. Find the 1st sample preceding each peak with velocity below the onset threshold (OnT) and is a local minimum
+        3. Find the 1st sample following each peak with velocity below the offset threshold (OfT) and is a local minimum
+        4. Match each saccade peak-idx with its onset-idx, offset-idx and offset-threshold-velocity
+
+        :param v: angular velocity of the gaze data
+        :param pt: saccades' peak threshold velocity
+        :param ont: saccades' onset threshold velocity
+        :param min_peak_samples: minimum number of samples for a peak to be considered a saccade, otherwise ignored
+        :return: dict mapping saccade id -> (onset-idx, peak-idx, offset-idx, offset-threshold-velocity)
+        """
+        is_above_pt = v > pt
+        chunks_above_pt = [     # assume very short peaks are noise
+            ch for ch in get_chunk_indices(is_above_pt) if is_above_pt[ch[0]] and len(ch) >= min_peak_samples
+        ]
+        # each chunk is a possible saccade, find the onset and offset of each saccade
+        saccades_info = {}  # saccade_id -> (start_idx, peak_idx, end_idx, offset_threshold)
+        for i, chunk in enumerate(chunks_above_pt):
+            peak_idx: int = int(chunk[0])
+            # find the onset of the saccade: the 1st local minimum preceding the peak with v<=OnT
+            onset_idx = self.__find_local_minimum_index(v, peak_idx, ont, move_back=True)
+            # calculate the offset threshold: OfT = a * OnT + b * OtT
+            # note the locally adaptive term: OtT = mean(v) + 3 * std(v) for the min_fixation_samples before the onset
+            window_start_idx = max(0, onset_idx - self.min_fixation_samples)
+            window_vel = v[window_start_idx: onset_idx]
+            ott = np.nanmean(window_vel) + 3 * np.nanstd(window_vel)
+            if np.isfinite(ott) and ott < pt:
+                offset_threshold = self.alpha * ont + self.beta * ott
+            else:
+                offset_threshold = ont
+            # save saccade info
+            last_peak_idx: int = int(chunk[-1])
+            offset_idx = self.__find_local_minimum_index(v, last_peak_idx, offset_threshold, move_back=False)
+            saccades_info[i] = (onset_idx, peak_idx, offset_idx, offset_threshold)
+        return saccades_info
+
+    def _detect_psos(
+            self, v: np.ndarray, saccade_info: Dict[int, Tuple[int, int, int, float]], pt: float, ont: float
+    ) -> Dict[int, Tuple[int, int, bool]]:
+        """
+        Detects PSOs in the gaze data based on the angular velocity:
+        1. Determine what velocity threshold to use for PSO detection (depending on value of self._detect_high_psos)
+        2. Check if a window of length min fixation duration, succeeding each saccade, has samples above AND below the
+              threshold. If so, there is a PSO.
+        3. Identify the end of the PSO - the first local velocity-minimum after the last sample above the threshold
+        4. Ignore PSOs with amplitude exceeding the preceding saccade
+
+        :param v: angular velocity of the gaze data
+        :param saccade_info: dictionary of saccade id -> (onset-idx, peak-idx, offset-idx, offset-threshold-velocity)
+        :param pt: saccades' peak threshold velocity (used for determining PSOs' threshold velocity)
+        :param ont: saccades' onset threshold velocity (used for determining PSOs' threshold velocity)
+
+        :return: dict matching saccade id with PSO start-idx, end-idx and PSO type (high or low)
+        """
+        max_pso_samples = self._calc_num_samples(self._max_pso_duration, self.sr)
+        pso_info = {}  # saccade_id -> (start_idx, end_idx, pso_type)
+
+        # extract saccade indices to ready-to-use lists
+        saccade_info_list = sorted(saccade_info.items(), key=lambda x: x[0])
+        saccade_onset_idxs = [info[1][0] for info in saccade_info_list]
+        saccade_peak_idxs = [info[1][1] for info in saccade_info_list]
+        saccade_offset_idxs = [info[1][2] for info in saccade_info_list]
+
+        # find PSO start & end idxs after each saccade
+        sac_id = 0
+        while sac_id < len(saccade_info):
+            sac_onset_idx, sac_peak_idx, sac_offset_idx, sac_offset_threshold = saccade_info[sac_id]
+            # if a window succeeding a saccade has samples above AND below the offset threshold, there is a PSO
+            start_idx, end_idx = 1 + sac_offset_idx, min([1 + sac_offset_idx + self.min_fixation_samples, len(v)])
+            window = v[start_idx: end_idx]
+            is_above, is_below = window > sac_offset_threshold, window < sac_offset_threshold
+            if not (any(is_above) and any(is_below)):
+                # no PSO for this saccade
+                sac_id += 1
+                continue
+
+            # if the window contains samples with velocity above saccades' peak threshold, but below the preceding
+            # saccade's max velocity, it is considered "high" PSO and contains saccade peaks
+            end_idx = start_idx + np.where(is_above)[0][-1]
+            is_high_pso = False
+            is_peak_in_window = [start_idx <= p_idx < end_idx for p_idx in saccade_peak_idxs]
+            if any(is_peak_in_window):
+                last_peak = np.where(is_peak_in_window)[0][-1]
+                last_offset_idx = saccade_offset_idxs[last_peak]
+                if v[start_idx: last_offset_idx].max() < v[sac_onset_idx: sac_offset_idx].max():
+                    # only allow high PSO if its max velocity is below the previous saccade's max velocity
+                    is_high_pso = True
+                    end_idx = max([end_idx, last_offset_idx])
+
+            # move forward from the last sample above the threshold to find the first local minimum
+            window = v[end_idx: len(v)]
+            min_idx_in_window = self.__find_local_minimum_index(window, 0, sac_offset_threshold, move_back=False)
+            end_idx += min_idx_in_window
+            if end_idx - start_idx > max_pso_samples:
+                # PSO is too long, ignore it
+                sac_id += 1
+                continue
+
+            # save PSO info
+            pso_info[sac_id] = (start_idx, end_idx, is_high_pso)
+
+            # move to the next saccade
+            next_sac_idx = np.where(saccade_onset_idxs > end_idx)[0]
+            if len(next_sac_idx):
+                sac_id = next_sac_idx[0]
+            else:
+                break
+        return pso_info
+
+    @staticmethod
+    def _classify_samples(
+            labels: np.ndarray,
+            is_noise: np.ndarray,
+            saccade_info: Dict[int, Tuple[int, int, int, float]],
+            pso_info: Dict[int, Tuple[int, int, bool]],
+            allow_high_psos: bool,
+    ) -> (np.ndarray, np.ndarray):
+        """
+        Classifies each sample as either noise, saccade, PSO, fixation or blink. Samples that are not classified as
+        noise, blink, saccade or PSO are considered fixations.
+
+        If we allow high PSOs we override the saccade classification when a high PSO was also detected (i.e. we consider
+        a saccade immediately following a previous saccade as high-PSO).
+        Note the matlab implementation does the opposite, and first merges subsequent saccades that are only separated
+        by a few PSO samples, and classifies the union as a saccade. We don't do this here (see in https://shorturl.at/EMOQR)
+
+        :param is_noise: boolean array indicating noise samples
+        :param saccade_info: dict of saccade id -> (onset-idx, peak-idx, offset-idx, offset-threshold-velocity)
+        :param pso_info: dict of saccade -> (PSO start-idx, PSO end-idx and PSO type (high or low))
+        :return: array of classified samples
+        """
+        labels = np.asarray(copy.deepcopy(labels), dtype=EventLabelEnum)
+        for val in saccade_info.values():
+            onset_idx, _, offset_idx, _ = val
+            labels[onset_idx: offset_idx] = EventLabelEnum.SACCADE
+        for val in pso_info.values():
+            start_idx, end_idx, is_high = val
+            if is_high and not allow_high_psos:
+                # high PSO are essentially saccades that immediately follow a previous saccade
+                continue
+            labels[start_idx: end_idx] = EventLabelEnum.PSO
+
+        is_blinks = labels == EventLabelEnum.BLINK
+        is_saccade = labels == EventLabelEnum.SACCADE
+        is_pso = labels == EventLabelEnum.PSO
+        labels[~(is_noise | is_saccade | is_pso | is_blinks)] = EventLabelEnum.FIXATION
+        return labels
+
+    @staticmethod
+    def __find_local_minimum_index(arr: np.ndarray, idx: int, min_thresh=np.inf, move_back=False) -> int:
+        """
+        Finds a local minimum in the array (an element that is smaller than its neighbors) starting from the given index.
+        :param arr: the array to search in
+        :param idx: the starting index
+        :param min_thresh: the minimum value for a local minimum    (default: infinity)
+        :param move_back: whether to move back or forward from the starting index   (default: False)
+        :return: the index of the local minimum
+        """
+        while 0 < idx < len(arr):
+            if arr[idx] < min_thresh and arr[idx] < arr[idx + 1] and arr[idx] < arr[idx - 1]:
+                # idx is a local minimum
+                return idx
+            idx = idx - 1 if move_back else idx + 1
+        return idx
+
+
+class REMoDNaVDetector(BaseDetector):
+    """
+    This is a wrapper class that uses an implementation of the REMoDNaV algorithm to detect gaze events in the gaze
+        data. This algorithm is based on the NHDetector algorithm, but extends and improves it by adding a more
+        sophisticated saccade/pso detection algorithm, and by adding a smooth pursuit detection algorithm.
+
+    See the REMoDNaV paper:
+        Dar AH, Wagner AS, Hanke M. REMoDNaV: robust eye-movement classification for dynamic stimulation. Behav Res
+        Methods. 2021 Feb;53(1):399-414. doi: 10.3758/s13428-020-01428-x
+    See the NH Detector paper:
+        Nyström, M., Holmqvist, K. An adaptive algorithm for fixation, saccade, and glissade detection in eyetracking
+        data. Behavior Research Methods 42, 188–204 (2010).
+
+    See the REMoDNaV algorithm documentation & implementation:
+        https://github.com/psychoinformatics-de/remodnav/tree/master
+    """
+
+    _DEFAULT_MIN_SACCADE_DURATION_MS = cnfg.EVENT_MAPPING[EventLabelEnum.SACCADE][cnst.MIN_DURATION_STR]
+    _DEFAULT_MIN_SMOOTH_PURSUIT_DURATION_MS = cnfg.EVENT_MAPPING[EventLabelEnum.SMOOTH_PURSUIT][cnst.MIN_DURATION_STR]
+    _DEFAULT_MIN_FIXATION_DURATION_MS = cnfg.EVENT_MAPPING[EventLabelEnum.FIXATION][cnst.MIN_DURATION_STR]
+    _DEFAULT_MIN_BLINK_DURATION_MS = cnfg.EVENT_MAPPING[EventLabelEnum.BLINK][cnst.MIN_DURATION_STR]
+    _DEFAULT_MAX_PSO_DURATION_MS = cnfg.EVENT_MAPPING[EventLabelEnum.PSO][cnst.MAX_DURATION_STR]
+
+    _DEFAULT_SACCADE_INITIAL_VELOCITY_THRESHOLD = 300       # deg/s
+    _DEFAULT_SACCADE_CONTEXT_WINDOW_DURATION_MS = 1000      # ms
+    _DEFAULT_SACCADE_INITIAL_MAX_FREQ = 2.0                 # Hz
+    _DEFAULT_SACCADE_ONSET_THRESHOLD_NOISE_FACTOR = 5.0     # unitless
+    _DEFAULT_SMOOTH_PURSUIT_LOWPASS_CUTOFF_FREQ = 4.0       # Hz
+    _DEFAULT_SMOOTH_PURSUIT_DRIFT_VELOCITY_THRESHOLD = 2.0  # deg/s
+    _DEFAULT_SAVGOL_POLYORDER = 2                           # unitless
+    _DEFAULT_SAVGOL_DURATION_MS = 19                        # ms
+    _DEFAULT_MEDIAN_FILTER_DURATION_MS = 50                 # ms
+    _DEFAULT_MAX_VELOCITY_DEG = 1500                        # deg/s
+
+    __LABEL_MAPPING = {
+        'FIXA': EventLabelEnum.FIXATION, 'SACC': EventLabelEnum.SACCADE, 'ISAC': EventLabelEnum.SACCADE,
+        'HPSO': EventLabelEnum.PSO, 'IHPS': EventLabelEnum.PSO, 'LPSO': EventLabelEnum.PSO,
+        'ILPS': EventLabelEnum.PSO, 'PURS': EventLabelEnum.SMOOTH_PURSUIT, 'BLNK': EventLabelEnum.BLINK
+    }
+
+    def __init__(
+            self,
+            min_saccade_duration: float = _DEFAULT_MIN_SACCADE_DURATION_MS,
+            saccade_initial_velocity_threshold: float = _DEFAULT_SACCADE_INITIAL_VELOCITY_THRESHOLD,
+            saccade_context_window_duration: float = _DEFAULT_SACCADE_CONTEXT_WINDOW_DURATION_MS,
+            saccade_initial_max_freq: float = _DEFAULT_SACCADE_INITIAL_MAX_FREQ,
+            saccade_onset_threshold_noise_factor: float = _DEFAULT_SACCADE_ONSET_THRESHOLD_NOISE_FACTOR,
+            min_smooth_pursuit_duration: float = _DEFAULT_MIN_SMOOTH_PURSUIT_DURATION_MS,
+            smooth_pursuits_lowpass_cutoff_freq: float = _DEFAULT_SMOOTH_PURSUIT_LOWPASS_CUTOFF_FREQ,
+            smooth_pursuit_drift_velocity_threshold: float = _DEFAULT_SMOOTH_PURSUIT_DRIFT_VELOCITY_THRESHOLD,
+            min_fixation_duration: float = _DEFAULT_MIN_FIXATION_DURATION_MS,
+            min_blink_duration: float = cnfg.EVENT_MAPPING[EventLabelEnum.BLINK][cnst.MIN_DURATION_STR],
+            max_pso_duration: float = _DEFAULT_MAX_PSO_DURATION_MS,
+            savgol_filter_polyorder: int = _DEFAULT_SAVGOL_POLYORDER,
+            savgol_filter_duration_ms: float = _DEFAULT_SAVGOL_DURATION_MS,
+            median_filter_duration_ms: float = _DEFAULT_MEDIAN_FILTER_DURATION_MS,
+            max_velocity: float = _DEFAULT_MAX_VELOCITY_DEG,
+            missing_value: float = BaseDetector._DEFAULT_MISSING_VALUE,
+            min_event_duration: float = BaseDetector._DEFAULT_MIN_EVENT_DURATION,
+            pad_blinks_ms: float = BaseDetector._DEFAULT_PAD_BLINKS_MS,
+    ):
+        super().__init__(missing_value, min_event_duration, pad_blinks_ms)
+        self._min_saccade_duration_ms = max(min_saccade_duration, self._min_event_duration)
+        self._saccade_initial_velocity_threshold = saccade_initial_velocity_threshold
+        self._saccade_context_window_duration = saccade_context_window_duration
+        self._saccade_initial_max_freq = saccade_initial_max_freq
+        self._saccade_onset_threshold_noise_factor = saccade_onset_threshold_noise_factor
+        self._min_smooth_pursuit_duration_ms = max(min_smooth_pursuit_duration, self._min_event_duration)
+        self._smooth_pursuit_lowpass_cutoff_freq = smooth_pursuits_lowpass_cutoff_freq
+        self._smooth_pursuit_drift_velocity_threshold = smooth_pursuit_drift_velocity_threshold
+        self._min_fixation_duration_ms = max(min_fixation_duration, self._min_event_duration)
+        self._min_blink_duration_ms = max(min_blink_duration, self._min_event_duration)
+        self._max_pso_duration_ms = max(max_pso_duration, self._min_event_duration)
+        self._savgol_polyorder = savgol_filter_polyorder
+        self._savgol_duration_ms = savgol_filter_duration_ms
+        self._median_filter_length = median_filter_duration_ms
+        self._max_velocity = max_velocity
+
+    def _detect_impl(
+            self,
+            t: np.ndarray,
+            x: np.ndarray,
+            y: np.ndarray,
+            labels: np.ndarray,
+            viewer_distance_cm: float,
+            pixel_size_cm: float,
+            **kwargs,
+    ) -> np.ndarray:
+        classifier = remodnav.EyegazeClassifier(
+            px2deg=pixel_size_cm,
+            sampling_rate=self.sr,
+            min_saccade_duration=self.min_fixation_duration_ms / cnst.MILLISECONDS_PER_SECOND,
+            min_intersaccade_duration=self.min_inter_saccade_duration_ms / cnst.MILLISECONDS_PER_SECOND,
+            saccade_context_window_length=self.saccade_context_window_duration_ms / cnst.MILLISECONDS_PER_SECOND,
+            velthresh_startvelocity=self.saccade_initial_velocity_threshold,
+            max_initial_saccade_freq=self.saccade_initial_max_freq,
+            noise_factor=self.saccade_onset_threshold_noise_factor,
+            min_pursuit_duration=self.min_smooth_pursuit_duration_ms / cnst.MILLISECONDS_PER_SECOND,
+            pursuit_velthresh=self.smooth_pursuit_drift_velocity_threshold,
+            lowpass_cutoff_freq=self.smooth_pursuits_lowpass_cutoff_freq,
+            min_fixation_duration=self.min_fixation_duration_ms / cnst.MILLISECONDS_PER_SECOND,
+            max_pso_duration=self.max_pso_duration_ms / cnst.MILLISECONDS_PER_SECOND,
+        )
+        xy = np.rec.fromarrays([x, y], names="{},{}".format(cnst.X, cnst.Y), formats="<f8,<f8")
+        pp = classifier.preproc(
+            xy,
+            max_vel=self.max_velocity,
+            savgol_polyord=self.savgol_filter_polyorder,
+            savgol_length=self.savgol_filter_duration_ms / cnst.MILLISECONDS_PER_SECOND,
+            median_filter_length=self.median_filter_duration_ms / cnst.MILLISECONDS_PER_SECOND,
+            min_blink_duration=self.min_blink_duration_ms / cnst.MILLISECONDS_PER_SECOND,
+            dilate_nan=self.pad_blinks_ms / cnst.MILLISECONDS_PER_SECOND,
+        )
+        detected_events = classifier(pp, classify_isp=True, sort_events=True)   # returns a list of dicts, each dict is a single gaze event
+        labels = np.asarray(copy.deepcopy(labels), dtype=EventLabelEnum)
+        for i, event in enumerate(detected_events):
+            start_sample = round(event["start_time"] * self.sr)
+            end_sample = round(event["end_time"] * self.sr)
+            label = self.__LABEL_MAPPING[event["label"]]
+            labels[start_sample:end_sample+1] = label
+        return labels
+
+    @property
+    def min_saccade_duration_ms(self) -> float:
+        return self._min_saccade_duration_ms
+
+    @property
+    def min_inter_saccade_duration_ms(self) -> float:
+        return min(self._min_blink_duration_ms, self._min_fixation_duration_ms, self._min_smooth_pursuit_duration_ms)
+
+    @property
+    def saccade_initial_velocity_threshold(self) -> float:
+        return self._saccade_initial_velocity_threshold  # deg/s
+
+    @property
+    def saccade_context_window_duration_ms(self) -> float:
+        return self._saccade_context_window_duration
+
+    @property
+    def saccade_initial_max_freq(self) -> float:
+        return self._saccade_initial_max_freq
+
+    @property
+    def saccade_onset_threshold_noise_factor(self) -> float:
+        return self._saccade_onset_threshold_noise_factor
+
+    @property
+    def min_smooth_pursuit_duration_ms(self) -> float:
+        return self._min_smooth_pursuit_duration_ms
+
+    @property
+    def smooth_pursuits_lowpass_cutoff_freq(self) -> float:
+        return self._smooth_pursuit_lowpass_cutoff_freq
+
+    @property
+    def smooth_pursuit_drift_velocity_threshold(self) -> float:
+        return self._smooth_pursuit_drift_velocity_threshold
+
+    @property
+    def min_fixation_duration_ms(self) -> float:
+        return self._min_fixation_duration_ms
+
+    @property
+    def min_blink_duration_ms(self) -> float:
+        return self._min_blink_duration_ms
+
+    @property
+    def max_pso_duration_ms(self) -> float:
+        return self._max_pso_duration_ms
+
+    @property
+    def savgol_filter_polyorder(self) -> int:
+        return self._savgol_polyorder
+
+    @property
+    def savgol_filter_duration_ms(self) -> float:
+        return self._savgol_duration_ms
+
+    @property
+    def median_filter_duration_ms(self) -> float:
+        return self._median_filter_length
+
+    @property
+    def max_velocity(self) -> float:
+        return self._max_velocity   # deg/s
