@@ -38,6 +38,10 @@ class BaseDetector(ABC):
     _DEFAULT_PAD_BLINKS_MS = 0      # ms
     _MINIMUM_SAMPLES_IN_EVENT = 2   # minimum number of samples in an event
 
+    __MISSING_VALUE_STR = "missing_value"
+    __MIN_EVENT_DURATION_STR = "min_event_duration"
+    __PAD_BLINKS_MS_STR = "pad_blinks_ms"
+
     def __init__(
             self,
             missing_value: float = _DEFAULT_MISSING_VALUE,
@@ -50,6 +54,7 @@ class BaseDetector(ABC):
         self._sr = np.nan  # sampling rate calculated in the detect method
         self._metadata = {}  # additional metadata
 
+    @final
     def detect(
             self,
             t: np.ndarray,
@@ -77,6 +82,15 @@ class BaseDetector(ABC):
         })
         return labels, copy.deepcopy(self._metadata)
 
+    @classmethod
+    def get_default_params(cls) -> Dict[str, float]:
+        return {
+            cls.__MISSING_VALUE_STR: cls._DEFAULT_MISSING_VALUE,
+            cls.__MIN_EVENT_DURATION_STR: cls._DEFAULT_MIN_EVENT_DURATION,
+            cls.__PAD_BLINKS_MS_STR: cls._DEFAULT_PAD_BLINKS_MS,
+            **cls._get_default_params_impl(),
+        }
+
     @abstractmethod
     def _detect_impl(
             self,
@@ -87,6 +101,12 @@ class BaseDetector(ABC):
             viewer_distance_cm: float,
             pixel_size_cm: float,
     ) -> np.ndarray:
+        raise NotImplementedError
+
+
+    @classmethod
+    @abstractmethod
+    def _get_default_params_impl(cls) -> Dict[str, float]:
         raise NotImplementedError
 
     @property
@@ -240,9 +260,11 @@ class IVTDetector(BaseDetector, IThresholdDetector):
             raise ValueError("Saccade velocity threshold must be positive")
         self._saccade_velocity_threshold = saccade_velocity_threshold
 
-    @property
-    def saccade_velocity_threshold_deg(self) -> float:
-        return self._saccade_velocity_threshold
+    @classmethod
+    def _get_default_params_impl(cls) -> Dict[str, float]:
+        return {
+            cls._SACCADE_VELOCITY_THRESHOLD_STR: cls._DEFAULT_SACCADE_VELOCITY_THRESHOLD,
+        }
 
     def _detect_impl(
             self,
@@ -270,6 +292,10 @@ class IVTDetector(BaseDetector, IThresholdDetector):
         })
         return labels
 
+    @property
+    def saccade_velocity_threshold_deg(self) -> float:
+        return self._saccade_velocity_threshold
+
 
 class IVVTDetector(IVTDetector):
     """
@@ -292,9 +318,11 @@ class IVVTDetector(IVTDetector):
             raise ValueError("Smooth pursuit velocity threshold must be positive")
         self._smooth_pursuit_velocity_threshold = smooth_pursuit_velocity_threshold
 
-    @property
-    def smooth_pursuit_velocity_threshold_deg(self) -> float:
-        return self._smooth_pursuit_velocity_threshold
+    @classmethod
+    def _get_default_params_impl(cls) -> Dict[str, float]:
+        return {
+            cls._SMOOTH_PURSUIT_VELOCITY_THRESHOLD_STR: cls._DEFAULT_SMOOTH_PURSUIT_VELOCITY_THRESHOLD
+        }
 
     def _detect_impl(
             self,
@@ -318,6 +346,10 @@ class IVVTDetector(IVTDetector):
             f"{self._SMOOTH_PURSUIT_VELOCITY_THRESHOLD_STR}_px": px_threshold,
         })
         return labels
+
+    @property
+    def smooth_pursuit_velocity_threshold_deg(self) -> float:
+        return self._smooth_pursuit_velocity_threshold
 
 
 class IDTDetector(BaseDetector, IThresholdDetector):
@@ -343,7 +375,8 @@ class IDTDetector(BaseDetector, IThresholdDetector):
 
     _DEFAULT_DISPERSION_THRESHOLD = 0.5  # visual degrees
     _DEFAULT_WINDOW_DURATION = 100  # ms
-    _DISPERSION_THRESHOLD_STR = "dispersion_threshold"
+    __DISPERSION_THRESHOLD_STR = "dispersion_threshold"
+    __DEFAULT_WINDOW_DURATION_STR = "window_duration"
 
     def __init__(
             self,
@@ -359,13 +392,12 @@ class IDTDetector(BaseDetector, IThresholdDetector):
         self._dispersion_threshold = dispersion_threshold
         self._window_duration = window_duration
 
-    @property
-    def dispersion_threshold_deg(self) -> float:
-        return self._dispersion_threshold
-
-    @property
-    def window_duration_ms(self) -> float:
-        return self._window_duration
+    @classmethod
+    def _get_default_params_impl(cls) -> Dict[str, float]:
+        return {
+            cls.__DISPERSION_THRESHOLD_STR: cls._DEFAULT_DISPERSION_THRESHOLD,
+            cls.__DEFAULT_WINDOW_DURATION_STR: cls._DEFAULT_WINDOW_DURATION,
+        }
 
     def _detect_impl(
             self,
@@ -399,10 +431,18 @@ class IDTDetector(BaseDetector, IThresholdDetector):
                 start_idx += 1
                 end_idx += 1
         self._metadata.update({
-            f"{self._DISPERSION_THRESHOLD_STR}_deg": self.dispersion_threshold_deg,
-            f"{self._DISPERSION_THRESHOLD_STR}_px": px_threshold,
+            f"{self.__DISPERSION_THRESHOLD_STR}_deg": self.dispersion_threshold_deg,
+            f"{self.__DISPERSION_THRESHOLD_STR}_px": px_threshold,
         })
         return labels
+
+    @property
+    def dispersion_threshold_deg(self) -> float:
+        return self._dispersion_threshold
+
+    @property
+    def window_duration_ms(self) -> float:
+        return self._window_duration
 
     def _calculate_window_size_samples(self, t: np.ndarray) -> int:
         ws = self._calc_num_samples(self.window_duration_ms, self.sr)
@@ -449,7 +489,9 @@ class EngbertDetector(BaseDetector):
 
     _DEFAULT_LAMBDA_PARAM = 5     # standard deviation multiplier
     _DEFAULT_DERIVATION_WINDOW_SIZE = 5     # number of samples used to calculate axial velocity
-    _THRESHOLD_VELOCITY_STR = "threshold_velocity"
+    __THRESHOLD_VELOCITY_STR = "threshold_velocity"
+    __LAMBDA_PARAM_STR = "lambda"
+    __DERIV_WINDOW_SIZE_STR = "deriv_window_size"
 
     def __init__(
             self,
@@ -467,13 +509,12 @@ class EngbertDetector(BaseDetector):
         if self._deriv_window_size <= 0:
             raise ValueError("Derivation window size must be positive")
 
-    @property
-    def lambda_param(self) -> float:
-        return self._lambda_param
-
-    @property
-    def deriv_window_size(self) -> int:
-        return self._deriv_window_size
+    @classmethod
+    def _get_default_params_impl(cls) -> Dict[str, float]:
+        return {
+            cls.__LAMBDA_PARAM_STR: cls._DEFAULT_LAMBDA_PARAM,
+            cls.__DERIV_WINDOW_SIZE_STR: cls._DEFAULT_DERIVATION_WINDOW_SIZE,
+        }
 
     def _detect_impl(
             self,
@@ -493,10 +534,18 @@ class EngbertDetector(BaseDetector):
         labels[ellipse < 1] = EventLabelEnum.FIXATION
         labels[ellipse >= 1] = EventLabelEnum.SACCADE
         self._metadata.update({
-            f"{cnst.X}_{self._THRESHOLD_VELOCITY_STR}_pxs": x_thresh,
-            f"{cnst.Y}_{self._THRESHOLD_VELOCITY_STR}_px": y_thresh,
+            f"{cnst.X}_{self.__THRESHOLD_VELOCITY_STR}_pxs": x_thresh,
+            f"{cnst.Y}_{self.__THRESHOLD_VELOCITY_STR}_px": y_thresh,
         })
         return labels
+
+    @property
+    def lambda_param(self) -> float:
+        return self._lambda_param
+
+    @property
+    def deriv_window_size(self) -> int:
+        return self._deriv_window_size
 
     def _axial_velocities_px(self, arr: np.ndarray) -> np.ndarray:
         """
@@ -570,6 +619,16 @@ class NHDetector(BaseDetector):
     _DEFAULT_MAX_PSO_DURATION_MS = cnfg.EVENT_MAPPING[EventLabelEnum.PSO][cnst.MAX_DURATION_STR]            # 20ms
     _DEFAULT_ALPHA_PARAM = 0.7                                                                              # unitless
 
+    __FILTER_DURATION_MS_STR = "filter_duration_ms"
+    __FILTER_POLYORDER_STR = "filter_polyorder"
+    __SACCADE_MAX_VELOCITY_STR = "saccade_max_velocity"
+    __SACCADE_MAX_ACCELERATION_STR = "saccade_max_acceleration"
+    __MIN_SACCADE_DURATION_STR = "min_saccade_duration"
+    __MIN_FIXATION_DURATION_STR = "min_fixation_duration"
+    __MAX_PSO_DURATION_STR = "max_pso_duration"
+    __ALPHA_PARAM_STR = "alpha_param"
+    __IGNORE_SHORT_PEAK_DURATIONS_STR = "ignore_short_peak_durations"
+    __ALLOW_HIGH_PSOS_STR = "allow_high_psos"
     __SACCADE_PEAK_VELOCITY_THRESHOLD_STR = "saccade_peak_velocity_threshold"
     __SACCADE_ONSET_VELOCITY_THRESHOLD_STR = "saccade_onset_velocity_threshold"
 
@@ -635,6 +694,21 @@ class NHDetector(BaseDetector):
         self._beta_param = 1 - alpha_param
         self._ignore_short_peak_durations = ignore_short_peak_durations
         self._allow_high_psos = allow_high_psos
+
+    @classmethod
+    def _get_default_params_impl(cls) -> Dict[str, float]:
+        return {
+            cls.__FILTER_DURATION_MS_STR: cls._DEFAULT_FILTER_DURATION_MS,
+            cls.__FILTER_POLYORDER_STR: cls._DEFAULT_FILTER_POLYORDER,
+            cls.__SACCADE_MAX_VELOCITY_STR: cls._DEFAULT_SACCADE_MAX_VELOCITY,
+            cls.__SACCADE_MAX_ACCELERATION_STR: cls._DEFAULT_SACCADE_MAX_ACCELERATION,
+            cls.__MIN_SACCADE_DURATION_STR: cls._DEFAULT_MIN_SACCADE_DURATION_MS,
+            cls.__MIN_FIXATION_DURATION_STR: cls._DEFAULT_MIN_FIXATION_DURATION_MS,
+            cls.__MAX_PSO_DURATION_STR: cls._DEFAULT_MAX_PSO_DURATION_MS,
+            cls.__ALPHA_PARAM_STR: cls._DEFAULT_ALPHA_PARAM,
+            cls.__IGNORE_SHORT_PEAK_DURATIONS_STR: True,
+            cls.__ALLOW_HIGH_PSOS_STR: True,
+        }
 
     def _detect_impl(
             self,
@@ -1036,6 +1110,22 @@ class REMoDNaVDetector(BaseDetector):
         'ILPS': EventLabelEnum.PSO, 'PURS': EventLabelEnum.SMOOTH_PURSUIT, 'BLNK': EventLabelEnum.BLINK
     }
 
+    __MIN_SACCADE_DURATION_STR = "min_saccade_duration"
+    __SACCADE_INITIAL_VELOCITY_THRESHOLD_STR = "saccade_initial_velocity_threshold"
+    __SACCADE_CONTEXT_WINDOW_DURATION_STR = "saccade_context_window_duration"
+    __SACCADE_INITIAL_MAX_FREQ_STR = "saccade_initial_max_freq"
+    __SACCADE_ONSET_THRESHOLD_NOISE_FACTOR_STR = "saccade_onset_threshold_noise_factor"
+    __MIN_SMOOTH_PURSUIT_DURATION_STR = "min_smooth_pursuit_duration"
+    __SMOOTH_PURSUIT_LOWPASS_CUTOFF_FREQ_STR = "smooth_pursuits_lowpass_cutoff_freq"
+    __SMOOTH_PURSUIT_DRIFT_VELOCITY_THRESHOLD_STR = "smooth_pursuit_drift_velocity_threshold"
+    __MIN_FIXATION_DURATION_STR = "min_fixation_duration"
+    __MIN_BLINK_DURATION_STR = "min_blink_duration"
+    __MAX_PSO_DURATION_STR = "max_pso_duration"
+    __SAVGOL_POLYORDER_STR = "savgol_filter_polyorder"
+    __SAVGOL_DURATION_MS_STR = "savgol_filter_duration_ms"
+    __MEDIAN_FILTER_DURATION_MS_STR = "median_filter_duration_ms"
+    __MAX_VELOCITY_DEG_STR = "max_velocity_deg"
+
     def __init__(
             self,
             min_saccade_duration: float = _DEFAULT_MIN_SACCADE_DURATION_MS,
@@ -1073,6 +1163,26 @@ class REMoDNaVDetector(BaseDetector):
         self._savgol_duration_ms = savgol_filter_duration_ms
         self._median_filter_length = median_filter_duration_ms
         self._max_velocity = max_velocity
+
+    @classmethod
+    def _get_default_params_impl(cls) -> Dict[str, float]:
+        return {
+            cls.__MIN_SACCADE_DURATION_STR: cls._DEFAULT_MIN_SACCADE_DURATION_MS,
+            cls.__SACCADE_INITIAL_VELOCITY_THRESHOLD_STR: cls._DEFAULT_SACCADE_INITIAL_VELOCITY_THRESHOLD,
+            cls.__SACCADE_CONTEXT_WINDOW_DURATION_STR: cls._DEFAULT_SACCADE_CONTEXT_WINDOW_DURATION_MS,
+            cls.__SACCADE_INITIAL_MAX_FREQ_STR: cls._DEFAULT_SACCADE_INITIAL_MAX_FREQ,
+            cls.__SACCADE_ONSET_THRESHOLD_NOISE_FACTOR_STR: cls._DEFAULT_SACCADE_ONSET_THRESHOLD_NOISE_FACTOR,
+            cls.__MIN_SMOOTH_PURSUIT_DURATION_STR: cls._DEFAULT_MIN_SMOOTH_PURSUIT_DURATION_MS,
+            cls.__SMOOTH_PURSUIT_LOWPASS_CUTOFF_FREQ_STR: cls._DEFAULT_SMOOTH_PURSUIT_LOWPASS_CUTOFF_FREQ,
+            cls.__SMOOTH_PURSUIT_DRIFT_VELOCITY_THRESHOLD_STR: cls._DEFAULT_SMOOTH_PURSUIT_DRIFT_VELOCITY_THRESHOLD,
+            cls.__MIN_FIXATION_DURATION_STR: cls._DEFAULT_MIN_FIXATION_DURATION_MS,
+            cls.__MIN_BLINK_DURATION_STR: cls._DEFAULT_MIN_BLINK_DURATION_MS,
+            cls.__MAX_PSO_DURATION_STR: cls._DEFAULT_MAX_PSO_DURATION_MS,
+            cls.__SAVGOL_POLYORDER_STR: cls._DEFAULT_SAVGOL_POLYORDER,
+            cls.__SAVGOL_DURATION_MS_STR: cls._DEFAULT_SAVGOL_DURATION_MS,
+            cls.__MEDIAN_FILTER_DURATION_MS_STR: cls._DEFAULT_MEDIAN_FILTER_DURATION_MS,
+            cls.__MAX_VELOCITY_DEG_STR: cls._DEFAULT_MAX_VELOCITY_DEG,
+        }
 
     def _detect_impl(
             self,
