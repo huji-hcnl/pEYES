@@ -2,7 +2,7 @@ from typing import Sequence, Set
 
 from src.pEYES._DataModels.Event import BaseEvent
 from src.pEYES._DataModels.EventLabelEnum import EventLabelEnum
-from src.pEYES._DataModels.EventMatcher import EventMatcher
+from src.pEYES._DataModels.EventMatcher import EventMatcher, EventMatchesType
 
 
 def match_events(
@@ -12,7 +12,7 @@ def match_events(
         ignore_events: Set[EventLabelEnum] = None,
         allow_xmatch: bool = False,
         **match_kwargs,
-):
+) -> EventMatchesType:
     """
     Match events based on the given matching criteria, ignoring specified event-labels.
     Matches can be one-to-one or one-to-many depending on the matching criteria and the specified parameters.
