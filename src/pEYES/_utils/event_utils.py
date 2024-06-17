@@ -66,3 +66,17 @@ def count_labels(data: Optional[Sequence[Union[EventLabelEnum, BaseEvent]]]) -> 
         return counts
     missing_labels = pd.Series({l: 0 for l in EventLabelEnum if l not in counts.index})
     return pd.concat([counts, missing_labels]).sort_index()
+
+
+def microsaccade_ratio(events: Sequence[BaseEvent], amplitude_threshold) -> float:
+    """
+    Calculates the ratio of microsaccades to saccades. Returns NaN if there are no saccades.
+    :param events: sequence of events
+    :param amplitude_threshold: threshold for microsaccades (degrees)
+    :return: the ratio of microsaccades to saccades
+    """
+    saccades = [e for e in events if e.label == EventLabelEnum.SACCADE]
+    if len(saccades) == 0:
+        return np.nan
+    microsaccades = [e for e in saccades if e.amplitude < amplitude_threshold]
+    return len(microsaccades) / len(saccades)
