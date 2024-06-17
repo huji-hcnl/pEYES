@@ -117,6 +117,30 @@ def match_multiple(
     return matches
 
 
+def confusion_matrix(
+        ground_truth: Sequence[BaseEvent],
+        prediction: Sequence[BaseEvent],
+        matches: OneToOneEventMatchesType,
+        label: EventLabelEnum,
+) -> np.ndarray:
+    p = len([e for e in ground_truth if e.label == label])
+    pp = len([e for e in prediction if e.label == label])
+
+    #
+    #
+    # TODO: think how to implement this
+    #
+    #
+
+
+    # n, pn = len(ground_truth) - p, len(prediction) - pp
+    # tp = len([pred for gt, pred in matches.items() if gt.label == pred.label == label])
+    # tn = len([pred for gt, pred in matches.items() if gt.label == pred.label and pred.label != label])
+    # fp, fn = pp - tp, p - tp
+
+    return None
+
+
 def calculate_metrics(
         matches: OneToOneEventMatchesType, metrics: Union[str, Sequence[str]], verbose: bool = False,
 ) -> Union[np.ndarray, Dict[str, np.ndarray]]:
