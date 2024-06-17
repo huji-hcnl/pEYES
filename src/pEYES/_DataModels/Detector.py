@@ -69,6 +69,10 @@ class BaseDetector(ABC):
             viewer_distance_cm: float,
             pixel_size_cm: float,
     ) -> (np.ndarray, dict):
+        if not np.isfinite(viewer_distance_cm) or viewer_distance_cm <= 0:
+            raise ValueError("Viewer distance must be a positive finite number")
+        if not np.isfinite(pixel_size_cm) or pixel_size_cm <= 0:
+            raise ValueError("Pixel size must be a positive finite number")
         t, x, y = self._reshape_vectors(t, x, y)
         self._sr = calculate_sampling_rate(t)
         labels = np.full_like(t, EventLabelEnum.UNDEFINED)
