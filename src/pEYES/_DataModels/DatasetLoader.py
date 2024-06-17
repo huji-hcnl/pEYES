@@ -32,8 +32,8 @@ class BaseDatasetLoader(ABC):
     @final
     def load(cls, directory: str, save: bool = False) -> pd.DataFrame:
         """
-        Loads the dataset from the specified directory. If the dataset is not found, it is downloaded.
-        If `save` is True, the dataset is saved to the specified directory.
+        Loads the dataset from the specified directory. If the dataset is not found, it is downloaded from the internet.
+        If `save` is True and the dataset was downloaded, it is saved to the specified directory.
         :return: a DataFrame containing the dataset
         :raises ValueError: if `should_save` is True and `directory` is not specified
         """
@@ -41,10 +41,10 @@ class BaseDatasetLoader(ABC):
             dataset = pd.read_pickle(os.path.join(directory, f"{cls.name()}.pkl"))
         except (FileNotFoundError, TypeError) as _e:
             dataset = cls.download()
-        if save:
-            os.makedirs(directory, exist_ok=True)
-            file_path = os.path.join(directory, f"{cls.name()}.pkl")
-            dataset.to_pickle(file_path)
+            if save:
+                os.makedirs(directory, exist_ok=True)
+                file_path = os.path.join(directory, f"{cls.name()}.pkl")
+                dataset.to_pickle(file_path)
         return dataset
 
     @classmethod
