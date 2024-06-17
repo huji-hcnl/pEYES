@@ -1,4 +1,6 @@
-from typing import Sequence, Set
+from typing import Sequence, Set, Dict
+
+from tqdm import tqdm
 
 from src.pEYES._DataModels.Event import BaseEvent
 from src.pEYES._DataModels.EventLabelEnum import EventLabelEnum
@@ -88,3 +90,28 @@ def match_events(
     return EventMatcher.generic_matching(
         ground_truth, prediction, allow_cross_matching=allow_xmatch, **match_kwargs
     )
+
+
+def match_multiple(
+        ground_truth: Sequence[BaseEvent],
+        predictions: Dict[str, Sequence[BaseEvent]],
+        match_by: str,
+        ignore_events: Set[EventLabelEnum] = None,
+        allow_xmatch: bool = False,
+        verbose: bool = False,
+        **match_kwargs,
+) -> Dict[str, EventMatchesType]:
+    """
+    Matched between each of the predicted event sequences and the ground-truth event sequence, using the specified
+    matching criteria and ignoring specified event-labels. Matching can be one-to-one or one-to-many depending on the
+    matching criteria and the specified parameters. If `verbose` is True, a progress bar tracks the matching process for
+    predicted sequences.
+    Returns a dictionary mapping prediction names to their respective matching results.
+    See `match_events` function for more details on the matching criteria and parameters.
+    """
+    matches = {}
+    for name, pred in tqdm(predictions.items(), desc="Matching", disable=not verbose):
+        matches[name] = match_events(
+            ground_truth, pred, match_by, ignore_events=ignore_events, allow_xmatch=allow_xmatch, **match_kwargs
+        )
+    return matches
