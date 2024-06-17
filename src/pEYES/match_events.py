@@ -7,7 +7,7 @@ from src.pEYES._DataModels.EventLabelEnum import EventLabelEnum
 from src.pEYES._DataModels.EventMatcher import EventMatcher, EventMatchesType
 
 
-def match_events(
+def match(
         ground_truth: Sequence[BaseEvent],
         prediction: Sequence[BaseEvent],
         match_by: str,
@@ -111,7 +111,6 @@ def match_multiple(
     """
     matches = {}
     for name, pred in tqdm(predictions.items(), desc="Matching", disable=not verbose):
-        matches[name] = match_events(
-            ground_truth, pred, match_by, ignore_events=ignore_events, allow_xmatch=allow_xmatch, **match_kwargs
-        )
+        matches[name] = match(ground_truth, pred, match_by, ignore_events=ignore_events, allow_xmatch=allow_xmatch,
+                              **match_kwargs)
     return matches
