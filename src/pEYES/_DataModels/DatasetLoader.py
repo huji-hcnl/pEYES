@@ -10,6 +10,7 @@ from abc import ABC, abstractmethod
 import numpy as np
 import pandas as pd
 import requests as req
+from tqdm import tqdm
 from scipy.io import loadmat
 from scipy.interpolate import interp1d
 import arff
@@ -30,10 +31,11 @@ class BaseDatasetLoader(ABC):
 
     @classmethod
     @final
-    def load(cls, directory: str, save: bool = False) -> pd.DataFrame:
+    def load(cls, directory: str, save: bool = False, verbose: bool = False) -> pd.DataFrame:
         """
         Loads the dataset from the specified directory. If the dataset is not found, it is downloaded from the internet.
         If `save` is True and the dataset was downloaded, it is saved to the specified directory.
+        if `verbose` is True, a progress bar is displayed while parsing the downloaded dataset.
         :return: a DataFrame containing the dataset
         :raises ValueError: if `save` is True and `directory` is not specified
         """
@@ -42,8 +44,12 @@ class BaseDatasetLoader(ABC):
         try:
             dataset = pd.read_pickle(os.path.join(directory, f"{cls.name()}.pkl"))
         except (FileNotFoundError, TypeError) as _e:
-            dataset = cls.download()
+            if verbose:
+                print(f"Dataset {cls.name()} not found in directory {directory}.\nDownloading...")
+            dataset = cls.download(verbose)
             if save:
+                if verbose:
+                    print(f"Saving dataset {cls.name()} to directory {directory}.")
                 os.makedirs(directory, exist_ok=True)
                 file_path = os.path.join(directory, f"{cls.name()}.pkl")
                 dataset.to_pickle(file_path)
@@ -51,7 +57,7 @@ class BaseDatasetLoader(ABC):
 
     @classmethod
     @final
-    def download(cls) -> pd.DataFrame:
+    def download(cls, verbose: bool = False) -> pd.DataFrame:
         """ Downloads the dataset from the internet, parses it and returns a DataFrame with cleaned data """
         url = cls.url()
         response = req.get(cls._URL)
@@ -60,12 +66,12 @@ class BaseDatasetLoader(ABC):
             raise ConnectionError(
                 f"HTTP status code {code} when attempting to download dataset {cls.name()} from {url}"
             )
-        df = cls._parse_response(response)
+        df = cls._parse_response(response, verbose)
         return cls._reorder_columns(df)
 
     @classmethod
     @abstractmethod
-    def _parse_response(cls, response: req.Response) -> pd.DataFrame:
+    def _parse_response(cls, response: req.Response, verbose: bool = False) -> pd.DataFrame:
         """ Parses the downloaded response and returns a DataFrame containing the raw dataset """
         raise NotImplementedError
 
@@ -136,7 +142,7 @@ class Lund2013DatasetLoader(BaseDatasetLoader):
     ]
 
     @classmethod
-    def _parse_response(cls, response: req.Response) -> pd.DataFrame:
+    def _parse_response(cls, response: req.Response, verbose: bool = False) -> pd.DataFrame:
         zip_file = zp.ZipFile(io.BytesIO(response.content))
 
         # list all files in the zip archive that are relevant to this dataset
@@ -147,7 +153,7 @@ class Lund2013DatasetLoader(BaseDatasetLoader):
 
         # read all files into a list of dataframes
         dataframes = {}
-        for i, f in enumerate(file_names):
+        for i, f in tqdm(enumerate(file_names), desc="Processing Files", disable=not verbose):
             file = zip_file.open(f)
             gaze_data = cls.__read_eyetracker_data(file)
             subject_id, stimulus_type, stimulus_name, rater = cls.__extract_metadata(file)
@@ -248,14 +254,14 @@ class IRFDatasetLoader(BaseDatasetLoader):
     __RATER_NAME = "RZ"
 
     @classmethod
-    def _parse_response(cls, response: req.Response) -> pd.DataFrame:
+    def _parse_response(cls, response: req.Response, verbose: bool = False) -> pd.DataFrame:
         zip_file = zp.ZipFile(io.BytesIO(response.content))
         gaze_file_names = [
             f for f in zip_file.namelist() if
             (f.startswith(psx.join(cls.__PREFIX, "lookAtPoint_EL_")) and f.endswith('.npy'))
         ]
         gaze_dfs = []
-        for i, f in enumerate(gaze_file_names):
+        for i, f in tqdm(enumerate(gaze_file_names), desc="Processing Files", disable=not verbose):
             file = zip_file.open(f)
             _, file_name, _ = cls._extract_filename_and_extension(f)
             gaze_data = pd.DataFrame(np.load(file))
@@ -338,7 +344,7 @@ class HFCDatasetLoader(BaseDatasetLoader):
         return {**super().column_order(), HFCDatasetLoader.__SUBJECT_GROUP_STR: 6.1}
 
     @classmethod
-    def _parse_response(cls, response: req.Response) -> pd.DataFrame:
+    def _parse_response(cls, response: req.Response, verbose: bool = False) -> pd.DataFrame:
         zip_file = zp.ZipFile(io.BytesIO(response.content))
         # extract gaze data:
         gaze_file_names = [
@@ -346,7 +352,7 @@ class HFCDatasetLoader(BaseDatasetLoader):
             (f.startswith(psx.join(cls.__PREFIX, "ETdata")) and f.endswith('.txt'))
         ]
         gaze_dfs = {}
-        for i, f in enumerate(gaze_file_names):
+        for i, f in tqdm(enumerate(gaze_file_names), desc="Processing Files", disable=not verbose):
             file = zip_file.open(f)
             gaze_data = pd.read_csv(file, sep='\t', usecols=["time", "x", "y"])
             _, file_name, _ = cls._extract_filename_and_extension(file.name)
@@ -460,10 +466,11 @@ class GazeComDatasetLoader(BaseDatasetLoader):
     }
 
     @classmethod
-    def load_zipfile(cls, root: str = None) -> pd.DataFrame:
+    def load_zipfile(cls, root: str = None, verbose: bool = False) -> pd.DataFrame:
         """
         Loads the dataset from a zip file stored in a local directory (so it doesn't need to be downloaded again).
         :param root: path to the directory containing the zip file.
+        :param verbose: whether to display progress bars.
         :return: DataFrame with the annotated gaze data.
         """
         if not root or not psx.isdir(root):
@@ -472,7 +479,7 @@ class GazeComDatasetLoader(BaseDatasetLoader):
         if not psx.isfile(zip_file):
             raise FileNotFoundError(f"File not found: {zip_file}")
         with zp.ZipFile(zip_file, 'r') as zip_ref:
-            df = cls.__read_zipfile(zf=zip_ref)
+            df = cls.__read_zipfile(zf=zip_ref, verbose=verbose)
             return cls._reorder_columns(df)
 
     @staticmethod
@@ -485,20 +492,21 @@ class GazeComDatasetLoader(BaseDatasetLoader):
         return {**super().column_order(), **handlabeller_scores}
 
     @classmethod
-    def _parse_response(cls, response: req.Response) -> pd.DataFrame:
+    def _parse_response(cls, response: req.Response, verbose: bool = False) -> pd.DataFrame:
         zip_file = zp.ZipFile(io.BytesIO(response.content))
-        return cls.__read_zipfile(zf=zip_file)
+        return cls.__read_zipfile(zf=zip_file, verbose=verbose)
 
     @classmethod
-    def __read_zipfile(cls, zf: zp.ZipFile) -> pd.DataFrame:
+    def __read_zipfile(cls, zf: zp.ZipFile, verbose: bool = False) -> pd.DataFrame:
         """
         Reads the contents of a zip file and returns a DataFrame with the annotated data.
         :param zf: ZipFile object
+        :param verbose: whether to display progress bars
         :return: DataFrame with annotated gaze data
         """
         annotated_file_names = [f for f in zf.namelist() if (f.endswith('.arff') and cls.__PREFIX in f)]
         gaze_dfs = []
-        for i, f in enumerate(annotated_file_names):
+        for i, f in tqdm(enumerate(annotated_file_names), desc="Processing Files", disable=not verbose):
             file = zf.open(f)
             _, file_name, _ = cls._extract_filename_and_extension(f)
             data = arff.loads(file.read().decode('utf-8'))
