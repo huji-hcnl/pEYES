@@ -39,7 +39,7 @@ class BaseDatasetLoader(ABC):
         """
         try:
             dataset = pd.read_pickle(os.path.join(directory, f"{cls.name()}.pkl"))
-        except FileNotFoundError:
+        except (FileNotFoundError, TypeError) as _e:
             dataset = cls.download()
         if save:
             os.makedirs(directory, exist_ok=True)
