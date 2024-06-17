@@ -1,10 +1,11 @@
-from typing import Sequence, Set, Dict
+from typing import Sequence, Set, Dict, Union
 
+import numpy as np
 from tqdm import tqdm
 
 from src.pEYES._DataModels.Event import BaseEvent
 from src.pEYES._DataModels.EventLabelEnum import EventLabelEnum
-from src.pEYES._DataModels.EventMatcher import EventMatcher, EventMatchesType
+from src.pEYES._DataModels.EventMatcher import EventMatcher, EventMatchesType, OneToOneEventMatchesType
 
 
 def match(
@@ -114,3 +115,38 @@ def match_multiple(
         matches[name] = match(ground_truth, pred, match_by, ignore_events=ignore_events, allow_xmatch=allow_xmatch,
                               **match_kwargs)
     return matches
+
+
+def calculate_metrics(
+        matches: OneToOneEventMatchesType, metrics: Union[str, Sequence[str]], verbose: bool = False,
+) -> Union[np.ndarray, Dict[str, np.ndarray]]:
+    if isinstance(metrics, str):
+        return _calculate_metric_impl(matches, metrics)
+    results = {}
+    for metric in tqdm(metrics, desc="Calculating metrics", disable=not verbose):
+        results[metric] = _calculate_metric_impl(matches, metric)
+    return results
+
+
+def _calculate_metric_impl(matches: OneToOneEventMatchesType, metric: str,) -> np.ndarray:
+    metric_name = metric.lower().strip().replace(" ", "_").replace("-", "_")
+    metric_name = metric_name.removesuffix("_difference")
+    if metric_name == "onset":
+        return np.array([gt.start_time - pred.start_time for gt, pred in matches.items()])
+    if metric_name == "offset":
+        return np.array([gt.end_time - pred.end_time for gt, pred in matches.items()])
+    if metric_name == "duration":
+        return np.array([gt.duration - pred.duration for gt, pred in matches.items()])
+    if metric_name == "amplitude":
+        return np.array([gt.amplitude - pred.amplitude for gt, pred in matches.items()])
+    if metric_name == "azimuth":
+        return np.array([gt.azimuth - pred.azimuth for gt, pred in matches.items()])
+    if metric_name == "center_pixel_distance":
+        return np.array([gt.center_distance(pred) for gt, pred in matches.items()])
+    if metric_name == "time_overlap":
+        return np.array([gt.time_overlap(pred) for gt, pred in matches.items()])
+    if metric_name == "time_iou":
+        return np.array([gt.time_iou(pred) for gt, pred in matches.items()])
+    if metric_name == "time_l2":
+        return np.array([gt.time_l2(pred) for gt, pred in matches.items()])
+    raise ValueError(f"Unknown metric: {metric}")
