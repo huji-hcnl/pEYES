@@ -35,8 +35,10 @@ class BaseDatasetLoader(ABC):
         Loads the dataset from the specified directory. If the dataset is not found, it is downloaded from the internet.
         If `save` is True and the dataset was downloaded, it is saved to the specified directory.
         :return: a DataFrame containing the dataset
-        :raises ValueError: if `should_save` is True and `directory` is not specified
+        :raises ValueError: if `save` is True and `directory` is not specified
         """
+        if save and not directory:
+            raise ValueError("Directory must be specified to save the dataset")
         try:
             dataset = pd.read_pickle(os.path.join(directory, f"{cls.name()}.pkl"))
         except (FileNotFoundError, TypeError) as _e:
