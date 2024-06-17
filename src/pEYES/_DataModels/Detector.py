@@ -239,8 +239,8 @@ class IVTDetector(BaseDetector, IThresholdDetector):
     2. Identify saccade candidates as samples with angular velocity greater than the threshold
     3. Assume undefined (non-blink) samples are fixations
 
-    :param velocity_threshold: the threshold for angular velocity, in degrees per second. Default is 45 degrees per-second,
-        as suggested in the paper "One algorithm to rule them all? An evaluation and discussion of ten eye
+    :param saccade_velocity_threshold: the threshold for angular velocity, in degrees per second. Default is 45 degrees
+        per-second, as suggested in the paper "One algorithm to rule them all? An evaluation and discussion of ten eye
         movement event-detection algorithms" (2016), Andersson et al.
     """
 
@@ -298,10 +298,26 @@ class IVTDetector(BaseDetector, IThresholdDetector):
 
 class IVVTDetector(IVTDetector):
     """
-    TODO
+    Implements the I-VVT (dual velocity threshold) gaze event detection algorithm, which builds on the I-VT algorithm
+    by adding a second velocity threshold for smooth pursuit detection. The I-VT algorithm is described in:
+        Salvucci, D. D., & Goldberg, J. H. (2000). Identifying fixations and saccades in eye-tracking protocols.
+        In Proceedings of the Symposium on Eye Tracking Research & Applications (pp. 71-78).
+
+    General algorithm:
+    1. Calculate the angular velocity of the gaze data
+    2. Identify saccade candidates as samples with angular velocity greater than the saccade threshold
+    3. Identify smooth pursuit candidates as samples with intermediate angular velocity - lower than the saccade
+        threshold and greater than the smooth pursuit threshold.
+    4. Assume undefined (non-blink) samples are fixations
+
+    :param saccade_velocity_threshold: the threshold for angular velocity, in degrees per second. Default is 45 degrees
+        per-second, as suggested in the paper "One algorithm to rule them all? An evaluation and discussion of ten eye
+        movement event-detection algorithms" (2016), Andersson et al.
+    :param smooth_pursuit_velocity_threshold: the threshold for angular velocity, in degrees per second, that separates
+        smooth pursuit from fixations. Default is 5 degrees per-second.
     """
 
-    _DEFAULT_SMOOTH_PURSUIT_VELOCITY_THRESHOLD = 15  # deg/s  # TODO: check the default value
+    _DEFAULT_SMOOTH_PURSUIT_VELOCITY_THRESHOLD = 5  # deg/s
     _SMOOTH_PURSUIT_VELOCITY_THRESHOLD_STR = "smooth_pursuit_velocity_threshold"
 
     def __init__(
@@ -476,14 +492,16 @@ class EngbertDetector(BaseDetector):
 
     General algorithm:
         1. Calculate the velocity of the gaze data in both axes
-        2. Calculate the median-standard-deviation of the velocity in both axes
-        3. Calculate the noise threshold as the multiple of the median-standard-deviation with the constant `lambda_noise_threshold`
+        2. Calculate the median-based-standard-deviation of the velocity in each axis
+        3. Calculate the saccade threshold as the multiple of the median-based-standard-deviation with the
+            `lambda_param` constant
         4. Identify saccade candidates as samples with velocity greater than the noise threshold
 
-    :param lambda: the threshold for the noise, as a multiple of the median-standard-deviation. Default
+    :param lambda_param: the threshold for the noise, as a multiple of the median-standard-deviation. Default
         is 5, as suggested in the original paper
-    :param window_size: the size of the window used to calculate the velocity. Default is 2, as suggested in
-        the original paper
+    :param deriv_window_size: number of samples (including the middle sample) used to calculate the velocity, meaning
+        the velocity at time t is the difference between the sum of the `ws//2` samples after and before t, divided by
+        the window size. Default is 5, as suggested in the original paper
     """
 
     _DEFAULT_LAMBDA_PARAM = 5     # standard deviation multiplier
@@ -607,6 +625,22 @@ class NHDetector(BaseDetector):
         5. Fixation Detection:
             5a. Detect samples that are not part of a saccade, PSO or noise
             5b. Ignore fixations that are too short
+
+    :param filter_duration_ms: Savitzky-Golay filter's duration (ms)
+    :param filter_polyorder: Savitzky-Golay filter's polynomial order
+    :param saccade_max_velocity: maximum saccade velocity (deg/s)
+    :param saccade_max_acceleration: maximum saccade acceleration (deg/s^2)
+    :param min_saccade_duration: minimum saccade duration (ms)
+    :param min_fixation_duration: minimum fixation duration (ms)
+    :param max_pso_duration: maximum PSO duration (ms)
+    :param alpha_param: weight of saccade onset threshold when detecting saccade offset
+    :param ignore_short_peak_durations: if True, excludes sporadic instances where velocity is above the PT, when
+        detecting saccade peaks
+    :param allow_high_psos: if True, includes PSOs with maximum velocity exceeding saccades' peak threshold (PT),
+        given that the PSO's max velocity is still lower than the preceding saccade's max velocity
+    :param missing_value: the value that indicates missing data in the gaze data, default is np.NaN
+    :param min_event_duration: minimum duration of a gaze event (ms) default is 5 ms
+    :param pad_blinks_ms: padding duration for blinks (ms), default is 0 ms
     """
 
     _DEFAULT_FILTER_DURATION_MS = 2 * cnfg.EVENT_MAPPING[EventLabelEnum.SACCADE][cnst.MIN_DURATION_STR]     # 20ms
