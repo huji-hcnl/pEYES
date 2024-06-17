@@ -161,6 +161,13 @@ class BaseEvent(ABC):
         """
         return np.linalg.norm([self.start_time - other.start_time, self.end_time - other.end_time])
 
+    @final
+    def center_distance(self, other: "BaseEvent") -> float:
+        """  Calculates the Euclidean distance between the center pixel of this event and another event.  """
+        x1, y1 = self.center_pixel
+        x2, y2 = other.center_pixel
+        return np.linalg.norm([x1 - x2, y1 - y2])
+
     @classmethod
     @final
     def get_min_duration(cls) -> float:
