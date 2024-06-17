@@ -1,6 +1,7 @@
-from typing import Union, Tuple, Dict, Any
+from typing import Union, Tuple, Dict, Any, List
 
 import numpy as np
+from tqdm import tqdm
 
 import src.pEYES.config as cnfg
 from src.pEYES._DataModels.Detector import (
@@ -22,7 +23,7 @@ def detect(
         **kwargs
 ) -> Union[np.ndarray, Tuple[np.ndarray, Dict[str, Any]]]:
     """
-    Detects gaze events in the given gaze data using the specified detector, and returns the detected labels for each
+    Detects gaze events in the given gaze data using the specified detector, and returns the detected label for each
     sample. Optionally, returns the metadata of the detection process.
 
     :param t: np.ndarray; the timestamps of the gaze data, in milliseconds
@@ -87,6 +88,45 @@ def detect(
     if include_metadata:
         return labels, metadata
     return labels
+
+
+def detect_multiple(
+        ts: List[np.ndarray],
+        xs: List[np.ndarray],
+        ys: List[np.ndarray],
+        viewer_distance: Union[float, List[float]],
+        pixel_size: Union[float, List[float]],
+        detector_name: str,
+        missing_value: float = np.nan,
+        min_event_duration: float = cnfg.MIN_EVENT_DURATION,
+        pad_blinks_time: float = 0,
+        include_metadata: bool = False,
+        verbose: bool = False,
+        **kwargs
+) -> Union[List[np.ndarray], Tuple[List[np.ndarray], List[Dict[str, Any]]]]:
+    """
+    Detects gaze events in multiple gaze data sequences using the specified detector, and returns the detected label
+    for each sample in each sequence. Optionally, returns the metadata of the detection process of each sequence.
+    Returns a list of np.ndarrays, where each array contains the detected labels of the corresponding gaze data
+    sequence. If `include_metadata` is True, also returns a list of dictionaries, where each dictionary contains the
+    metadata of the detection process of the corresponding gaze data sequence.
+    See `detect` for the list of arguments and keyword arguments.
+    """
+    if len(ts) != len(xs) != len(ys):
+        raise ValueError("The number of timestamp arrays, x-coordinate arrays, and y-coordinate arrays must be equal.")
+    detector = _create_detector(detector_name, missing_value, min_event_duration, pad_blinks_time, **kwargs)
+    viewer_distance = viewer_distance if isinstance(viewer_distance, list) else [viewer_distance] * len(ts)
+    pixel_size = pixel_size if isinstance(pixel_size, list) else [pixel_size] * len(ts)
+    labels_list, metadata_list = [], []
+    for t, x, y, vd, ps in tqdm(
+            zip(ts, xs, ys, viewer_distance, pixel_size), disable=not verbose, desc="Detecting Events"
+    ):
+        labels, metadata = detector.detect(t, x, y, vd, ps)
+        labels_list.append(labels)
+        metadata_list.append(metadata)
+    if include_metadata:
+        return labels_list, metadata_list
+    return labels_list
 
 
 def _create_detector(
