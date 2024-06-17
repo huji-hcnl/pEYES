@@ -26,7 +26,6 @@ def scarfplot_comparison_figure(
     for i, l in enumerate(labels):
         bottom, top = 2 * i * scarf_height, (2 * i + 1) * scarf_height
         fig = add_scarfplot(fig, t, l, top, bottom, show_colorbar=i == 0)
-    # Update layout
     names = kwargs.get("names", [str(i) for i in range(num_scarfs)])
     assert len(names) == num_scarfs
     fig.update_layout(
