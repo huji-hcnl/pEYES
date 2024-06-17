@@ -28,13 +28,11 @@ class BaseDetector(ABC):
     4. Ignore chunks of gaze-events that are shorter than `min_event_duration`
     5. Merge chunks of the same type that are separated by less than `min_event_duration`
 
-    :param missing_value: the value that indicates missing data in the gaze data. Default is np.NaN
-    :param min_event_duration: the minimum duration of a gaze event, in milliseconds. Default is 5 ms
+    :param missing_value: the value that indicates missing data in the gaze data.
+    :param min_event_duration: the minimum duration of a gaze event, in milliseconds.
+    :param pad_blinks_ms: the duration to pad around detected blinks, in milliseconds.
     """
 
-    _DEFAULT_MISSING_VALUE = np.nan
-    _DEFAULT_MIN_EVENT_DURATION = cnfg.MIN_EVENT_DURATION
-    _DEFAULT_PAD_BLINKS_MS = 0      # ms
     _MINIMUM_SAMPLES_IN_EVENT = 2   # minimum number of samples in an event
 
     __MISSING_VALUE_STR = "missing_value"
@@ -43,15 +41,24 @@ class BaseDetector(ABC):
 
     def __init__(
             self,
-            missing_value: float = _DEFAULT_MISSING_VALUE,
-            min_event_duration: float = _DEFAULT_MIN_EVENT_DURATION,
-            pad_blinks_ms: float = _DEFAULT_PAD_BLINKS_MS,
+            missing_value: float,
+            min_event_duration: float,
+            pad_blinks_ms: float,
     ):
         self._missing_value = missing_value
         self._min_event_duration = min_event_duration
+        if self._min_event_duration <= 0:
+            raise ValueError("Minimum event duration must be positive")
         self._pad_blinks_ms = pad_blinks_ms
-        self._sr = np.nan  # sampling rate calculated in the detect method
-        self._metadata = {}  # additional metadata
+        if self._pad_blinks_ms < 0:
+            raise ValueError("Time to pad blinks must be non-negative")
+        self._metadata = {}     # additional metadata
+        self._sr = np.nan       # sampling rate calculated in the detect method
+
+    @classmethod
+    @abstractmethod
+    def get_default_params(cls) -> Dict[str, float]:
+        raise NotImplementedError
 
     @final
     def detect(
@@ -69,8 +76,8 @@ class BaseDetector(ABC):
         # detect blinks and replace blink-samples with NaN
         labels[is_blink] = EventLabelEnum.BLINK
         x_copy, y_copy = copy.deepcopy(x), copy.deepcopy(y)
-        x_copy[is_blink] = self._DEFAULT_MISSING_VALUE
-        y_copy[is_blink] = self._DEFAULT_MISSING_VALUE
+        x_copy[is_blink] = np.nan
+        y_copy[is_blink] = np.nan
         labels = self._detect_impl(t, x_copy, y_copy, labels, viewer_distance_cm, pixel_size_cm)
         labels = merge_chunks(labels, self.min_event_samples)
         labels = reset_short_chunks(labels, self.min_event_samples, False)
@@ -80,15 +87,6 @@ class BaseDetector(ABC):
             cnst.VIEWER_DISTANCE_STR: viewer_distance_cm,
         })
         return labels, copy.deepcopy(self._metadata)
-
-    @classmethod
-    def get_default_params(cls) -> Dict[str, float]:
-        return {
-            cls.__MISSING_VALUE_STR: cls._DEFAULT_MISSING_VALUE,
-            cls.__MIN_EVENT_DURATION_STR: cls._DEFAULT_MIN_EVENT_DURATION,
-            cls.__PAD_BLINKS_MS_STR: cls._DEFAULT_PAD_BLINKS_MS,
-            **cls._get_default_params_impl(),
-        }
 
     @abstractmethod
     def _detect_impl(
@@ -100,12 +98,6 @@ class BaseDetector(ABC):
             viewer_distance_cm: float,
             pixel_size_cm: float,
     ) -> np.ndarray:
-        raise NotImplementedError
-
-
-    @classmethod
-    @abstractmethod
-    def _get_default_params_impl(cls) -> Dict[str, float]:
         raise NotImplementedError
 
     @property
@@ -239,6 +231,9 @@ class IVTDetector(BaseDetector, IThresholdDetector):
     2. Identify saccade candidates as samples with angular velocity greater than the threshold
     3. Assume undefined (non-blink) samples are fixations
 
+    :param missing_value: the value that indicates missing data in the gaze data.
+    :param min_event_duration: the minimum duration of a gaze event, in milliseconds.
+    :param pad_blinks_ms: the duration to pad around detected blinks, in milliseconds.
     :param saccade_velocity_threshold: the threshold for angular velocity, in degrees per second. Default is 45 degrees
         per-second, as suggested in the paper "One algorithm to rule them all? An evaluation and discussion of ten eye
         movement event-detection algorithms" (2016), Andersson et al.
@@ -249,10 +244,10 @@ class IVTDetector(BaseDetector, IThresholdDetector):
 
     def __init__(
             self,
+            missing_value: float,
+            min_event_duration: float,
+            pad_blinks_ms: float,
             saccade_velocity_threshold: float = _DEFAULT_SACCADE_VELOCITY_THRESHOLD,
-            missing_value: float = BaseDetector._DEFAULT_MISSING_VALUE,
-            min_event_duration: float = BaseDetector._DEFAULT_MISSING_VALUE,
-            pad_blinks_ms: float = BaseDetector._DEFAULT_PAD_BLINKS_MS,
     ):
         super().__init__(missing_value, min_event_duration, pad_blinks_ms)
         if saccade_velocity_threshold <= 0:
@@ -260,7 +255,7 @@ class IVTDetector(BaseDetector, IThresholdDetector):
         self._saccade_velocity_threshold = saccade_velocity_threshold
 
     @classmethod
-    def _get_default_params_impl(cls) -> Dict[str, float]:
+    def get_default_params(cls) -> Dict[str, float]:
         return {
             cls._SACCADE_VELOCITY_THRESHOLD_STR: cls._DEFAULT_SACCADE_VELOCITY_THRESHOLD,
         }
@@ -310,6 +305,9 @@ class IVVTDetector(IVTDetector):
         threshold and greater than the smooth pursuit threshold.
     4. Assume undefined (non-blink) samples are fixations
 
+    :param missing_value: the value that indicates missing data in the gaze data.
+    :param min_event_duration: the minimum duration of a gaze event, in milliseconds.
+    :param pad_blinks_ms: the duration to pad around detected blinks, in milliseconds.
     :param saccade_velocity_threshold: the threshold for angular velocity, in degrees per second. Default is 45 degrees
         per-second, as suggested in the paper "One algorithm to rule them all? An evaluation and discussion of ten eye
         movement event-detection algorithms" (2016), Andersson et al.
@@ -322,20 +320,21 @@ class IVVTDetector(IVTDetector):
 
     def __init__(
             self,
+            missing_value: float,
+            min_event_duration: float,
+            pad_blinks_ms: float,
             saccade_velocity_threshold: float = IVTDetector._DEFAULT_SACCADE_VELOCITY_THRESHOLD,
             smooth_pursuit_velocity_threshold: float = _DEFAULT_SMOOTH_PURSUIT_VELOCITY_THRESHOLD,
-            missing_value: float = BaseDetector._DEFAULT_MISSING_VALUE,
-            min_event_duration: float = BaseDetector._DEFAULT_MISSING_VALUE,
-            pad_blinks_ms: float = BaseDetector._DEFAULT_PAD_BLINKS_MS,
     ):
-        super().__init__(saccade_velocity_threshold, missing_value, min_event_duration, pad_blinks_ms)
+        super().__init__(missing_value, min_event_duration, pad_blinks_ms, saccade_velocity_threshold)
         if smooth_pursuit_velocity_threshold <= 0:
             raise ValueError("Smooth pursuit velocity threshold must be positive")
         self._smooth_pursuit_velocity_threshold = smooth_pursuit_velocity_threshold
 
     @classmethod
-    def _get_default_params_impl(cls) -> Dict[str, float]:
+    def get_default_params(cls) -> Dict[str, float]:
         return {
+            cls._SACCADE_VELOCITY_THRESHOLD_STR: cls._DEFAULT_SACCADE_VELOCITY_THRESHOLD,
             cls._SMOOTH_PURSUIT_VELOCITY_THRESHOLD_STR: cls._DEFAULT_SMOOTH_PURSUIT_VELOCITY_THRESHOLD
         }
 
@@ -380,6 +379,9 @@ class IDTDetector(BaseDetector, IThresholdDetector):
         single sample. Otherwise, label the current sample as saccade and start a new window in the next sample
     4. Repeat until the end of the gaze data
 
+    :param missing_value: the value that indicates missing data in the gaze data.
+    :param min_event_duration: the minimum duration of a gaze event, in milliseconds.
+    :param pad_blinks_ms: the duration to pad around detected blinks, in milliseconds.
     :param dispersion_threshold: the threshold for dispersion, in degrees. Default is 0.5 degrees, as suggested in the
         paper "One algorithm to rule them all? An evaluation and discussion of ten eye movement event-detection
         algorithms" (2016), Andersson et al.
@@ -395,11 +397,11 @@ class IDTDetector(BaseDetector, IThresholdDetector):
 
     def __init__(
             self,
+            missing_value: float,
+            min_event_duration: float,
+            pad_blinks_ms: float,
             dispersion_threshold: float = _DEFAULT_DISPERSION_THRESHOLD,
             window_duration: float = _DEFAULT_WINDOW_DURATION,
-            missing_value: float = BaseDetector._DEFAULT_MISSING_VALUE,
-            min_event_duration: float = BaseDetector._DEFAULT_MISSING_VALUE,
-            pad_blinks_ms: float = BaseDetector._DEFAULT_PAD_BLINKS_MS,
     ):
         super().__init__(missing_value, min_event_duration, pad_blinks_ms)
         if dispersion_threshold <= 0:
@@ -408,7 +410,7 @@ class IDTDetector(BaseDetector, IThresholdDetector):
         self._window_duration = window_duration
 
     @classmethod
-    def _get_default_params_impl(cls) -> Dict[str, float]:
+    def get_default_params(cls) -> Dict[str, float]:
         return {
             cls.__DISPERSION_THRESHOLD_STR: cls._DEFAULT_DISPERSION_THRESHOLD,
             cls.__DEFAULT_WINDOW_DURATION_STR: cls._DEFAULT_WINDOW_DURATION,
@@ -497,14 +499,17 @@ class EngbertDetector(BaseDetector):
             `lambda_param` constant
         4. Identify saccade candidates as samples with velocity greater than the noise threshold
 
-    :param lambda_param: the threshold for the noise, as a multiple of the median-standard-deviation. Default
-        is 5, as suggested in the original paper
+    :param missing_value: the value that indicates missing data in the gaze data.
+    :param min_event_duration: the minimum duration of a gaze event, in milliseconds.
+    :param pad_blinks_ms: the duration to pad around detected blinks, in milliseconds.
+    :param lambda_param: the multiplication coefficient used for calculating saccade threshold. Default is 5, as
+        suggested in the original paper
     :param deriv_window_size: number of samples (including the middle sample) used to calculate the velocity, meaning
         the velocity at time t is the difference between the sum of the `ws//2` samples after and before t, divided by
         the window size. Default is 5, as suggested in the original paper
     """
 
-    _DEFAULT_LAMBDA_PARAM = 5     # standard deviation multiplier
+    _DEFAULT_LAMBDA_PARAM = 5               # standard deviation multiplier
     _DEFAULT_DERIVATION_WINDOW_SIZE = 5     # number of samples used to calculate axial velocity
     __THRESHOLD_VELOCITY_STR = "threshold_velocity"
     __LAMBDA_PARAM_STR = "lambda"
@@ -512,11 +517,11 @@ class EngbertDetector(BaseDetector):
 
     def __init__(
             self,
+            missing_value: float,
+            min_event_duration: float,
+            pad_blinks_ms: float,
             lambda_param: float = _DEFAULT_LAMBDA_PARAM,
             deriv_window_size: int = _DEFAULT_DERIVATION_WINDOW_SIZE,
-            missing_value: float = BaseDetector._DEFAULT_MISSING_VALUE,
-            min_event_duration: float = BaseDetector._DEFAULT_MIN_EVENT_DURATION,
-            pad_blinks_ms: float = BaseDetector._DEFAULT_PAD_BLINKS_MS,
     ):
         super().__init__(missing_value, min_event_duration, pad_blinks_ms)
         self._lambda_param = lambda_param
@@ -527,7 +532,7 @@ class EngbertDetector(BaseDetector):
             raise ValueError("Derivation window size must be positive")
 
     @classmethod
-    def _get_default_params_impl(cls) -> Dict[str, float]:
+    def get_default_params(cls) -> Dict[str, float]:
         return {
             cls.__LAMBDA_PARAM_STR: cls._DEFAULT_LAMBDA_PARAM,
             cls.__DERIV_WINDOW_SIZE_STR: cls._DEFAULT_DERIVATION_WINDOW_SIZE,
@@ -626,6 +631,9 @@ class NHDetector(BaseDetector):
             5a. Detect samples that are not part of a saccade, PSO or noise
             5b. Ignore fixations that are too short
 
+    :param missing_value: the value that indicates missing data in the gaze data.
+    :param min_event_duration: the minimum duration of a gaze event, in milliseconds.
+    :param pad_blinks_ms: the duration to pad around detected blinks, in milliseconds.
     :param filter_duration_ms: Savitzky-Golay filter's duration (ms)
     :param filter_polyorder: Savitzky-Golay filter's polynomial order
     :param saccade_max_velocity: maximum saccade velocity (deg/s)
@@ -638,18 +646,15 @@ class NHDetector(BaseDetector):
         detecting saccade peaks
     :param allow_high_psos: if True, includes PSOs with maximum velocity exceeding saccades' peak threshold (PT),
         given that the PSO's max velocity is still lower than the preceding saccade's max velocity
-    :param missing_value: the value that indicates missing data in the gaze data, default is np.NaN
-    :param min_event_duration: minimum duration of a gaze event (ms) default is 5 ms
-    :param pad_blinks_ms: padding duration for blinks (ms), default is 0 ms
     """
 
     _DEFAULT_FILTER_DURATION_MS = 2 * cnfg.EVENT_MAPPING[EventLabelEnum.SACCADE][cnst.MIN_DURATION_STR]     # 20ms
     _DEFAULT_FILTER_POLYORDER = 2                                                                           # unitless
     _DEFAULT_SACCADE_MAX_VELOCITY = 1000                                                                    # deg/s
     _DEFAULT_SACCADE_MAX_ACCELERATION = 100000                                                              # deg/s^2
-    _DEFAULT_MIN_SACCADE_DURATION_MS = cnfg.EVENT_MAPPING[EventLabelEnum.SACCADE][cnst.MIN_DURATION_STR]    # 20ms
+    _DEFAULT_MIN_SACCADE_DURATION_MS = cnfg.EVENT_MAPPING[EventLabelEnum.SACCADE][cnst.MIN_DURATION_STR]    # 10ms
     _DEFAULT_MIN_FIXATION_DURATION_MS = cnfg.EVENT_MAPPING[EventLabelEnum.FIXATION][cnst.MIN_DURATION_STR]  # 50ms
-    _DEFAULT_MAX_PSO_DURATION_MS = cnfg.EVENT_MAPPING[EventLabelEnum.PSO][cnst.MAX_DURATION_STR]            # 20ms
+    _DEFAULT_MAX_PSO_DURATION_MS = cnfg.EVENT_MAPPING[EventLabelEnum.PSO][cnst.MAX_DURATION_STR]            # 80ms
     _DEFAULT_ALPHA_PARAM = 0.7                                                                              # unitless
 
     __FILTER_DURATION_MS_STR = "filter_duration_ms"
@@ -667,6 +672,9 @@ class NHDetector(BaseDetector):
 
     def __init__(
             self,
+            missing_value: float,
+            min_event_duration: float,
+            pad_blinks_ms: float,
             filter_duration_ms: float = _DEFAULT_FILTER_DURATION_MS,
             filter_polyorder: int = _DEFAULT_FILTER_POLYORDER,
             saccade_max_velocity: float = _DEFAULT_SACCADE_MAX_VELOCITY,
@@ -677,9 +685,6 @@ class NHDetector(BaseDetector):
             alpha_param: float = _DEFAULT_ALPHA_PARAM,
             ignore_short_peak_durations: bool = True,   # whether to exclude sporadic samples from the calculation (default is True)
             allow_high_psos: bool = True,
-            missing_value: float = BaseDetector._DEFAULT_MISSING_VALUE,
-            min_event_duration: float = BaseDetector._DEFAULT_MIN_EVENT_DURATION,
-            pad_blinks_ms: float = BaseDetector._DEFAULT_PAD_BLINKS_MS,
     ):
         """
         Initialize a new Nyström & Holmqvist gaze event detector
@@ -729,7 +734,7 @@ class NHDetector(BaseDetector):
         self._allow_high_psos = allow_high_psos
 
     @classmethod
-    def _get_default_params_impl(cls) -> Dict[str, float]:
+    def get_default_params(cls) -> Dict[str, float]:
         return {
             cls.__FILTER_DURATION_MS_STR: cls._DEFAULT_FILTER_DURATION_MS,
             cls.__FILTER_POLYORDER_STR: cls._DEFAULT_FILTER_POLYORDER,
@@ -768,9 +773,7 @@ class NHDetector(BaseDetector):
         saccades_info = self._extract_saccade_info(
             v_copy, peak_threshold, onset_threshold
         )  # saccade id -> (onset-idx, peak-idx, offset-idx, offset-threshold-velocity)
-        psos_info = self._detect_psos(
-            v_copy, saccades_info, peak_threshold, onset_threshold
-        )  # saccade id -> (start_idx, end_idx, pso_type)
+        psos_info = self._detect_psos(v_copy, saccades_info)  # saccade id -> (start_idx, end_idx, pso_type)
 
         # save and return results
         labels = self._classify_samples(
@@ -974,7 +977,7 @@ class NHDetector(BaseDetector):
         return saccades_info
 
     def _detect_psos(
-            self, v: np.ndarray, saccade_info: Dict[int, Tuple[int, int, int, float]], pt: float, ont: float
+            self, v: np.ndarray, saccade_info: Dict[int, Tuple[int, int, int, float]]
     ) -> Dict[int, Tuple[int, int, bool]]:
         """
         Detects PSOs in the gaze data based on the angular velocity:
@@ -986,9 +989,6 @@ class NHDetector(BaseDetector):
 
         :param v: angular velocity of the gaze data
         :param saccade_info: dictionary of saccade id -> (onset-idx, peak-idx, offset-idx, offset-threshold-velocity)
-        :param pt: saccades' peak threshold velocity (used for determining PSOs' threshold velocity)
-        :param ont: saccades' onset threshold velocity (used for determining PSOs' threshold velocity)
-
         :return: dict matching saccade id with PSO start-idx, end-idx and PSO type (high or low)
         """
         max_pso_samples = self._calc_num_samples(self._max_pso_duration, self.sr)
@@ -1118,6 +1118,25 @@ class REMoDNaVDetector(BaseDetector):
 
     See the REMoDNaV algorithm documentation & implementation:
         https://github.com/psychoinformatics-de/remodnav/tree/master
+
+    :param missing_value: the value that indicates missing data in the gaze data.
+    :param min_event_duration: the minimum duration of a gaze event, in milliseconds.
+    :param pad_blinks_ms: the duration to pad around detected blinks, in milliseconds.
+    :param min_saccade_duration: the minimum duration of a saccade (ms), default is 10 ms
+    :param saccade_initial_velocity_threshold: the initial velocity threshold for saccade detection (deg/s), default is 300
+    :param saccade_context_window_duration: the duration of the context window for saccade detection (ms), default is 1000
+    :param saccade_initial_max_freq: the initial maximum frequency for saccade detection (Hz), default is 2.0
+    :param saccade_onset_threshold_noise_factor: the noise factor for saccade onset threshold, default is 5.0
+    :param min_smooth_pursuit_duration: the minimum duration of a smooth pursuit (ms), default is 40 ms
+    :param smooth_pursuits_lowpass_cutoff_freq: the lowpass cutoff frequency for smooth pursuit detection (Hz), default is 4.0
+    :param smooth_pursuit_drift_velocity_threshold: the drift velocity threshold for smooth pursuit detection (deg/s), default is 2.0
+    :param min_fixation_duration: the minimum duration of a fixation (ms), default is 50 ms
+    :param min_blink_duration: the minimum duration of a blink (ms), default is 20 ms
+    :param max_pso_duration: the maximum duration of a PSO (ms), default is 80 ms
+    :param savgol_filter_polyorder: the polynomial order for the Savitzky-Golay filter, default is 2
+    :param savgol_filter_duration_ms: the duration of the Savitzky-Golay filter (ms), default is 19 ms
+    :param median_filter_duration_ms: the duration of the median filter (ms), default is 50 ms
+    :param max_velocity: the maximum velocity of the gaze data (deg/s), default is 1500
     """
 
     _DEFAULT_MIN_SACCADE_DURATION_MS = cnfg.EVENT_MAPPING[EventLabelEnum.SACCADE][cnst.MIN_DURATION_STR]
@@ -1161,6 +1180,9 @@ class REMoDNaVDetector(BaseDetector):
 
     def __init__(
             self,
+            missing_value: float,
+            min_event_duration: float,
+            pad_blinks_ms: float,
             min_saccade_duration: float = _DEFAULT_MIN_SACCADE_DURATION_MS,
             saccade_initial_velocity_threshold: float = _DEFAULT_SACCADE_INITIAL_VELOCITY_THRESHOLD,
             saccade_context_window_duration: float = _DEFAULT_SACCADE_CONTEXT_WINDOW_DURATION_MS,
@@ -1176,9 +1198,6 @@ class REMoDNaVDetector(BaseDetector):
             savgol_filter_duration_ms: float = _DEFAULT_SAVGOL_DURATION_MS,
             median_filter_duration_ms: float = _DEFAULT_MEDIAN_FILTER_DURATION_MS,
             max_velocity: float = _DEFAULT_MAX_VELOCITY_DEG,
-            missing_value: float = BaseDetector._DEFAULT_MISSING_VALUE,
-            min_event_duration: float = BaseDetector._DEFAULT_MIN_EVENT_DURATION,
-            pad_blinks_ms: float = BaseDetector._DEFAULT_PAD_BLINKS_MS,
     ):
         super().__init__(missing_value, min_event_duration, pad_blinks_ms)
         self._min_saccade_duration_ms = max(min_saccade_duration, self._min_event_duration)
@@ -1198,7 +1217,7 @@ class REMoDNaVDetector(BaseDetector):
         self._max_velocity = max_velocity
 
     @classmethod
-    def _get_default_params_impl(cls) -> Dict[str, float]:
+    def get_default_params(cls) -> Dict[str, float]:
         return {
             cls.__MIN_SACCADE_DURATION_STR: cls._DEFAULT_MIN_SACCADE_DURATION_MS,
             cls.__SACCADE_INITIAL_VELOCITY_THRESHOLD_STR: cls._DEFAULT_SACCADE_INITIAL_VELOCITY_THRESHOLD,
