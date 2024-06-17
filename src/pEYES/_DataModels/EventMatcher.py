@@ -11,7 +11,9 @@ class EventMatcher(ABC):
         Startsev, M., Zemblys, R. Evaluating Eye Movement Event Detection: A Review of the State of the Art
         Behav Res 55, 1653–1714 (2023). https://doi.org/10.3758/s13428-021-01763-7
     """
-    __TYPE_EVENT_MATCHES = Dict[BaseEvent, Union[BaseEvent, Sequence[BaseEvent]]]
+    __TYPE_ONE_TO_ONE_EVENT_MATCHES = Dict[BaseEvent, BaseEvent]
+    __TYPE_ONE_TO_MANY_EVENT_MATCHES = Dict[BaseEvent, Sequence[BaseEvent]]
+    __TYPE_EVENT_MATCHES = Union[__TYPE_ONE_TO_ONE_EVENT_MATCHES, __TYPE_ONE_TO_MANY_EVENT_MATCHES]
     __TYPE_EVENT_MATCHING_FUNC = Callable[[Sequence[BaseEvent], Sequence[BaseEvent]], __TYPE_EVENT_MATCHES]
 
     @staticmethod
