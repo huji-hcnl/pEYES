@@ -69,7 +69,7 @@ class BaseDetector(ABC):
             viewer_distance_cm: float,
             pixel_size_cm: float,
     ) -> (np.ndarray, dict):
-        t, x, y = self._verify_inputs(t, x, y)
+        t, x, y = self._reshape_vectors(t, x, y)
         self._sr = calculate_sampling_rate(t)
         labels = np.full_like(t, EventLabelEnum.UNDEFINED)
         is_blink = self._detect_blinks(x, y)
@@ -176,7 +176,7 @@ class BaseDetector(ABC):
         return is_blink
 
     @staticmethod
-    def _verify_inputs(t: np.ndarray, x: np.ndarray, y: np.ndarray) -> (np.ndarray, np.ndarray, np.ndarray):
+    def _reshape_vectors(t: np.ndarray, x: np.ndarray, y: np.ndarray) -> (np.ndarray, np.ndarray, np.ndarray):
         if not is_one_dimensional(t):
             raise ValueError("`t` must be one-dimensional")
         if not is_one_dimensional(x):
@@ -600,8 +600,8 @@ class EngbertDetector(BaseDetector):
         return float(np.nanmax([sd, cnfg.EPSILON]))
 
     @override
-    def _verify_inputs(self, t: np.ndarray, x: np.ndarray, y: np.ndarray) -> (np.ndarray, np.ndarray, np.ndarray):
-        t, x, y = super()._verify_inputs(t, x, y)
+    def _reshape_vectors(self, t: np.ndarray, x: np.ndarray, y: np.ndarray) -> (np.ndarray, np.ndarray, np.ndarray):
+        t, x, y = super()._reshape_vectors(t, x, y)
         if len(x) < 2 * self.deriv_window_size:
             raise ValueError(f"Derivation window ({self.deriv_window_size} samples) is too long for the given data")
         return t, x, y
