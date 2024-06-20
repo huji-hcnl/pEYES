@@ -1,4 +1,4 @@
-from typing import Sequence, Set, Dict, Union
+from typing import Sequence, Set, Dict, Union, Optional
 
 import numpy as np
 from tqdm import tqdm
@@ -6,6 +6,7 @@ from tqdm import tqdm
 from src.pEYES._DataModels.Event import BaseEvent
 from src.pEYES._DataModels.EventLabelEnum import EventLabelEnum
 from src.pEYES._DataModels.EventMatcher import EventMatcher, EventMatchesType, OneToOneEventMatchesType
+from src.pEYES._utils.metric_utils import dprime
 
 
 def match(
@@ -128,6 +129,41 @@ def calculate(
     return results
 
 
+def precision_recall_f1(
+        ground_truth: Sequence[BaseEvent],
+        prediction: Sequence[BaseEvent],
+        matches: OneToOneEventMatchesType,
+        labels: Union[EventLabelEnum, Sequence[EventLabelEnum]],
+) -> (float, float, float):
+    p, n, pp, tp = _extract_contingency_values(ground_truth, prediction, matches, labels)
+    recall = tp / p if p > 0 else np.nan
+    precision = tp / pp if pp > 0 else np.nan
+    f1 = 2 * (precision * recall) / (precision + recall) if precision + recall > 0 else np.nan
+    return precision, recall, f1
+
+
+def d_prime(
+        ground_truth: Sequence[BaseEvent],
+        prediction: Sequence[BaseEvent],
+        matches: OneToOneEventMatchesType,
+        labels: Union[EventLabelEnum, Sequence[EventLabelEnum]],
+        correction: Optional[str] = "loglinear",
+) -> float:
+    """
+    Calculates d-prime while optionally applying a correction for floor/ceiling effects on the hit-rate and/or
+    false-alarm rate. See information on correction methods at https://stats.stackexchange.com/a/134802/288290.
+
+    :param ground_truth: all ground-truth events
+    :param prediction: all predicted events
+    :param matches: the one-to-one matches between (subset of) ground-truth and (subset of) predicted events
+    :param labels: event-labels to consider as "positive" events
+    :param correction: optional floor/ceiling correction method when calculating hit-rate and false-alarm rate
+    :return: the d-prime value
+    """
+    p, n, pp, tp = _extract_contingency_values(ground_truth, prediction, matches, labels)
+    return dprime(p, n, pp, tp, correction)
+
+
 def _calculate_impl(matches: OneToOneEventMatchesType, metric: str,) -> np.ndarray:
     metric_name = metric.lower().strip().replace(" ", "_").replace("-", "_")
     metric_name = metric_name.removesuffix("_difference")
@@ -150,3 +186,27 @@ def _calculate_impl(matches: OneToOneEventMatchesType, metric: str,) -> np.ndarr
     if metric_name == "time_l2":
         return np.array([gt.time_l2(pred) for gt, pred in matches.items()])
     raise ValueError(f"Unknown metric: {metric}")
+
+
+def _extract_contingency_values(
+        ground_truth: Sequence[BaseEvent],
+        prediction: Sequence[BaseEvent],
+        matches: OneToOneEventMatchesType,
+        labels: Union[EventLabelEnum, Sequence[EventLabelEnum]],
+) -> (int, int, int, int):
+    """
+    Extracts contingency values, used to fill in the confusion matrix for the provided matches between ground-truth and
+    predicted events, where the given labels are considered "positive" events.
+
+    :return:
+        p: int; number of positive GT events
+        n: int; number of negative GT events
+        pp: int; number of positive predicted events
+        tp: int; number of true positive predictions
+    """
+    labels = [labels] if isinstance(labels, EventLabelEnum) else labels
+    p = len([e for e in ground_truth if e.label in labels])
+    n = len(ground_truth) - p
+    pp = len([e for e in prediction if e.label in labels])
+    tp = len([e for e in matches.values() if e.label in labels])
+    return p, n, pp, tp
