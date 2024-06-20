@@ -1,12 +1,30 @@
 import unittest
 
 import numpy as np
+import Levenshtein
 from scipy.stats import norm
 
-from src.pEYES._utils.metric_utils import dprime, _dprime_rates
+from src.pEYES._utils.metric_utils import transition_matrix, dprime, _dprime_rates
+from src.pEYES._utils.metric_utils import complement_normalized_levenshtein_distance as comp_nld
 
 
 class TestMetricUtils(unittest.TestCase):
+
+    def test_transition_matrix(self):
+        seq = [0, 1, 2, 3, 2, 3, 2, 2]
+        self.assertTrue(
+            np.array_equal(transition_matrix(seq).values,
+                           np.array([[1, 0, 0], [0, 1, 0], [0, 1, 2], [0, 2, 0]]))
+        )
+        self.assertTrue(
+            np.array_equal(transition_matrix(seq, True).values,
+                           np.array([[1, 0, 0], [0, 1, 0], [0, 1/3, 2/3], [0, 1, 0]]))
+        )
+
+    def test_complement_nld(self):
+        gt = "kitten"
+        pred = "sitting"
+        self.assertEqual(1 - Levenshtein.distance(gt, pred) / max(len(gt), len(pred)), comp_nld(gt, pred))
 
     def test_dprime(self):
         p = n = pp = 10
