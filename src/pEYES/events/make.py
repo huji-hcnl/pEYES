@@ -15,6 +15,17 @@ def make(
         viewer_distance: float,
         pixel_size: float,
 ) -> Union[Event, List[Event]]:
+    """
+    TODO: Add documentation here
+    :param labels:
+    :param t:
+    :param x:
+    :param y:
+    :param pupil:
+    :param viewer_distance:
+    :param pixel_size:
+    :return:
+    """
     if isinstance(labels, UnparsedEventLabelType):
         label = parse_label(labels)
         return Event.make(label, t, x, y, pupil, viewer_distance, pixel_size)
