@@ -7,6 +7,8 @@ import src.pEYES.constants as cnst
 from src.pEYES._DataModels.EventLabelEnum import EventLabelEnum
 from src.pEYES._DataModels.Event import BaseEvent
 
+UnparsedEventLabelType = Union[EventLabelEnum, BaseEvent, int, str, float]
+
 
 def calculate_sampling_rate(ms: np.ndarray) -> float:
     """
@@ -22,7 +24,7 @@ def calculate_sampling_rate(ms: np.ndarray) -> float:
 
 
 def parse_label(
-        val: Optional[Union[EventLabelEnum, BaseEvent, int, str, float]],
+        val: Optional[UnparsedEventLabelType],
         safe: bool = True
 ) -> EventLabelEnum:
     """
