@@ -142,7 +142,7 @@ def calculate(
     if isinstance(features, str):
         return _calculate_impl(matches, features)
     results = {}
-    for metric in tqdm(features, desc="Calculating metrics", disable=not verbose):
+    for metric in tqdm(features, desc="Calculating Features", disable=not verbose):
         results[metric] = _calculate_impl(matches, metric)
     return results
 
