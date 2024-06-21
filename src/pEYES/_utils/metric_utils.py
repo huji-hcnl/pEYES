@@ -30,6 +30,15 @@ def transition_matrix(seq: Sequence, normalize_rows: bool = False) -> pd.DataFra
     return counts
 
 
+def complement_normalized_levenshtein_distance(
+        gt: Sequence, pred: Sequence,
+) -> float:
+    """ Calculates the complement of the normalized Levenshtein distance between two sequences. """
+    d = Levenshtein.distance(gt, pred)
+    normalized_d = d / max(len(gt), len(pred))
+    return 1 - normalized_d
+
+
 def dprime(p: int, n: float, pp: int, tp: int, correction: Optional[str]) -> float:
     """
     Calculates d-prime while optionally applying a correction for floor/ceiling effects on the hit-rate and/or
@@ -83,13 +92,4 @@ def _dprime_rates(p: int, n: float, pp: int, tp: int, correction: Optional[str])
         false_alarm_rate = new_fp / new_n if new_n > 0 else np.nan
         return hit_rate, false_alarm_rate
     raise ValueError(f"Invalid correction: {correction}")
-
-
-def complement_normalized_levenshtein_distance(
-        gt: Sequence, pred: Sequence,
-) -> float:
-    """ Calculates the complement of the normalized Levenshtein distance between two sequences. """
-    d = Levenshtein.distance(gt, pred)
-    normalized_d = d / max(len(gt), len(pred))
-    return 1 - normalized_d
 
