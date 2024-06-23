@@ -110,6 +110,7 @@ def detect_multiple(
     Returns a list of np.ndarrays, where each array contains the detected labels of the corresponding gaze data
     sequence. If `include_metadata` is True, also returns a list of dictionaries, where each dictionary contains the
     metadata of the detection process of the corresponding gaze data sequence.
+
     See `detect` for the list of arguments and keyword arguments.
     """
     if len(ts) != len(xs) != len(ys):
