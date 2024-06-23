@@ -2,10 +2,12 @@ from typing import Union, Sequence, List
 
 import numpy as np
 
+from src.pEYES import constants as cnst
 from src.pEYES._DataModels.Event import BaseEvent as Event
 from src.pEYES._DataModels.EventLabelEnum import EventLabelEnum as EventLabel
+from src.pEYES._DataModels.UnparsedEventLabel import UnparsedEventLabelType
 
-from src.pEYES._utils.event_utils import UnparsedEventLabelType, parse_label
+from src.pEYES._utils.event_utils import parse_label
 
 
 def from_labels(
@@ -44,14 +46,13 @@ def to_labels(
         sampling_rate: float,
 ) -> Sequence[EventLabel]:
     if isinstance(events, Event):
-        total_duration = events.duration
-        out = np.full(int(np.ceil(total_duration * sampling_rate)), events.label)
+        out = np.full(int(np.ceil(sampling_rate * events.duration / cnst.MILLISECONDS_PER_SECOND)), events.label)
         return out
-    total_duration = sum(e.duration for e in events)
-    out = np.full(int(np.ceil(total_duration * sampling_rate)), EventLabel.UNDEFINED)
-    start = 0
+    max_end_time = max(e.end_time for e in events)
+    out = np.full(int(np.ceil(sampling_rate * max_end_time / cnst.MILLISECONDS_PER_SECOND)), EventLabel.UNDEFINED)
     for e in events:
-        end = start + int(np.ceil(e.duration * sampling_rate))
-        out[start:end] = e.label
-        start = end
+        start_time, end_time = e.start_time, e.end_time
+        start_sample = int(np.round(start_time * sampling_rate / cnst.MILLISECONDS_PER_SECOND))
+        end_sample = int(np.round(end_time * sampling_rate / cnst.MILLISECONDS_PER_SECOND))
+        out[start_sample:end_sample] = e.label
     return out

@@ -11,7 +11,7 @@ import src.pEYES.constants as cnst
 import src.pEYES.config as cnfg
 from src.pEYES._utils.vector_utils import *
 from src.pEYES._utils.pixel_utils import *
-from src.pEYES._utils.event_utils import calculate_sampling_rate
+from src.pEYES._utils.event_utils import calculate_sampling_rate, parse_label
 from src.pEYES._DataModels.EventLabelEnum import EventLabelEnum
 
 
@@ -75,7 +75,7 @@ class BaseDetector(ABC):
             raise ValueError("Pixel size must be a positive finite number")
         t, x, y = self._reshape_vectors(t, x, y)
         self._sr = calculate_sampling_rate(t)
-        labels = np.full_like(t, EventLabelEnum.UNDEFINED)
+        labels = np.full_like(t, EventLabelEnum.UNDEFINED, dtype=EventLabelEnum)
         is_blink = self._detect_blinks(x, y)
         # detect blinks and replace blink-samples with NaN
         labels[is_blink] = EventLabelEnum.BLINK
@@ -85,6 +85,7 @@ class BaseDetector(ABC):
         labels = self._detect_impl(t, x_copy, y_copy, labels, viewer_distance_cm, pixel_size_cm)
         labels = merge_chunks(labels, self.min_event_samples)
         labels = reset_short_chunks(labels, self.min_event_samples, False)
+        labels = np.vectorize(parse_label)(labels)
         self._metadata.update({
             cnst.SAMPLING_RATE_STR: self.sr,
             cnst.PIXEL_SIZE_STR: pixel_size_cm,
@@ -179,8 +180,7 @@ class BaseDetector(ABC):
                 is_blink[start:end] = True
         return is_blink
 
-    @staticmethod
-    def _reshape_vectors(t: np.ndarray, x: np.ndarray, y: np.ndarray) -> (np.ndarray, np.ndarray, np.ndarray):
+    def _reshape_vectors(self, t: np.ndarray, x: np.ndarray, y: np.ndarray) -> (np.ndarray, np.ndarray, np.ndarray):
         if not is_one_dimensional(t):
             raise ValueError("`t` must be one-dimensional")
         if not is_one_dimensional(x):
@@ -516,7 +516,7 @@ class EngbertDetector(BaseDetector):
     _DEFAULT_LAMBDA_PARAM = 5               # standard deviation multiplier
     _DEFAULT_DERIVATION_WINDOW_SIZE = 5     # number of samples used to calculate axial velocity
     __THRESHOLD_VELOCITY_STR = "threshold_velocity"
-    __LAMBDA_PARAM_STR = "lambda"
+    __LAMBDA_PARAM_STR = "lambda_param"
     __DERIV_WINDOW_SIZE_STR = "deriv_window_size"
 
     def __init__(
@@ -1180,7 +1180,7 @@ class REMoDNaVDetector(BaseDetector):
     __SAVGOL_POLYORDER_STR = "savgol_filter_polyorder"
     __SAVGOL_DURATION_MS_STR = "savgol_filter_duration_ms"
     __MEDIAN_FILTER_DURATION_MS_STR = "median_filter_duration_ms"
-    __MAX_VELOCITY_DEG_STR = "max_velocity_deg"
+    __MAX_VELOCITY_STR = "max_velocity"
 
     def __init__(
             self,
@@ -1237,7 +1237,7 @@ class REMoDNaVDetector(BaseDetector):
             cls.__SAVGOL_POLYORDER_STR: cls._DEFAULT_SAVGOL_POLYORDER,
             cls.__SAVGOL_DURATION_MS_STR: cls._DEFAULT_SAVGOL_DURATION_MS,
             cls.__MEDIAN_FILTER_DURATION_MS_STR: cls._DEFAULT_MEDIAN_FILTER_DURATION_MS,
-            cls.__MAX_VELOCITY_DEG_STR: cls._DEFAULT_MAX_VELOCITY_DEG,
+            cls.__MAX_VELOCITY_STR: cls._DEFAULT_MAX_VELOCITY_DEG,
         }
 
     def _detect_impl(

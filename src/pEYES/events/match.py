@@ -2,7 +2,7 @@ from typing import Set, Dict
 
 from tqdm import tqdm
 
-from src.pEYES._DataModels.Event import BaseEvent, EventSequenceType
+from src.pEYES._DataModels.Event import EventSequenceType
 from src.pEYES._DataModels.EventLabelEnum import EventLabelEnum
 from src.pEYES._DataModels.EventMatcher import EventMatcher, EventMatchesType
 

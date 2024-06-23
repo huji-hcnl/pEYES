@@ -6,8 +6,7 @@ import pandas as pd
 import src.pEYES.constants as cnst
 from src.pEYES._DataModels.EventLabelEnum import EventLabelEnum
 from src.pEYES._DataModels.Event import BaseEvent, EventSequenceType
-
-UnparsedEventLabelType = Union[EventLabelEnum, BaseEvent, int, str, float]
+from src.pEYES._DataModels.UnparsedEventLabel import UnparsedEventLabelType
 
 
 def calculate_sampling_rate(ms: np.ndarray) -> float:

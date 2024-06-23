@@ -48,10 +48,10 @@ class BaseDatasetLoader(ABC):
                 print(f"Dataset {cls.name()} not found in directory {directory}.\nDownloading...")
             dataset = cls.download(verbose)
             if save:
-                if verbose:
-                    print(f"Saving dataset {cls.name()} to directory {directory}.")
                 os.makedirs(directory, exist_ok=True)
                 file_path = os.path.join(directory, f"{cls.name()}.pkl")
+                if verbose:
+                    print(f"Saved dataset to {file_path}")
                 dataset.to_pickle(file_path)
         return dataset
 
@@ -280,7 +280,6 @@ class IRFDatasetLoader(BaseDatasetLoader):
         df.rename(
             columns={"t": cnst.T, "evt": cls.__RATER_NAME, "x": cnst.X, "y": cnst.Y}, inplace=True
         )
-        df.drop(columns=["status"], inplace=True)
         df = cls.__correct_coordinates(df)
         return df
 
@@ -290,6 +289,7 @@ class IRFDatasetLoader(BaseDatasetLoader):
         nan_idxs = new_df[~new_df['status']].index
         new_df.loc[nan_idxs, cnst.X] = np.nan
         new_df.loc[nan_idxs, cnst.Y] = np.nan
+        new_df.drop(columns=['status'], inplace=True)
 
         pixel_width_cm = cls.__MONITOR_WIDTH_CM_VAL / cls.__MONITOR_RESOLUTION_VAL[0]
         x = new_df[cnst.X].apply(
@@ -305,8 +305,8 @@ class IRFDatasetLoader(BaseDatasetLoader):
             )
         )
         y += cls.__MONITOR_RESOLUTION_VAL[1] // 2  # move y=0 coordinate to the top of the screen
-        new_df.loc[:, cnst.X] = x
-        new_df.loc[:, cnst.Y] = y
+        new_df.loc[:, cnst.X] = x.astype("float32")
+        new_df.loc[:, cnst.Y] = y.astype("float32")
         return new_df
 
 
@@ -341,7 +341,9 @@ class HFCDatasetLoader(BaseDatasetLoader):
 
     @staticmethod
     def column_order() -> Dict[str, float]:
-        return {**super().column_order(), HFCDatasetLoader.__SUBJECT_GROUP_STR: 6.1}
+        return {
+            **super(HFCDatasetLoader, HFCDatasetLoader).column_order(), HFCDatasetLoader.__SUBJECT_GROUP_STR: 6.1
+        }
 
     @classmethod
     def _parse_response(cls, response: req.Response, verbose: bool = False) -> pd.DataFrame:

@@ -66,7 +66,7 @@ def _dprime_rates(p: int, n: float, pp: int, tp: int, correction: Optional[str])
     assert 0 <= fp <= n, f"False Positive count must be between 0 and n = {n}"
     hit_rate = tp / p if p > 0 else np.nan
     false_alarm_rate = fp / n if n > 0 else np.nan
-    if hit_rate != 0 and hit_rate != 1 and false_alarm_rate != 0 and false_alarm_rate != 1:
+    if 0 < hit_rate < 1 and 0 < false_alarm_rate < 1:
         # no correction needed
         return hit_rate, false_alarm_rate
     corr = (correction or "").lower().strip().replace(" ", "_").replace("-", "_")
