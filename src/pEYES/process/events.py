@@ -1,6 +1,7 @@
 from typing import Union, Sequence
 
 import numpy as np
+import pandas as pd
 
 from src.pEYES import constants as cnst
 from src.pEYES._DataModels.Event import BaseEvent, EventSequenceType
@@ -64,3 +65,18 @@ def events_to_labels(
         end_sample = int(np.round(end_time * sampling_rate / cnst.MILLISECONDS_PER_SECOND))
         out[start_sample:end_sample] = e.label
     return out
+
+
+def events_to_table(
+        events: Union[BaseEvent, EventSequenceType],
+) -> pd.DataFrame:
+    """
+    Converts the given event(s) to a DataFrame, where each row represents an event and columns are event features.
+    """
+    if isinstance(events, BaseEvent):
+        s = events.summary()
+        return s.to_frame()
+    if len(events) == 0:
+        return pd.DataFrame()
+    summaries = [e.summary() for e in events]
+    return pd.DataFrame(summaries)
