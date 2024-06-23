@@ -48,10 +48,10 @@ class BaseDatasetLoader(ABC):
                 print(f"Dataset {cls.name()} not found in directory {directory}.\nDownloading...")
             dataset = cls.download(verbose)
             if save:
-                if verbose:
-                    print(f"Saving dataset {cls.name()} to directory {directory}.")
                 os.makedirs(directory, exist_ok=True)
                 file_path = os.path.join(directory, f"{cls.name()}.pkl")
+                if verbose:
+                    print(f"Saved dataset to {file_path}")
                 dataset.to_pickle(file_path)
         return dataset
 
