@@ -179,8 +179,7 @@ class BaseDetector(ABC):
                 is_blink[start:end] = True
         return is_blink
 
-    @staticmethod
-    def _reshape_vectors(t: np.ndarray, x: np.ndarray, y: np.ndarray) -> (np.ndarray, np.ndarray, np.ndarray):
+    def _reshape_vectors(self, t: np.ndarray, x: np.ndarray, y: np.ndarray) -> (np.ndarray, np.ndarray, np.ndarray):
         if not is_one_dimensional(t):
             raise ValueError("`t` must be one-dimensional")
         if not is_one_dimensional(x):
