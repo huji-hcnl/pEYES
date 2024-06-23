@@ -87,7 +87,7 @@ def create_frames(
     frames = []
     n_samples = len(x)
     bg_image = _create_background(resolution, bg_image, bg_image_format)
-    label_colors = label_colors or {l: val[cnst.COLOR_STR] for l, val in cnfg.EVENT_MAPPING.items()}
+    label_colors = _get_rgb_mapping(label_colors)
     for i in trange(n_samples, desc="Creating Frames", disable=not verbose):
         curr_img = bg_image.copy()
         curr_x, curr_y = int(x[i]), int(y[i])
@@ -113,6 +113,20 @@ def _create_background(
             raise ValueError(f"Invalid color format: {color_format}")
     bg = cv2.resize(bg, resolution)
     return bg
+
+
+def _get_rgb_mapping(label_colors: dict) -> dict:
+    defaults_colors = {l: val[cnst.COLOR_STR] for l, val in cnfg.EVENT_MAPPING.items()}
+    if label_colors is None or not label_colors:
+        label_colors = defaults_colors
+    else:
+        label_colors = {**defaults_colors, **label_colors}
+    for k, v in label_colors.items():
+        if isinstance(v, str):
+            # convert hex to rgb
+            v = v.removeprefix("#")
+            label_colors[k] = tuple(int(v[i:i + 2], 16) for i in (0, 2, 4))
+    return label_colors
 
 
 def _write_video(
