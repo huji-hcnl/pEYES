@@ -10,7 +10,7 @@ from src.pEYES._DataModels.UnparsedEventLabel import UnparsedEventLabelType
 from src.pEYES._utils.event_utils import parse_label
 
 
-def from_labels(
+def create_events(
         labels: Union[UnparsedEventLabelType, Sequence[UnparsedEventLabelType]],
         t: np.ndarray,
         x: np.ndarray,
@@ -41,10 +41,18 @@ def from_labels(
     return Event.make_multiple(labels, t, x, y, pupil, viewer_distance, pixel_size)
 
 
-def to_labels(
+def events_to_labels(
         events: Union[Event, Sequence[Event]],
         sampling_rate: float,
 ) -> Sequence[EventLabel]:
+    """
+    Converts the given event(s) to a sequence of labels, where each event is mapped to a sequence of labels with length
+    matching the number of samples in the event's duration (rounded up to the nearest integer).
+
+    :param events: sequence of event(s)
+    :param sampling_rate: the sampling rate of the output labels
+    :return: sequence of labels
+    """
     if isinstance(events, Event):
         out = np.full(int(np.ceil(sampling_rate * events.duration / cnst.MILLISECONDS_PER_SECOND)), events.label)
         return out
