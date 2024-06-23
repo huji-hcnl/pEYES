@@ -2,11 +2,13 @@ from typing import Union, Sequence, List
 
 import numpy as np
 
-from src.pEYES._utils.event_utils import UnparsedEventLabelType, parse_label
 from src.pEYES._DataModels.Event import BaseEvent as Event
+from src.pEYES._DataModels.EventLabelEnum import EventLabelEnum as EventLabel
+
+from src.pEYES._utils.event_utils import UnparsedEventLabelType, parse_label
 
 
-def make(
+def from_labels(
         labels: Union[UnparsedEventLabelType, Sequence[UnparsedEventLabelType]],
         t: np.ndarray,
         x: np.ndarray,
@@ -35,3 +37,21 @@ def make(
         return Event.make(label, t, x, y, pupil, viewer_distance, pixel_size)
     labels = np.vectorize(parse_label)(labels)
     return Event.make_multiple(labels, t, x, y, pupil, viewer_distance, pixel_size)
+
+
+def to_labels(
+        events: Union[Event, Sequence[Event]],
+        sampling_rate: float,
+) -> Sequence[EventLabel]:
+    if isinstance(events, Event):
+        total_duration = events.duration
+        out = np.full(int(np.ceil(total_duration * sampling_rate)), events.label)
+        return out
+    total_duration = sum(e.duration for e in events)
+    out = np.full(int(np.ceil(total_duration * sampling_rate)), EventLabel.UNDEFINED)
+    start = 0
+    for e in events:
+        end = start + int(np.ceil(e.duration * sampling_rate))
+        out[start:end] = e.label
+        start = end
+    return out
