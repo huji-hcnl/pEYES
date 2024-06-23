@@ -280,7 +280,6 @@ class IRFDatasetLoader(BaseDatasetLoader):
         df.rename(
             columns={"t": cnst.T, "evt": cls.__RATER_NAME, "x": cnst.X, "y": cnst.Y}, inplace=True
         )
-        df.drop(columns=["status"], inplace=True)
         df = cls.__correct_coordinates(df)
         return df
 
@@ -290,6 +289,7 @@ class IRFDatasetLoader(BaseDatasetLoader):
         nan_idxs = new_df[~new_df['status']].index
         new_df.loc[nan_idxs, cnst.X] = np.nan
         new_df.loc[nan_idxs, cnst.Y] = np.nan
+        new_df.drop(columns=['status'], inplace=True)
 
         pixel_width_cm = cls.__MONITOR_WIDTH_CM_VAL / cls.__MONITOR_RESOLUTION_VAL[0]
         x = new_df[cnst.X].apply(
