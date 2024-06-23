@@ -305,8 +305,8 @@ class IRFDatasetLoader(BaseDatasetLoader):
             )
         )
         y += cls.__MONITOR_RESOLUTION_VAL[1] // 2  # move y=0 coordinate to the top of the screen
-        new_df.loc[:, cnst.X] = x
-        new_df.loc[:, cnst.Y] = y
+        new_df.loc[:, cnst.X] = x.astype("float32")
+        new_df.loc[:, cnst.Y] = y.astype("float32")
         return new_df
 
 
