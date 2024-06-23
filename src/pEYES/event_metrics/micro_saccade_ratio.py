@@ -1,11 +1,9 @@
-from typing import Sequence
-
 import numpy as np
 
-from src.pEYES._DataModels.Event import BaseEvent
+from src.pEYES._DataModels.Event import EventSequenceType
 
 
-def microsaccade_ratio(events: Sequence[BaseEvent], threshold: float = 1.0, zero_division: float = np.nan) -> float:
+def microsaccade_ratio(events: EventSequenceType, threshold: float = 1.0, zero_division: float = np.nan) -> float:
     """
     Calculate the ratio of micro-saccades to all saccades.
     Returns `zero_division` if there are no saccades.

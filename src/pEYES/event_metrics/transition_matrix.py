@@ -2,12 +2,12 @@ from typing import Sequence
 
 import pandas as pd
 
-from src.pEYES._DataModels.Event import BaseEvent
+from src.pEYES._DataModels.Event import EventSequenceType
 from src.pEYES._utils.metric_utils import transition_matrix as _transition_matrix
 
 
 def transition_matrix(
-        seq: Sequence[BaseEvent],
+        seq: EventSequenceType,
         normalize_rows: bool = False
 ) -> pd.DataFrame:
     """

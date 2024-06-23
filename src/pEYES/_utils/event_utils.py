@@ -5,7 +5,7 @@ import pandas as pd
 
 import src.pEYES.constants as cnst
 from src.pEYES._DataModels.EventLabelEnum import EventLabelEnum
-from src.pEYES._DataModels.Event import BaseEvent
+from src.pEYES._DataModels.Event import BaseEvent, EventSequenceType
 
 UnparsedEventLabelType = Union[EventLabelEnum, BaseEvent, int, str, float]
 
@@ -70,7 +70,7 @@ def count_labels(data: Optional[Sequence[Union[EventLabelEnum, BaseEvent]]]) -> 
     return pd.concat([counts, missing_labels]).sort_index()
 
 
-def microsaccade_ratio(events: Sequence[BaseEvent], amplitude_threshold) -> float:
+def microsaccade_ratio(events: EventSequenceType, amplitude_threshold) -> float:
     """
     Calculates the ratio of microsaccades to saccades. Returns NaN if there are no saccades.
     :param events: sequence of events

@@ -1,5 +1,5 @@
 from abc import ABC
-from typing import final, List, Optional
+from typing import final, List, Optional, Sequence
 
 import numpy as np
 import pandas as pd
@@ -386,3 +386,6 @@ class SmoothPursuitEvent(BaseEvent):
 
 class BlinkEvent(BaseEvent):
     _LABEL = EventLabelEnum.BLINK
+
+
+EventSequenceType = Sequence[BaseEvent]

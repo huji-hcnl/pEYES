@@ -1,12 +1,12 @@
 from abc import ABC
 from typing import Sequence, Dict, Union, Callable
 
-from src.pEYES._DataModels.Event import BaseEvent
+from src.pEYES._DataModels.Event import BaseEvent, EventSequenceType
 
 OneToOneEventMatchesType = Dict[BaseEvent, BaseEvent]
-OneToManyEventMatchesType = Dict[BaseEvent, Sequence[BaseEvent]]
+OneToManyEventMatchesType = Dict[BaseEvent, EventSequenceType]
 EventMatchesType = Union[OneToOneEventMatchesType, OneToManyEventMatchesType]
-EventMatchingFunctionType = Callable[[Sequence[BaseEvent], Sequence[BaseEvent]], EventMatchesType]
+EventMatchingFunctionType = Callable[[EventSequenceType, EventSequenceType], EventMatchesType]
 
 
 class EventMatcher(ABC):
@@ -19,8 +19,8 @@ class EventMatcher(ABC):
 
     @staticmethod
     def generic_matching(
-            ground_truth: Sequence[BaseEvent],
-            predictions: Sequence[BaseEvent],
+            ground_truth: EventSequenceType,
+            predictions: EventSequenceType,
             allow_cross_matching: bool,
             min_overlap: float = 0,
             min_iou: float = - float("inf"),
@@ -82,8 +82,8 @@ class EventMatcher(ABC):
 
     @staticmethod
     def first_overlap(
-            ground_truth: Sequence[BaseEvent],
-            predictions: Sequence[BaseEvent],
+            ground_truth: EventSequenceType,
+            predictions: EventSequenceType,
             min_overlap: float = 0,
             allow_cross_matching: bool = True
     ) -> OneToOneEventMatchesType:
@@ -95,10 +95,12 @@ class EventMatcher(ABC):
         )
 
     @staticmethod
-    def last_overlap(ground_truth: Sequence[BaseEvent],
-                     predictions: Sequence[BaseEvent],
-                     min_overlap: float = 0,
-                     allow_cross_matching: bool = True) -> Dict[BaseEvent, BaseEvent]:
+    def last_overlap(
+            ground_truth: EventSequenceType,
+            predictions: EventSequenceType,
+            min_overlap: float = 0,
+            allow_cross_matching: bool = True
+    ) -> Dict[BaseEvent, BaseEvent]:
         """
         Matches the last predicted event that overlaps with each ground-truth event, above a minimal overlap time.
         """
@@ -108,8 +110,8 @@ class EventMatcher(ABC):
 
     @staticmethod
     def max_overlap(
-            ground_truth: Sequence[BaseEvent],
-            predictions: Sequence[BaseEvent],
+            ground_truth: EventSequenceType,
+            predictions: EventSequenceType,
             min_overlap: float = 0,
             allow_cross_matching: bool = True
     ) -> OneToOneEventMatchesType:
@@ -123,8 +125,8 @@ class EventMatcher(ABC):
 
     @staticmethod
     def longest_overlapping_event(
-            ground_truth: Sequence[BaseEvent],
-            predictions: Sequence[BaseEvent],
+            ground_truth: EventSequenceType,
+            predictions: EventSequenceType,
             min_overlap: float = 0,
             allow_cross_matching: bool = True
     ) -> OneToOneEventMatchesType:
@@ -137,8 +139,8 @@ class EventMatcher(ABC):
 
     @staticmethod
     def iou(
-            ground_truth: Sequence[BaseEvent],
-            predictions: Sequence[BaseEvent],
+            ground_truth: EventSequenceType,
+            predictions: EventSequenceType,
             min_iou: float = 0,
             allow_cross_matching: bool = True
     ) -> OneToOneEventMatchesType:
@@ -151,8 +153,8 @@ class EventMatcher(ABC):
 
     @staticmethod
     def l2_timing(
-            ground_truth: Sequence[BaseEvent],
-            predictions: Sequence[BaseEvent],
+            ground_truth: EventSequenceType,
+            predictions: EventSequenceType,
             max_l2: float = 0,
             allow_cross_matching: bool = True
     ) -> OneToOneEventMatchesType:
@@ -165,8 +167,8 @@ class EventMatcher(ABC):
 
     @staticmethod
     def onset_difference(
-            ground_truth: Sequence[BaseEvent],
-            predictions: Sequence[BaseEvent],
+            ground_truth: EventSequenceType,
+            predictions: EventSequenceType,
             max_onset_difference: float = 0,
             allow_cross_matching: bool = True
     ) -> OneToOneEventMatchesType:
@@ -180,8 +182,8 @@ class EventMatcher(ABC):
 
     @staticmethod
     def offset_difference(
-            ground_truth: Sequence[BaseEvent],
-            predictions: Sequence[BaseEvent],
+            ground_truth: EventSequenceType,
+            predictions: EventSequenceType,
             max_offset_difference: float = 0,
             allow_cross_matching: bool = True
     ) -> OneToOneEventMatchesType:
@@ -195,8 +197,8 @@ class EventMatcher(ABC):
 
     @staticmethod
     def window_based(
-            ground_truth: Sequence[BaseEvent],
-            predictions: Sequence[BaseEvent],
+            ground_truth: EventSequenceType,
+            predictions: EventSequenceType,
             max_onset_difference: float = 0,
             max_offset_difference: float = 0,
             allow_cross_matching: bool = True,
@@ -215,14 +217,14 @@ class EventMatcher(ABC):
     @staticmethod
     def __find_matches(
             gt: BaseEvent,
-            predictions: Sequence[BaseEvent],
+            predictions: EventSequenceType,
             allow_cross_matching: bool,
             min_overlap: float,
             min_iou: float,
             max_l2_timing_offset: float,
             max_onset_latency: float,
             max_offset_latency: float
-    ) -> Sequence[BaseEvent]:
+    ) -> EventSequenceType:
         """
         Find predicted events that are possible matches for the ground-truth event, based on the specified criteria.
 
@@ -247,7 +249,7 @@ class EventMatcher(ABC):
         return predictions
 
     @staticmethod
-    def __choose_match(gt: BaseEvent, matches: Sequence[BaseEvent], reduction: str) -> Sequence[BaseEvent]:
+    def __choose_match(gt: BaseEvent, matches: EventSequenceType, reduction: str) -> EventSequenceType:
         """
         Choose predicted event(s) matching the ground-truth event, based on the reduction function.
         Possible reduction functions:

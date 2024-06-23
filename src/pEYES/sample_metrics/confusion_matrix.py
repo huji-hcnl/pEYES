@@ -1,18 +1,18 @@
-from typing import Sequence, Optional
+from typing import Optional
 
 import pandas as pd
 import sklearn.metrics as met
 
-from src.pEYES._DataModels.EventLabelEnum import EventLabelEnum
+from src.pEYES._DataModels.EventLabelEnum import EventLabelEnum, EventLabelSequenceType
 
 _GROUND_TRUTH_STR = "Ground Truth"
 _PREDICTION_STR = "Prediction"
 
 
 def confusion_matrix(
-        ground_truth: Sequence[EventLabelEnum],
-        prediction: Sequence[EventLabelEnum],
-        labels: Optional[Sequence[EventLabelEnum]] = None,
+        ground_truth: EventLabelSequenceType,
+        prediction: EventLabelSequenceType,
+        labels: Optional[EventLabelSequenceType] = None,
 ) -> pd.DataFrame:
     labels = list(set(EventLabelEnum)) if labels is None else list(set(labels))
     conf = met.confusion_matrix(ground_truth, prediction, labels=labels)

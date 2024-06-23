@@ -5,7 +5,7 @@ import plotly.graph_objects as go
 
 import src.pEYES.config as cnfg
 import src.pEYES.constants as cnst
-from src.pEYES._DataModels.EventLabelEnum import EventLabelEnum
+from src.pEYES._DataModels.EventLabelEnum import EventLabelEnum, EventLabelSequenceType
 
 
 def scarfplot_comparison_figure(
@@ -43,7 +43,7 @@ def scarfplot_comparison_figure(
 def add_scarfplot(
         fig: go.Figure,
         t: np.ndarray,
-        labels: Sequence[EventLabelEnum],
+        labels: EventLabelSequenceType,
         top: float,
         bottom: float,
         label_colors: Dict[EventLabelEnum, str] = None,

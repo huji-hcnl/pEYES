@@ -1,13 +1,13 @@
-from typing import Sequence, Dict, Union
+from typing import Dict, Union
 
 import numpy as np
 from tqdm import tqdm
 
-from src.pEYES._DataModels.Event import BaseEvent
+from src.pEYES._DataModels.Event import EventSequenceType
 
 
 def get_features(
-        events: Sequence[BaseEvent], *features: str, verbose: bool = False
+        events: EventSequenceType, *features: str, verbose: bool = False
 ) -> Union[np.ndarray, Dict[str, np.ndarray]]:
     """
     Extracts the specified features from the given events.
@@ -31,7 +31,7 @@ def get_features(
     return results
 
 
-def _get_features_impl(events: Sequence[BaseEvent], feature: str) -> np.ndarray:
+def _get_features_impl(events: EventSequenceType, feature: str) -> np.ndarray:
     feature_lower = feature.lower().strip().replace(" ", "_").replace("-", "_")
     feature_lower = feature_lower.removesuffix('s')
     if feature_lower == "start_time" or feature_lower == "onset":

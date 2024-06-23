@@ -1,10 +1,10 @@
-from typing import Sequence, Dict, Union, Optional
+from typing import Dict, Union, Optional
 
 import numpy as np
 from tqdm import tqdm
 import sklearn.metrics as met
 
-from src.pEYES._DataModels.EventLabelEnum import EventLabelEnum
+from src.pEYES._DataModels.EventLabelEnum import EventLabelEnum, EventLabelSequenceType
 from src.pEYES._utils.event_utils import parse_label
 from src.pEYES._utils.metric_utils import complement_normalized_levenshtein_distance as _comp_nld
 
@@ -12,10 +12,10 @@ _parse_vectorized = np.vectorize(parse_label)
 
 
 def calculate(
-        ground_truth: Sequence[EventLabelEnum],
-        prediction: Sequence[EventLabelEnum],
+        ground_truth: EventLabelSequenceType,
+        prediction: EventLabelSequenceType,
         *metrics: str,
-        pos_labels: Optional[Union[EventLabelEnum, Sequence[EventLabelEnum]]] = None,
+        pos_labels: Optional[Union[EventLabelEnum, EventLabelSequenceType]] = None,
         average: str = "weighted",
 ) -> Union[float, Dict[str, float]]:
     """
@@ -47,10 +47,10 @@ def calculate(
 
 
 def _calculate_impl(
-        ground_truth: Sequence[EventLabelEnum],
-        prediction: Sequence[EventLabelEnum],
+        ground_truth: EventLabelSequenceType,
+        prediction: EventLabelSequenceType,
         metric: str,
-        pos_labels: Optional[Union[EventLabelEnum, Sequence[EventLabelEnum]]] = None,
+        pos_labels: Optional[Union[EventLabelEnum, EventLabelSequenceType]] = None,
         average: str = "weighted",
         dprime_correction: Optional[str] = "loglinear"
 ) -> float:

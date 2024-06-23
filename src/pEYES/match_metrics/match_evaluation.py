@@ -1,19 +1,19 @@
-from typing import Sequence, Union, Optional
+from typing import Union, Optional
 
 import numpy as np
 
-from src.pEYES._DataModels.Event import BaseEvent
+from src.pEYES._DataModels.Event import EventSequenceType
+from src.pEYES._DataModels.EventLabelEnum import EventLabelEnum, EventLabelSequenceType
 from src.pEYES._DataModels.EventMatcher import OneToOneEventMatchesType
-from src.pEYES._DataModels.EventLabelEnum import EventLabelEnum
 
 from src.pEYES._utils.metric_utils import dprime
 
 
 def precision_recall_f1(
-        ground_truth: Sequence[BaseEvent],
-        prediction: Sequence[BaseEvent],
+        ground_truth: EventSequenceType,
+        prediction: EventSequenceType,
         matches: OneToOneEventMatchesType,
-        positive_labels: Union[EventLabelEnum, Sequence[EventLabelEnum]],
+        positive_labels: Union[EventLabelEnum, EventLabelSequenceType],
 ) -> (float, float, float):
     """
     Calculates the precision, recall, and F1-score for the given ground-truth and predicted events, where successfully
@@ -33,10 +33,10 @@ def precision_recall_f1(
 
 
 def d_prime(
-        ground_truth: Sequence[BaseEvent],
-        prediction: Sequence[BaseEvent],
+        ground_truth: EventSequenceType,
+        prediction: EventSequenceType,
         matches: OneToOneEventMatchesType,
-        positive_labels: Union[EventLabelEnum, Sequence[EventLabelEnum]],
+        positive_labels: Union[EventLabelEnum, EventLabelSequenceType],
         correction: Optional[str] = "loglinear",
 ) -> float:
     """
@@ -55,10 +55,10 @@ def d_prime(
 
 
 def _extract_contingency_values(
-        ground_truth: Sequence[BaseEvent],
-        prediction: Sequence[BaseEvent],
+        ground_truth: EventSequenceType,
+        prediction: EventSequenceType,
         matches: OneToOneEventMatchesType,
-        positive_labels: Union[EventLabelEnum, Sequence[EventLabelEnum]],
+        positive_labels: Union[EventLabelEnum, EventLabelSequenceType],
 ) -> (int, int, int, int):
     """
     Extracts contingency values, used to fill in the confusion matrix for the provided matches between ground-truth and

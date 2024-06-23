@@ -1,15 +1,15 @@
-from typing import Sequence, Set, Dict
+from typing import Set, Dict
 
 from tqdm import tqdm
 
-from src.pEYES._DataModels.Event import BaseEvent
+from src.pEYES._DataModels.Event import BaseEvent, EventSequenceType
 from src.pEYES._DataModels.EventLabelEnum import EventLabelEnum
 from src.pEYES._DataModels.EventMatcher import EventMatcher, EventMatchesType
 
 
 def match(
-        ground_truth: Sequence[BaseEvent],
-        prediction: Sequence[BaseEvent],
+        ground_truth: EventSequenceType,
+        prediction: EventSequenceType,
         match_by: str,
         ignore_events: Set[EventLabelEnum] = None,
         allow_xmatch: bool = False,
@@ -93,8 +93,8 @@ def match(
 
 
 def match_multiple(
-        ground_truth: Sequence[BaseEvent],
-        predictions: Dict[str, Sequence[BaseEvent]],
+        ground_truth: EventSequenceType,
+        predictions: Dict[str, EventSequenceType],
         match_by: str,
         ignore_events: Set[EventLabelEnum] = None,
         allow_xmatch: bool = False,
