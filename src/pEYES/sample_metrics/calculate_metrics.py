@@ -5,6 +5,8 @@ from tqdm import tqdm
 import sklearn.metrics as met
 
 from src.pEYES._DataModels.EventLabelEnum import EventLabelEnum, EventLabelSequenceType
+from src.pEYES._DataModels.UnparsedEventLabel import UnparsedEventLabelType, UnparsedEventLabelSequenceType
+
 from src.pEYES._utils.event_utils import parse_label
 from src.pEYES._utils.metric_utils import complement_normalized_levenshtein_distance as _comp_nld
 
@@ -15,7 +17,7 @@ def calculate(
         ground_truth: EventLabelSequenceType,
         prediction: EventLabelSequenceType,
         *metrics: str,
-        pos_labels: Optional[Union[EventLabelEnum, EventLabelSequenceType]] = None,
+        pos_labels: Optional[Union[UnparsedEventLabelType, UnparsedEventLabelSequenceType]] = None,
         average: str = "weighted",
 ) -> Union[float, Dict[str, float]]:
     """
@@ -50,17 +52,16 @@ def _calculate_impl(
         ground_truth: EventLabelSequenceType,
         prediction: EventLabelSequenceType,
         metric: str,
-        pos_labels: Optional[Union[EventLabelEnum, EventLabelSequenceType]] = None,
+        pos_labels: Optional[Union[UnparsedEventLabelType, UnparsedEventLabelSequenceType]] = None,
         average: str = "weighted",
         dprime_correction: Optional[str] = "loglinear"
 ) -> float:
     assert len(ground_truth) == len(prediction), "Ground truth and prediction must have the same length."
-    if pos_labels is None:
-        pos_labels = set(EventLabelEnum)
-    elif isinstance(pos_labels, EventLabelEnum):
-        pos_labels = {pos_labels}
+    pos_labels = pos_labels or set(EventLabelEnum)
+    if isinstance(pos_labels, UnparsedEventLabelType):
+        pos_labels = {parse_label(pos_labels)}
     else:
-        pos_labels = set(pos_labels)
+        pos_labels = set([parse_label(label) for label in pos_labels])
     metric_lower = metric.lower().strip().replace(" ", "_").replace("-", "_").removesuffix("_score")
     average = average.lower().strip()
     if metric_lower == "accuracy":
