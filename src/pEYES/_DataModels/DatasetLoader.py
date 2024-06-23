@@ -341,7 +341,9 @@ class HFCDatasetLoader(BaseDatasetLoader):
 
     @staticmethod
     def column_order() -> Dict[str, float]:
-        return {**super().column_order(), HFCDatasetLoader.__SUBJECT_GROUP_STR: 6.1}
+        return {
+            **super(HFCDatasetLoader, HFCDatasetLoader).column_order(), HFCDatasetLoader.__SUBJECT_GROUP_STR: 6.1
+        }
 
     @classmethod
     def _parse_response(cls, response: req.Response, verbose: bool = False) -> pd.DataFrame:
