@@ -1,10 +1,10 @@
-from typing import Union, Sequence, List
+from typing import Union, Sequence
 
 import numpy as np
 
 from src.pEYES import constants as cnst
-from src.pEYES._DataModels.Event import BaseEvent as Event
-from src.pEYES._DataModels.EventLabelEnum import EventLabelEnum as EventLabel
+from src.pEYES._DataModels.Event import BaseEvent, EventSequenceType
+from src.pEYES._DataModels.EventLabelEnum import EventLabelEnum
 from src.pEYES._DataModels.UnparsedEventLabel import UnparsedEventLabelType
 
 from src.pEYES._utils.event_utils import parse_label
@@ -18,7 +18,7 @@ def create_events(
         pupil: np.ndarray,
         viewer_distance: float,
         pixel_size: float,
-) -> Union[Event, List[Event]]:
+) -> Union[BaseEvent, EventSequenceType]:
     """
     Create gaze-events from the given data.
     If `labels` is a single label, creates a single event spanning the entire data.
@@ -36,15 +36,15 @@ def create_events(
     """
     if isinstance(labels, UnparsedEventLabelType):
         label = parse_label(labels)
-        return Event.make(label, t, x, y, pupil, viewer_distance, pixel_size)
+        return BaseEvent.make(label, t, x, y, pupil, viewer_distance, pixel_size)
     labels = np.vectorize(parse_label)(labels)
-    return Event.make_multiple(labels, t, x, y, pupil, viewer_distance, pixel_size)
+    return BaseEvent.make_multiple(labels, t, x, y, pupil, viewer_distance, pixel_size)
 
 
 def events_to_labels(
-        events: Union[Event, Sequence[Event]],
+        events: Union[BaseEvent, EventSequenceType],
         sampling_rate: float,
-) -> Sequence[EventLabel]:
+) -> Sequence[EventLabelEnum]:
     """
     Converts the given event(s) to a sequence of labels, where each event is mapped to a sequence of labels with length
     matching the number of samples in the event's duration (rounded up to the nearest integer).
@@ -53,11 +53,11 @@ def events_to_labels(
     :param sampling_rate: the sampling rate of the output labels
     :return: sequence of labels
     """
-    if isinstance(events, Event):
+    if isinstance(events, BaseEvent):
         out = np.full(int(np.ceil(sampling_rate * events.duration / cnst.MILLISECONDS_PER_SECOND)), events.label)
         return out
     max_end_time = max(e.end_time for e in events)
-    out = np.full(int(np.ceil(sampling_rate * max_end_time / cnst.MILLISECONDS_PER_SECOND)), EventLabel.UNDEFINED)
+    out = np.full(int(np.ceil(sampling_rate * max_end_time / cnst.MILLISECONDS_PER_SECOND)), EventLabelEnum.UNDEFINED)
     for e in events:
         start_time, end_time = e.start_time, e.end_time
         start_sample = int(np.round(start_time * sampling_rate / cnst.MILLISECONDS_PER_SECOND))
