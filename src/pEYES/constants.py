@@ -34,6 +34,8 @@ T, X, Y = "t", "x", "y"
 PUPIL = "pupil"
 LEFT_X, LEFT_Y, LEFT_PUPIL = "left_x", "left_y", "left_pupil"
 RIGHT_X, RIGHT_Y, RIGHT_PUPIL = "right_x", "right_y", "right_pupil"
+
+STATUS_STR = "status"
 TIME_STR = "time"
 COLOR_STR = "color"
 DURATION_STR = "duration"

@@ -286,10 +286,10 @@ class IRFDatasetLoader(BaseDatasetLoader):
     @classmethod
     def __correct_coordinates(cls, df: pd.DataFrame) -> pd.DataFrame:
         new_df = df.copy()
-        nan_idxs = new_df[~new_df['status']].index
+        nan_idxs = new_df[~new_df[cnst.STATUS_STR]].index
         new_df.loc[nan_idxs, cnst.X] = np.nan
         new_df.loc[nan_idxs, cnst.Y] = np.nan
-        new_df.drop(columns=['status'], inplace=True)
+        new_df.drop(columns=[cnst.STATUS_STR], inplace=True)
 
         pixel_width_cm = cls.__MONITOR_WIDTH_CM_VAL / cls.__MONITOR_RESOLUTION_VAL[0]
         x = new_df[cnst.X].apply(
