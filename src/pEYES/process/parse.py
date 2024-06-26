@@ -6,7 +6,7 @@ import pandas as pd
 import src.pEYES.constants as cnst
 
 
-def parse_raw(
+def parse(
         data: Union[np.ndarray, pd.DataFrame],
         time_name: str = cnst.T,
         x_name: str = cnst.X,

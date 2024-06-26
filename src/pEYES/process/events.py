@@ -6,40 +6,6 @@ import pandas as pd
 from src.pEYES import constants as cnst
 from src.pEYES._DataModels.Event import BaseEvent, EventSequenceType
 from src.pEYES._DataModels.EventLabelEnum import EventLabelEnum
-from src.pEYES._DataModels.UnparsedEventLabel import UnparsedEventLabelType
-
-from src.pEYES._utils.event_utils import parse_label
-
-
-def create_events(
-        labels: Union[UnparsedEventLabelType, Sequence[UnparsedEventLabelType]],
-        t: np.ndarray,
-        x: np.ndarray,
-        y: np.ndarray,
-        pupil: np.ndarray,
-        viewer_distance: float,
-        pixel_size: float,
-) -> Union[BaseEvent, EventSequenceType]:
-    """
-    Create gaze-events from the given data.
-    If `labels` is a single label, creates a single event spanning the entire data.
-    Otherwise, `labels` must have the same length as `t` and events will be created for each "chunk" of subsequent
-    identical labels.
-
-    :param labels: The event label(s)
-    :param t: timestamps (ms)
-    :param x: horizontal gaze position (pixels)
-    :param y: vertical gaze position (pixels)
-    :param pupil: pupil size (mm)
-    :param viewer_distance: distance from the viewer's eyes to the screen (cm)
-    :param pixel_size: size of a pixel on the screen (cm)
-    :return: the generated event(s)
-    """
-    if isinstance(labels, UnparsedEventLabelType):
-        label = parse_label(labels)
-        return BaseEvent.make(label, t, x, y, pupil, viewer_distance, pixel_size)
-    labels = np.vectorize(parse_label)(labels)
-    return BaseEvent.make_multiple(labels, t, x, y, pupil, viewer_distance, pixel_size)
 
 
 def events_to_labels(

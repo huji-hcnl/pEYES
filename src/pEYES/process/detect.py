@@ -4,9 +4,7 @@ import numpy as np
 from tqdm import tqdm
 
 import src.pEYES.config as cnfg
-from src.pEYES._DataModels.Detector import (
-    IVTDetector, IVVTDetector, IDTDetector, EngbertDetector, NHDetector, REMoDNaVDetector
-)
+import src.pEYES.process.create as create
 
 
 def detect(
@@ -83,7 +81,7 @@ def detect(
         labels: np.ndarray; the detected labels for each sample
         metadata: Dict[str, Any]; the metadata of the detection process, returned only if `include_metadata` is True
     """
-    detector = _create_detector(detector_name, missing_value, min_event_duration, pad_blinks_time, **kwargs)
+    detector = create.detector(detector_name, missing_value, min_event_duration, pad_blinks_time, **kwargs)
     labels, metadata = detector.detect(t, x, y, viewer_distance, pixel_size)
     if include_metadata:
         return labels, metadata
@@ -115,7 +113,7 @@ def detect_multiple(
     """
     if len(ts) != len(xs) != len(ys):
         raise ValueError("The number of timestamp arrays, x-coordinate arrays, and y-coordinate arrays must be equal.")
-    detector = _create_detector(detector_name, missing_value, min_event_duration, pad_blinks_time, **kwargs)
+    detector = create.detector(detector_name, missing_value, min_event_duration, pad_blinks_time, **kwargs)
     viewer_distance = viewer_distance if isinstance(viewer_distance, list) else [viewer_distance] * len(ts)
     pixel_size = pixel_size if isinstance(pixel_size, list) else [pixel_size] * len(ts)
     labels_list, metadata_list = [], []
@@ -128,51 +126,3 @@ def detect_multiple(
     if include_metadata:
         return labels_list, metadata_list
     return labels_list
-
-
-def _create_detector(
-        detector_name: str,
-        missing_value: float,
-        min_event_duration: float,
-        pad_blinks_time: float,
-        **kwargs
-):
-    detector_name_lower = detector_name.lower().strip().replace('-', '').removesuffix('detector')
-    if detector_name_lower == 'ivt':
-        default_params = IVTDetector.get_default_params()
-        kwargs = {**default_params, **kwargs}
-        return IVTDetector(
-            missing_value=missing_value, min_event_duration=min_event_duration, pad_blinks_ms=pad_blinks_time, **kwargs
-        )
-    elif detector_name_lower == 'ivvt':
-        default_params = IVVTDetector.get_default_params()
-        kwargs = {**default_params, **kwargs}
-        return IVVTDetector(
-            missing_value=missing_value, min_event_duration=min_event_duration, pad_blinks_ms=pad_blinks_time, **kwargs
-        )
-    elif detector_name_lower == 'idt':
-        default_params = IDTDetector.get_default_params()
-        kwargs = {**default_params, **kwargs}
-        return IDTDetector(
-            missing_value=missing_value, min_event_duration=min_event_duration, pad_blinks_ms=pad_blinks_time, **kwargs
-        )
-    elif detector_name_lower == 'engbert':
-        default_params = EngbertDetector.get_default_params()
-        kwargs = {**default_params, **kwargs}
-        return EngbertDetector(
-            missing_value=missing_value, min_event_duration=min_event_duration, pad_blinks_ms=pad_blinks_time, **kwargs
-        )
-    elif detector_name_lower == 'nh':
-        default_params = NHDetector.get_default_params()
-        kwargs = {**default_params, **kwargs}
-        return NHDetector(
-            missing_value=missing_value, min_event_duration=min_event_duration, pad_blinks_ms=pad_blinks_time, **kwargs
-        )
-    elif detector_name_lower == 'remodnav':
-        default_params = REMoDNaVDetector.get_default_params()
-        kwargs = {**default_params, **kwargs}
-        return REMoDNaVDetector(
-            missing_value=missing_value, min_event_duration=min_event_duration, pad_blinks_ms=pad_blinks_time, **kwargs
-        )
-    else:
-        raise NotImplementedError(f'Detector `{detector_name}` is not implemented.')
