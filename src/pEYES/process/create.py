@@ -67,7 +67,7 @@ def detector(
         :keyword median_filter_duration_ms: int; the duration of the median filter (ms), default: 50
         :keyword max_velocity: float; the maximum velocity of the gaze data (deg/s), default: 1500
 
-    :return:
+    :return: a detector object
     """
     detector_name_lower = detector_name.lower().strip().replace('-', '').removesuffix('detector')
     if detector_name_lower == 'ivt':
