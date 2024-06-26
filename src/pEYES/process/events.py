@@ -79,12 +79,10 @@ def events_to_labels(
     return out
 
 
-def events_to_table(
+def summarize_events(
         events: Union[BaseEvent, EventSequenceType],
 ) -> pd.DataFrame:
-    """
-    Converts the given event(s) to a DataFrame, where each row represents an event and columns are event features.
-    """
+    """ Converts the given event(s) to a DataFrame, where each row is an event and columns are event features. """
     if isinstance(events, BaseEvent):
         s = events.summary()
         return s.to_frame()
