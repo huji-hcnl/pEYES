@@ -84,7 +84,7 @@ class BaseDetector(ABC):
         y_copy[is_blink] = np.nan
         labels = self._detect_impl(t, x_copy, y_copy, labels, viewer_distance_cm, pixel_size_cm)
         labels = merge_chunks(labels, self.min_event_samples)
-        labels = reset_short_chunks(labels, self.min_event_samples, False)
+        labels = reset_short_chunks(labels, self.min_event_samples, EventLabelEnum.UNDEFINED)
         labels = np.vectorize(parse_label)(labels)
         self._metadata.update({
             cnst.SAMPLING_RATE_STR: self.sr,
