@@ -45,20 +45,32 @@ def create_events(
 def events_to_labels(
         events: Union[BaseEvent, EventSequenceType],
         sampling_rate: float,
+        num_samples=None,
 ) -> Sequence[EventLabelEnum]:
     """
     Converts the given event(s) to a sequence of labels, where each event is mapped to a sequence of labels with length
     matching the number of samples in the event's duration (rounded up to the nearest integer).
+    Samples with no event are labeled as `EventLabelEnum.UNDEFINED`.
 
     :param events: sequence of event(s)
     :param sampling_rate: the sampling rate of the output labels
+    :param num_samples: the number of samples in the output sequence. If None, the number of samples is determined by
+        the total duration of the provided events.
     :return: sequence of labels
     """
     if isinstance(events, BaseEvent):
         out = np.full(int(np.ceil(sampling_rate * events.duration / cnst.MILLISECONDS_PER_SECOND)), events.label)
         return out
+
     max_end_time = max(e.end_time for e in events)
-    out = np.full(int(np.ceil(sampling_rate * max_end_time / cnst.MILLISECONDS_PER_SECOND)), EventLabelEnum.UNDEFINED)
+    min_num_samples = int(np.ceil(sampling_rate * max_end_time / cnst.MILLISECONDS_PER_SECOND))
+    if num_samples is not None and num_samples < min_num_samples:
+        raise ValueError(
+            f"The provided events last {min_num_samples} samples, " +
+            f"which is longer than the given number of samples {num_samples}."
+        )
+    num_samples = min_num_samples if num_samples is None else num_samples
+    out = np.full(num_samples, EventLabelEnum.UNDEFINED)
     for e in events:
         start_time, end_time = e.start_time, e.end_time
         start_sample = int(np.round(start_time * sampling_rate / cnst.MILLISECONDS_PER_SECOND))
