@@ -1251,7 +1251,7 @@ class REMoDNaVDetector(BaseDetector):
             **kwargs,
     ) -> np.ndarray:
         classifier = remodnav.EyegazeClassifier(
-            px2deg=pixel_size_cm,
+            px2deg=pixels_to_visual_angle(1, viewer_distance_cm, pixel_size_cm, use_radians=False),
             sampling_rate=self.sr,
             min_saccade_duration=self.min_fixation_duration_ms / cnst.MILLISECONDS_PER_SECOND,
             min_intersaccade_duration=self.min_inter_saccade_duration_ms / cnst.MILLISECONDS_PER_SECOND,
