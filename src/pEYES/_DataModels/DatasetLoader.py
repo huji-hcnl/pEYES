@@ -199,8 +199,8 @@ class Lund2013DatasetLoader(BaseDatasetLoader):
             timestamps = samples_data[:, 0] - np.nanmin(samples_data[:, 0])  # start timestamps from 0
             timestamps /= cnst.MICROSECONDS_PER_MILLISECOND
         return pd.DataFrame(data={
-            cnst.T: timestamps, cnst.X: right_x, cnst.Y: right_y, cnst.LABEL_STR: labels,
-            cnst.VIEWER_DISTANCE_STR: view_dist, cnst.PIXEL_SIZE_STR: pixel_size
+            cnst.T: timestamps, cnst.X: right_x, cnst.Y: right_y, cnst.PUPIL: np.nan,
+            cnst.LABEL_STR: labels, cnst.VIEWER_DISTANCE_STR: view_dist, cnst.PIXEL_SIZE_STR: pixel_size
         })
 
     @staticmethod
@@ -268,6 +268,7 @@ class IRFDatasetLoader(BaseDatasetLoader):
             gaze_data['evt'] = gaze_data['evt'].apply(lambda x: parse_label(x, safe=True))  # convert labels
             gaze_data[cnst.SUBJECT_ID_STR] = file_name.split('_')[-1]  # format: "lookAtPoint_EL_S<subject_num>"
             gaze_data[cnst.TRIAL_ID_STR] = i + 1
+            gaze_data[cnst.PUPIL] = np.nan
             gaze_dfs.append(gaze_data)
         df = pd.concat(gaze_dfs, ignore_index=True, axis=0)
 
@@ -356,7 +357,8 @@ class HFCDatasetLoader(BaseDatasetLoader):
         gaze_dfs = {}
         for i, f in tqdm(enumerate(gaze_file_names), desc="Processing Files", disable=not verbose):
             file = zip_file.open(f)
-            gaze_data = pd.read_csv(file, sep='\t', usecols=["time", "x", "y"])
+            gaze_data = pd.read_csv(file, sep='\t')
+            gaze_data[cnst.PUPIL] = np.nan  # no pupil data available
             _, file_name, _ = cls._extract_filename_and_extension(file.name)
             subject_group, subject_id = file_name.split('_')  # format: "<subject_type>_<subject_id>"
             gaze_data[cnst.SUBJECT_ID_STR] = subject_id
@@ -391,8 +393,9 @@ class HFCDatasetLoader(BaseDatasetLoader):
                     # reached here if there are annotations from this rater for this trial
                     labels = np.zeros(l, dtype=int)
                     for _, row in annotations.iterrows():
-                        f = interp1d(data["time"], range(l), kind="nearest", bounds_error=False,
-                                     fill_value="extrapolate")
+                        f = interp1d(
+                            data["time"], range(l), kind="nearest", bounds_error=False, fill_value="extrapolate"
+                        )
                         fixation_samples = itertools.chain(
                             *[range(int(s), int(e + 1)) for s, e in zip(
                                 f(annotations["FixStart"]), f(annotations["FixEnd"])
@@ -427,7 +430,7 @@ class GazeComDatasetLoader(BaseDatasetLoader):
 
     This loader is based on a previous implementation, see article:
     Startsev, M., Zemblys, R. Evaluating Eye Movement Event Detection: A Review of the State of the Art. Behav Res 55, 1653–1714 (2023)
-    See their implementation: https://github.com/r-zemblys/EM-event-detection-evaluation/blob/main/misc/data_parsers/humanFixationClassification.py
+    See their implementation: https://github.com/r-zemblys/EM-event-detection-evaluation/blob/main/misc/data_parsers/tum.py
     """
 
     _NAME: str = "GazeCom"
@@ -491,7 +494,7 @@ class GazeComDatasetLoader(BaseDatasetLoader):
             f"{GazeComDatasetLoader.__HANDLABELLER_PREFIX}2": 5.2,
             f"{GazeComDatasetLoader.__HANDLABELLER_PREFIX}_FINAL": 5.3
         }
-        return {**super().column_order(), **handlabeller_scores}
+        return {**super(GazeComDatasetLoader, GazeComDatasetLoader).column_order(), **handlabeller_scores}
 
     @classmethod
     def _parse_response(cls, response: req.Response, verbose: bool = False) -> pd.DataFrame:
@@ -510,11 +513,11 @@ class GazeComDatasetLoader(BaseDatasetLoader):
         gaze_dfs = []
         for i, f in tqdm(enumerate(annotated_file_names), desc="Processing Files", disable=not verbose):
             file = zf.open(f)
-            _, file_name, _ = cls._extract_filename_and_extension(f)
             data = arff.loads(file.read().decode('utf-8'))
 
             # parse gaze data:
             df = pd.DataFrame(data['data'], columns=[attr[0] for attr in data['attributes']])
+            df[cnst.PUPIL] = np.nan  # no pupil data available
             invalid_idxs = np.where(np.all(df[["x", "y"]] == 0, axis=1) | (df["confidence"] < 0.5))[0]
             df.iloc[invalid_idxs, df.columns.get_indexer(["x", "y"])] = np.nan
             df['time'] = df['time'] / cnst.MILLISECONDS_PER_SECOND
@@ -525,6 +528,7 @@ class GazeComDatasetLoader(BaseDatasetLoader):
                     df[col] = df[col].map(cls.__LABEL_MAP)
 
             # add metadata columns:
+            _, file_name, _ = cls._extract_filename_and_extension(f)
             subj_id = file_name.split('_')[0]  # file_name: <subject_id>_<stimulus>_<name>_<with>_<underscores>.arff
             stimulus = '_'.join(file_name.split('_')[1:])
             df[cnst.SUBJECT_ID_STR] = subj_id
