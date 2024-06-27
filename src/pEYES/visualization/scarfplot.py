@@ -15,16 +15,19 @@ def scarfplot_comparison_figure(
     :param t: The time axis.
     :param labels: multiple sequences of event labels to be plotted, each must have the same length as `t`.
     :keyword scarf_height: The height (in y-axis units) of each scarfplot, default is 1.
+    :keyword label_colors: A dictionary mapping event labels to their respective colors. If a label is missing, the
+        default color is used.
     :keyword title: The title of the figure, default is "Scarfplot Comparison".
     :keyword names: The names of the scarfplots, default is [0, 1, 2, ...].
     :return: The figure with the scarfplots.
     """
     num_scarfs = len(labels)
     scarf_height = kwargs.get("scarf_height", 1)
+    label_colors = vis_utils.get_label_colormap(kwargs.get("label_colors", None))
     fig = go.Figure()
     for i, l in enumerate(labels):
         bottom, top = 2 * i * scarf_height, (2 * i + 1) * scarf_height
-        fig = add_scarfplot(fig, t, l, top, bottom, show_colorbar=i == 0)
+        fig = add_scarfplot(fig, t, l, top, bottom, label_colors=label_colors, show_colorbar=i == 0)
     names = kwargs.get("names", [str(i) for i in range(num_scarfs)])
     assert len(names) == num_scarfs
     fig.update_layout(
