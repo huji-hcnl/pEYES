@@ -1,8 +1,10 @@
 from src.pEYES._DataModels.Event import EventSequenceType
+from src.pEYES._DataModels.EventLabelEnum import EventLabelEnum
 
 from src.pEYES.event_metrics.counts_and_rates import counts, microsaccade_ratio
 from src.pEYES.event_metrics.transition_matrix import transition_matrix
 from src.pEYES.event_metrics.get_features import get_features as features
+from src.pEYES.event_metrics.counts_and_rates import event_rate as _event_rate
 
 
 def start_times(events: EventSequenceType):
@@ -27,3 +29,11 @@ def azimuths(events: EventSequenceType):
 
 def center_pixels(events: EventSequenceType):
     return features(events, "center_pixel", verbose=False)
+
+
+def saccade_rate(events: EventSequenceType):
+    return _event_rate(events, EventLabelEnum.SACCADE)
+
+
+def blink_rate(events: EventSequenceType):
+    return _event_rate(events, EventLabelEnum.BLINK)
