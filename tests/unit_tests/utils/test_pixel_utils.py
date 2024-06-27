@@ -18,7 +18,6 @@ class TestPixelUtils(unittest.TestCase):
             calculate_pixel_size(width=self.TOBII_WIDTH, height=self.TOBII_HEIGHT, resolution=self.TOBII_RESOLUTION)
         ))
 
-
     def test_calculate_velocities(self):
         sqrt2 = np.sqrt(2)
         x_coords = np.arange(0, 5)
