@@ -4,7 +4,7 @@ import numpy as np
 from tqdm import tqdm
 
 import src.pEYES.config as cnfg
-import src.pEYES.process.create as create
+import src.pEYES._base_scripts.create as create
 
 
 def detect(
@@ -81,7 +81,7 @@ def detect(
         labels: np.ndarray; the detected labels for each sample
         metadata: Dict[str, Any]; the metadata of the detection process, returned only if `include_metadata` is True
     """
-    detector = create.detector(detector_name, missing_value, min_event_duration, pad_blinks_time, **kwargs)
+    detector = create.create_detector(detector_name, missing_value, min_event_duration, pad_blinks_time, **kwargs)
     labels, metadata = detector.detect(t, x, y, viewer_distance, pixel_size)
     if include_metadata:
         return labels, metadata
@@ -113,7 +113,7 @@ def detect_multiple(
     """
     if len(ts) != len(xs) != len(ys):
         raise ValueError("The number of timestamp arrays, x-coordinate arrays, and y-coordinate arrays must be equal.")
-    detector = create.detector(detector_name, missing_value, min_event_duration, pad_blinks_time, **kwargs)
+    detector = create.create_detector(detector_name, missing_value, min_event_duration, pad_blinks_time, **kwargs)
     viewer_distance = viewer_distance if isinstance(viewer_distance, list) else [viewer_distance] * len(ts)
     pixel_size = pixel_size if isinstance(pixel_size, list) else [pixel_size] * len(ts)
     labels_list, metadata_list = [], []
