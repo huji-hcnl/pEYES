@@ -3,7 +3,7 @@ from typing import Union
 import numpy as np
 import pandas as pd
 
-import src.pEYES._base.constants as cnst
+import src.pEYES._utils.constants as cnst
 
 
 def parse(

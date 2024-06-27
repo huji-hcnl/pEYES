@@ -5,7 +5,7 @@ import remodnav
 from overrides import override
 from scipy.signal import savgol_filter
 
-import src.pEYES._base.config as cnfg
+import src.pEYES._DataModels.config as cnfg
 from src.pEYES._utils.vector_utils import *
 from src.pEYES._utils.pixel_utils import *
 from src.pEYES._utils.event_utils import calculate_sampling_rate, parse_label

@@ -3,7 +3,7 @@ from typing import Union, Sequence, Optional
 import numpy as np
 import pandas as pd
 
-import src.pEYES._base.constants as cnst
+import src.pEYES._utils.constants as cnst
 from src.pEYES._DataModels.EventLabelEnum import EventLabelEnum
 from src.pEYES._DataModels.Event import BaseEvent, EventSequenceType
 from src.pEYES._DataModels.UnparsedEventLabel import UnparsedEventLabelType

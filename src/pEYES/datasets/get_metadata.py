@@ -1,4 +1,4 @@
-import src.pEYES._base.constants as cnst
+import src.pEYES._utils.constants as cnst
 from src.pEYES._DataModels.DatasetLoader import (
     Lund2013DatasetLoader, IRFDatasetLoader, HFCDatasetLoader, GazeComDatasetLoader
 )

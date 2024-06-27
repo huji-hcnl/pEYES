@@ -15,7 +15,7 @@ from scipy.io import loadmat
 from scipy.interpolate import interp1d
 import arff
 
-import src.pEYES._base.constants as cnst
+import src.pEYES._utils.constants as cnst
 from src.pEYES._utils.pixel_utils import calculate_pixel_size, visual_angle_to_pixels
 from src.pEYES._utils.event_utils import parse_label
 from src.pEYES._DataModels.EventLabelEnum import EventLabelEnum

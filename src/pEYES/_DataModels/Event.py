@@ -3,7 +3,7 @@ from typing import final, List, Optional, Sequence
 
 import pandas as pd
 
-import src.pEYES._base.config as cnfg
+import src.pEYES._DataModels.config as cnfg
 from src.pEYES._utils.pixel_utils import *
 from src.pEYES._utils.vector_utils import get_chunk_indices
 from src.pEYES._DataModels.EventLabelEnum import EventLabelEnum

@@ -1,7 +1,7 @@
 import numpy as np
 import pandas as pd
 
-from src.pEYES._base.constants import MILLISECONDS_PER_SECOND
+from src.pEYES._utils.constants import MILLISECONDS_PER_SECOND
 from src.pEYES._DataModels.Event import EventSequenceType
 from src.pEYES._DataModels.UnparsedEventLabel import UnparsedEventLabelType
 

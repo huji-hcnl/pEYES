@@ -1,10 +1,11 @@
 
 __version__ = '0.1.0'  # TODO: update automatically
 
-from src.pEYES._DataModels.EventLabelEnum import EventLabelEnum as Labels
+from src.pEYES._utils.constants import *
 
-from src.pEYES._base.constants import *
-import src.pEYES._base.config as config
+from src.pEYES._DataModels.EventLabelEnum import EventLabelEnum as Labels
+import src.pEYES._DataModels.config as config
+
 from src.pEYES._base.parse import parse
 from src.pEYES._base.create import create_detector, create_events
 from src.pEYES._base.match import match

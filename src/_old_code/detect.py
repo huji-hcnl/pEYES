@@ -3,7 +3,7 @@ from typing import Union, Tuple, Dict, Any, List
 import numpy as np
 from tqdm import tqdm
 
-import src.pEYES._base.config as cnfg
+import src.pEYES._DataModels.config as cnfg
 import src.pEYES._base.create as create
 
 
