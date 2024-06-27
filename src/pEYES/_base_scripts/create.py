@@ -12,7 +12,7 @@ from src.pEYES._DataModels.Detector import (
 from src.pEYES._utils.event_utils import parse_label
 
 
-def detector(
+def create_detector(
         detector_name: str,
         missing_value: float,
         min_event_duration: float,
@@ -110,7 +110,7 @@ def detector(
         raise NotImplementedError(f'Detector `{detector_name}` is not implemented.')
 
 
-def events(
+def create_events(
         labels: Union[UnparsedEventLabelType, Sequence[UnparsedEventLabelType]],
         t: np.ndarray,
         x: np.ndarray,
