@@ -86,7 +86,7 @@ def create_frames(
     assert len(x) == len(y) == len(labels), "All input arrays must have the same length."
     frames = []
     n_samples = len(x)
-    bg_image = _create_background(resolution, bg_image, bg_image_format)
+    bg_image = vis_utils.create_image(resolution, bg_image, bg_image_format, "#000000")  # default: black background
     label_colors = vis_utils.get_label_colormap(label_colors)
     for i in trange(n_samples, desc="Creating Frames", disable=not verbose):
         curr_img = bg_image.copy()
@@ -95,24 +95,6 @@ def create_frames(
         cv2.circle(curr_img, (curr_x, curr_y), gaze_radius, color, -1)
         frames.append(curr_img)
     return frames
-
-
-def _create_background(
-        resolution: Tuple[int, int],
-        image: np.ndarray = None,
-        color_format: str = "BGR",
-) -> np.ndarray:
-    if image is None or not image or image.size == 0:
-        bg = np.zeros((*resolution, 3), dtype=np.uint8)
-    else:
-        if color_format == "BGR":
-            bg = image
-        elif color_format.lower() == 'rgb':
-            bg = cv2.cvtColor(image, cv2.COLOR_RGB2BGR)
-        else:
-            raise ValueError(f"Invalid color format: {color_format}")
-    bg = cv2.resize(bg, resolution)
-    return bg
 
 
 def _write_video(

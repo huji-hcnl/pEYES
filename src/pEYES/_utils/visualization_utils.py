@@ -1,5 +1,8 @@
 from typing import Union, Tuple, Dict
 
+import cv2
+import numpy as np
+
 from src.pEYES._DataModels.EventLabelEnum import EventLabelEnum as _EventLabelEnum
 from src.pEYES._DataModels.UnparsedEventLabel import UnparsedEventLabelType as _UnparsedEventLabelType
 
@@ -14,6 +17,36 @@ _DEFAULT_LABEL_COLORMAP = {
     _EventLabelEnum.SMOOTH_PURSUIT: "#fb9a99",
     _EventLabelEnum.BLINK: "#222222",
 }
+
+
+def create_image(
+        resolution: Tuple[int, int],
+        bg_image: np.ndarray = None,
+        color_format: str = "BGR",
+        bg_color: ColorType = (0, 0, 0),
+):
+    """
+    Creates an image in BGR format with the specified resolution. If a background image is not provided, an image with
+    the specified background color will be created.
+
+    :param resolution: tuple of (width, height) in pixels
+    :param bg_image: background image (numpy array)
+    :param color_format: color format of the background image (RGB/GRAY/BGR). Default is BGR.
+    :param bg_color: background color (RGB tuple)
+
+    :return: numpy array of the image
+    """
+    if bg_image is None or not bg_image or bg_image.size == 0:
+        return np.full((resolution[1], resolution[0], 3), bg_color, dtype=np.uint8)
+    if color_format.upper() == "RGB":
+        bg = cv2.cvtColor(bg_image, cv2.COLOR_RGB2BGR)
+    elif color_format.upper() == "GRAY" or color_format.upper() == "GREY":
+        bg = cv2.cvtColor(bg_image, cv2.COLOR_GRAY2BGR)
+    elif color_format.upper() == "BGR":
+        bg = bg_image
+    else:
+        raise ValueError(f"Invalid color format: {color_format}")
+    return cv2.resize(bg, resolution)
 
 
 def get_label_colormap(
