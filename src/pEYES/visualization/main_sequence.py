@@ -5,6 +5,9 @@ from src.pEYES._DataModels.Event import EventSequenceType
 from src.pEYES._DataModels.EventLabelEnum import EventLabelEnum
 
 
+# TODO: FIX THESE FIGURES + ADD DOCSTRINGS + CALCULATE RANSAC REGRESSION LINES
+
+
 def peak_velocity_to_amplitude(events: EventSequenceType) -> go.Figure:
     saccades = [e for e in events if e.label == EventLabelEnum.SACCADE]
     amps = np.array([s.amplitude for s in saccades])
