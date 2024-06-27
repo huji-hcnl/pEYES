@@ -19,6 +19,7 @@ def calculate(
         *metrics: str,
         pos_labels: Optional[Union[UnparsedEventLabelType, UnparsedEventLabelSequenceType]] = None,
         average: str = "weighted",
+        verbose: bool = False,
 ) -> Union[float, Dict[str, float]]:
     """
     Calculate the specified metrics between the ground truth and prediction sequences.
@@ -35,11 +36,12 @@ def calculate(
         - "1_nld" or "complement_nld" - computed the complement to normalized Levenshtein distance
     :param pos_labels: the positive labels to consider for recall, precision, and f1-score
     :param average: the averaging strategy for recall, precision, and f1-score
+    :param verbose: if True, display a progress bar
     :return: the calculated metric(s) as a single float (if only one metric is specified) or a dictionary of metric
         names to values
     """
     results: Dict[str, float] = {}
-    for metric in tqdm(metrics, desc="Calculating Metrics"):
+    for metric in tqdm(metrics, desc="Calculating Metrics", disable=not verbose):
         results[metric] = _calculate_impl(
             ground_truth, prediction, metric, pos_labels, average
         )
