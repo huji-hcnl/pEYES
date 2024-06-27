@@ -5,9 +5,9 @@ import cv2
 import numpy as np
 from tqdm import trange
 
-import src.pEYES._utils.constants as cnst
-import src.pEYES._DataModels.config as cnfg
+import src.pEYES._utils.visualization_utils as vis_utils
 from src.pEYES._utils.event_utils import calculate_sampling_rate
+import src.pEYES._DataModels.config as cnfg
 
 _DEFAULT_EXTENSION = ".mp4"
 _DEFAULT_CODEC = cv2.VideoWriter_fourcc(*"mp4v")
@@ -22,7 +22,7 @@ def create_video(
         resolution: Tuple[int, int],
         bg_image: np.ndarray = None,
         bg_image_format: str = "BGR",
-        label_colors: dict = None,
+        label_colors: vis_utils.LabelColormapType = None,
         gaze_radius: int = 10,
         codec: int = _DEFAULT_CODEC,
         extension: str = _DEFAULT_EXTENSION,
@@ -62,7 +62,7 @@ def create_frames(
         resolution: Tuple[int, int],
         bg_image: np.ndarray = None,
         bg_image_format: str = "BGR",
-        label_colors: dict = None,
+        label_colors: vis_utils.LabelColormapType = None,
         gaze_radius: int = 10,
         verbose: bool = False,
 ) -> Sequence[np.ndarray]:
@@ -77,7 +77,7 @@ def create_frames(
     Optional Parameters:
     :param bg_image: background image (numpy array). If None, a black background will be used (default).
     :param bg_image_format: color format (RGB/BGR) for the background image, if provided. Default is BGR.
-    :param label_colors: dictionary mapping event labels to hex/rgb colors. Default is the event color mapping from `config.py`.
+    :param label_colors: dictionary mapping event labels to hex/rgb colors. If a label is missing, the default color is used.
     :param gaze_radius: radius of the gaze point in pixels. Default is 10.
     :param verbose: if True, prints progress messages. Default is False.
 
@@ -87,7 +87,7 @@ def create_frames(
     frames = []
     n_samples = len(x)
     bg_image = _create_background(resolution, bg_image, bg_image_format)
-    label_colors = _get_rgb_mapping(label_colors)
+    label_colors = vis_utils.get_label_colormap(label_colors)
     for i in trange(n_samples, desc="Creating Frames", disable=not verbose):
         curr_img = bg_image.copy()
         curr_x, curr_y = int(x[i]), int(y[i])
@@ -113,20 +113,6 @@ def _create_background(
             raise ValueError(f"Invalid color format: {color_format}")
     bg = cv2.resize(bg, resolution)
     return bg
-
-
-def _get_rgb_mapping(label_colors: dict) -> dict:
-    defaults_colors = {l: val[cnst.COLOR_STR] for l, val in cnfg.EVENT_MAPPING.items()}
-    if label_colors is None or not label_colors:
-        label_colors = defaults_colors
-    else:
-        label_colors = {**defaults_colors, **label_colors}
-    for k, v in label_colors.items():
-        if isinstance(v, str):
-            # convert hex to rgb
-            v = v.removeprefix("#")
-            label_colors[k] = tuple(int(v[i:i + 2], 16) for i in (0, 2, 4))
-    return label_colors
 
 
 def _write_video(

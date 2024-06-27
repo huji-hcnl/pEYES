@@ -3,8 +3,7 @@ from typing import Dict
 import numpy as np
 import plotly.graph_objects as go
 
-import src.pEYES._DataModels.config as cnfg
-import src.pEYES._utils.constants as cnst
+import src.pEYES._utils.visualization_utils as vis_utils
 from src.pEYES._DataModels.EventLabelEnum import EventLabelEnum, EventLabelSequenceType
 
 
@@ -46,7 +45,7 @@ def add_scarfplot(
         labels: EventLabelSequenceType,
         top: float,
         bottom: float,
-        label_colors: Dict[EventLabelEnum, str] = None,
+        label_colors: vis_utils.LabelColormapType = None,
         colorbar_length: float = 1,
         colorbar_thickness: int = 25,
         show_colorbar: bool = True,
@@ -60,17 +59,13 @@ def add_scarfplot(
     :param top: the top y-coordinate of the scarfplot.
     :param bottom: the bottom y-coordinate of the scarfplot.
     :param label_colors: a dictionary mapping event labels to their respective colors. If a label is missing, the
-        default color is taken from the configuration file.
+        default color is used.
     :param colorbar_length: the length of the colorbar (range [0, 1] where 1 is the full height of the plot), default is 1.
     :param colorbar_thickness: the thickness of the colorbar, default is 25.
     :param show_colorbar: whether to show the colorbar, default is True.
     """
     assert len(t) == len(labels), f"Length mismatch: len(t)={len(t)} != {len(labels)}=len(labels)"
-    label_colors = {
-        # Add default colors if labels are missing in the input
-        **{label: value[cnst.COLOR_STR] for label, value in cnfg.EVENT_MAPPING.items()},
-        **(label_colors or dict()),
-    }
+    label_colors = vis_utils.get_label_colormap(label_colors)
     colormap, tick_centers = _discrete_colormap(label_colors)
     scarfplot = go.Heatmap(
         x=t,
