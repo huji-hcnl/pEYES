@@ -1,13 +1,40 @@
-from typing import Optional
+from typing import Optional, Union
 
 import numpy as np
 
+from src.pEYES._DataModels.EventLabelEnum import EventLabelEnum
 from src.pEYES._DataModels.Event import EventSequenceType
 from src.pEYES._DataModels.EventMatcher import OneToOneEventMatchesType
-from src.pEYES._DataModels.UnparsedEventLabel import UnparsedEventLabelType
+from src.pEYES._DataModels.UnparsedEventLabel import UnparsedEventLabelType, UnparsedEventLabelSequenceType
 
 from src.pEYES._utils.event_utils import parse_label
 from src.pEYES._utils.metric_utils import dprime
+
+
+def match_ratio(
+        prediction: EventSequenceType,
+        matches: OneToOneEventMatchesType,
+        labels: Optional[Union[UnparsedEventLabelType, UnparsedEventLabelSequenceType]] = None,
+) -> float:
+    """
+    Calculates the ratio of matched events to the total number of predicted events, optionally filtered by the given
+    event labels. Returns NaN if there are no predicted events.
+
+    :param prediction: all predicted events
+    :param matches: the one-to-one matches between (subset of) ground-truth and (subset of) predicted events
+    :param labels: optional event-labels to consider when calculating the ratio
+
+    :return: the match ratio
+    """
+    if len(prediction) == 0:
+        return np.nan
+    if labels is None:
+        labels = set(EventLabelEnum)
+    elif isinstance(labels, UnparsedEventLabelType):
+        labels = {parse_label(labels)}
+    else:
+        labels = set(parse_label(l) for l in labels)
+    return sum(1 for e in matches.values() if e.label in labels) / len(prediction)
 
 
 def precision_recall_f1(
