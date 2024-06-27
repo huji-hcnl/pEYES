@@ -331,10 +331,10 @@ class BaseEvent(ABC):
     def __hash__(self):
         return hash((
             self.label,
-            tuple(self._t),
-            tuple(self._x),
-            tuple(self._y),
-            tuple(self._pupil),
+            self._t.tobytes(),
+            self._x.tobytes(),
+            self._y.tobytes(),
+            self._pupil.tobytes(),
             self._viewer_distance,
             self._pixel_size
         ))
