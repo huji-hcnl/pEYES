@@ -1,7 +1,6 @@
 from src.pEYES._DataModels.Event import EventSequenceType
 
-from src.pEYES.event_metrics.counts import counts
-from src.pEYES.event_metrics.micro_saccade_ratio import microsaccade_ratio
+from src.pEYES.event_metrics.counts_and_rates import counts, microsaccade_ratio
 from src.pEYES.event_metrics.transition_matrix import transition_matrix
 from src.pEYES.event_metrics.get_features import get_features as features
 
