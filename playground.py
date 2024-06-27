@@ -8,12 +8,10 @@ CWD = os.getcwd()
 
 #########
 dataset = peyes.datasets.lund2013(directory=os.path.join(CWD, "output", "datasets"), save=True, verbose=True)
-trial1 = dataset[dataset[src.pEYES._base_scripts.constants.TRIAL_ID_STR] == 1]
-t, x, y = trial1[src.pEYES._base_scripts.constants.T].values, trial1[src.pEYES._base_scripts.constants.X].values, trial1[
-    src.pEYES._base_scripts.constants.Y].values
-vd, ps = trial1[src.pEYES._base_scripts.constants.VIEWER_DISTANCE_STR].iloc[0], trial1[
-    src.pEYES._base_scripts.constants.PIXEL_SIZE_STR].iloc[0]
-pupil = trial1[src.pEYES._base_scripts.constants.PUPIL].values
+trial1 = dataset[dataset[peyes.TRIAL_ID_STR] == 1]
+t, x, y = trial1[peyes.T].values, trial1[peyes.X].values, trial1[peyes.Y].values
+vd, ps = trial1[peyes.VIEWER_DISTANCE_STR].iloc[0], trial1[peyes.PIXEL_SIZE_STR].iloc[0]
+pupil = trial1[peyes.PUPIL].values
 
 ####
 
@@ -34,7 +32,7 @@ matches = peyes.match(
 
 #########
 
-zzz = peyes.sample_metrics.precision(eng_labels, nh_labels, pos_labels=[1])
+zzz = peyes.sample_metrics.precision(eng_labels, nh_labels, pos_labels=[peyes.Labels.FIXATION])
 
 eng_durations = peyes.event_metrics.durations(eng_events)
 nh_durations = peyes.event_metrics.durations(nh_events)
@@ -43,4 +41,4 @@ matches_durations = peyes.event_metrics.durations(matches)
 cohen_kappa = peyes.sample_metrics.cohen_kappa(eng_labels, nh_labels)
 nld = peyes.sample_metrics.complement_nld(eng_labels, nh_labels)
 
-fix_dprime = peyes.match_metrics.d_prime(eng_events, nh_events, matches, positive_label=1)
+fix_dprime = peyes.match_metrics.d_prime(eng_events, nh_events, matches, positive_label=peyes.Labels.FIXATION)
