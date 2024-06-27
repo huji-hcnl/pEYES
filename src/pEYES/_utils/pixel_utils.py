@@ -1,8 +1,32 @@
+import warnings
 from typing import Tuple
 
 import numpy as np
 
 import src.pEYES._utils.constants as cnst
+
+
+def cast_to_integers(xs: np.ndarray, ys: np.ndarray, filter_warnings: bool = True) -> Tuple[np.ndarray, np.ndarray]:
+    """
+    Casts the given x and y coordinates to integers, rounding to the nearest integer.
+    If `filter_warnings` is True, ignores warnings about casting to int.
+
+    :param xs: 1D array of x coordinates
+    :param ys: 1D array of y coordinates
+    :param filter_warnings: if True, ignores warnings about casting to int
+
+    :return: 1D arrays of x and y coordinates, cast to integers
+    """
+    if filter_warnings:
+        with warnings.catch_warnings():
+            # ignore warnings about casting to int
+            warnings.filterwarnings('ignore', category=RuntimeWarning, message='invalid value encountered in cast')
+            x_int = np.rint(xs).astype(int)
+            y_int = np.rint(ys).astype(int)
+    else:
+        x_int = np.rint(xs).astype(int)
+        y_int = np.rint(ys).astype(int)
+    return x_int, y_int
 
 
 def calculate_pixel_size(width: float, height: float, resolution: Tuple[int, int]) -> float:

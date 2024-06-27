@@ -14,6 +14,13 @@ def is_one_dimensional(arr) -> bool:
     return False
 
 
+def normalize(arr: np.ndarray) -> np.ndarray:
+    """ Normalizes the input array to the range [0, 1]. """
+    if not is_one_dimensional(arr):
+        raise ValueError("input array must be one-dimensional")
+    return (arr - np.nanmin(arr)) / (np.nanmax(arr) - np.nanmin(arr))
+
+
 def get_chunk_indices(arr) -> List[np.ndarray]:
     """
     Given a 1D array with multiple values, returns a list of arrays, where each array contains the indices of

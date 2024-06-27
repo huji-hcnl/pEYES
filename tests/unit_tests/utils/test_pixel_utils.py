@@ -10,6 +10,10 @@ class TestPixelUtils(unittest.TestCase):
     TOBII_WIDTH, TOBII_HEIGHT = 53.5, 30.0  # cm
     TOBII_RESOLUTION = (1920, 1080)         # pixels
 
+    def test_cast_to_integers(self):
+        # TODO
+        pass
+
     def test_calculate_pixel_size(self):
         self.assertEqual(1, calculate_pixel_size(width=1, height=1, resolution=(1, 1)))
         self.assertEqual(0.5, calculate_pixel_size(width=1, height=1, resolution=(2, 2)))
