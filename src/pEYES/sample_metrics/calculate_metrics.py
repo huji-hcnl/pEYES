@@ -54,7 +54,6 @@ def _calculate_impl(
         metric: str,
         pos_labels: Optional[Union[UnparsedEventLabelType, UnparsedEventLabelSequenceType]] = None,
         average: str = "weighted",
-        dprime_correction: Optional[str] = "loglinear"
 ) -> float:
     assert len(ground_truth) == len(prediction), "Ground truth and prediction must have the same length."
     pos_labels = pos_labels or set(EventLabelEnum)
