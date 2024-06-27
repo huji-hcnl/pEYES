@@ -1,4 +1,4 @@
-import src.pEYES.constants as cnst
+import src.pEYES._base.constants as cnst
 from src.pEYES._DataModels.EventLabelEnum import EventLabelEnum
 
 EPSILON = 1e-8

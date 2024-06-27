@@ -7,7 +7,7 @@ from tqdm import tqdm
 from src.pEYES._DataModels.Event import EventSequenceType
 from src.pEYES._DataModels.EventMatcher import EventMatchesType
 
-import src.pEYES.constants as cnst
+import src.pEYES._base.constants as cnst
 import src.pEYES.process as process
 
 _DEFAULT_PARSE_PARAMS = {

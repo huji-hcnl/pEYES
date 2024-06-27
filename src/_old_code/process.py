@@ -1,12 +1,11 @@
-from typing import Union, List
+from typing import Union
 
 import numpy as np
 import pandas as pd
 
-import src.pEYES.constants as cnst
-import src.pEYES.config as cnfg
+import src.pEYES._base.constants as cnst
+import src.pEYES._base.config as cnfg
 import src.pEYES.process as preprocess
-import src.pEYES.datasets as datasets
 
 
 def process_trial(

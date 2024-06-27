@@ -1,7 +1,6 @@
 import os
 
 import numpy as np
-import pandas as pd
 
 import src.pEYES as peyes
 
@@ -9,10 +8,12 @@ CWD = os.getcwd()
 
 #########
 dataset = peyes.datasets.lund2013(directory=os.path.join(CWD, "output", "datasets"), save=True, verbose=True)
-trial1 = dataset[dataset[peyes.constants.TRIAL_ID_STR] == 1]
-t, x, y = trial1[peyes.constants.T].values, trial1[peyes.constants.X].values, trial1[peyes.constants.Y].values
-vd, ps = trial1[peyes.constants.VIEWER_DISTANCE_STR].iloc[0], trial1[peyes.constants.PIXEL_SIZE_STR].iloc[0]
-pupil = trial1[peyes.constants.PUPIL].values
+trial1 = dataset[dataset[src.pEYES._base_scripts.constants.TRIAL_ID_STR] == 1]
+t, x, y = trial1[src.pEYES._base_scripts.constants.T].values, trial1[src.pEYES._base_scripts.constants.X].values, trial1[
+    src.pEYES._base_scripts.constants.Y].values
+vd, ps = trial1[src.pEYES._base_scripts.constants.VIEWER_DISTANCE_STR].iloc[0], trial1[
+    src.pEYES._base_scripts.constants.PIXEL_SIZE_STR].iloc[0]
+pupil = trial1[src.pEYES._base_scripts.constants.PUPIL].values
 
 ####
 

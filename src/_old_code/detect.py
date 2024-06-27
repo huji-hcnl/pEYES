@@ -3,8 +3,8 @@ from typing import Union, Tuple, Dict, Any, List
 import numpy as np
 from tqdm import tqdm
 
-import src.pEYES.config as cnfg
-import src.pEYES._base_scripts.create as create
+import src.pEYES._base.config as cnfg
+import src.pEYES._base.create as create
 
 
 def detect(

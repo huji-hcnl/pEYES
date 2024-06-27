@@ -5,8 +5,8 @@ import cv2
 import numpy as np
 from tqdm import trange
 
-import src.pEYES.constants as cnst
-import src.pEYES.config as cnfg
+import src.pEYES._base.constants as cnst
+import src.pEYES._base.config as cnfg
 from src.pEYES._utils.event_utils import calculate_sampling_rate
 
 _DEFAULT_EXTENSION = ".mp4"

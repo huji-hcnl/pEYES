@@ -2,7 +2,7 @@ from typing import Tuple
 
 import numpy as np
 
-import src.pEYES.constants as cnst
+import src.pEYES._base.constants as cnst
 
 
 def calculate_pixel_size(width: float, height: float, resolution: Tuple[int, int]) -> float:

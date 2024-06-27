@@ -1,8 +1,5 @@
 import unittest
 
-import numpy as np
-
-import src.pEYES.constants as cnst
 from src.pEYES._utils.event_utils import *
 from src.pEYES._utils.pixel_utils import visual_angle_to_pixels
 from src.pEYES._DataModels.EventLabelEnum import EventLabelEnum

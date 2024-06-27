@@ -2,7 +2,7 @@ import unittest
 
 import numpy as np
 
-import src.pEYES.constants as cnst
+import src.pEYES._base.constants as cnst
 from src.pEYES._DataModels.Event import FixationEvent, SaccadeEvent
 from src.pEYES._DataModels.EventLabelEnum import EventLabelEnum
 from src.pEYES._utils.pixel_utils import pixels_to_visual_angle

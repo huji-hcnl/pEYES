@@ -1,10 +1,10 @@
-from typing import Sequence, Dict
+from typing import Dict
 
 import numpy as np
 import plotly.graph_objects as go
 
-import src.pEYES.config as cnfg
-import src.pEYES.constants as cnst
+import src.pEYES._base.config as cnfg
+import src.pEYES._base.constants as cnst
 from src.pEYES._DataModels.EventLabelEnum import EventLabelEnum, EventLabelSequenceType
 
 
