@@ -36,6 +36,8 @@ def create_image(
 
     :return: numpy array of the image
     """
+    if not resolution or len(resolution) != 2 or resolution[0] <= 0 or resolution[1] <= 0:
+        raise ValueError("resolution must be a tuple of two positive integers")
     if bg_image is None or not bg_image or bg_image.size == 0:
         return np.full((resolution[1], resolution[0], 3), bg_color, dtype=np.uint8)
     if color_format.upper() == "RGB":
