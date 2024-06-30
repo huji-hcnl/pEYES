@@ -15,5 +15,5 @@ import src.pEYES.datasets as datasets
 import src.pEYES.event_metrics as event_metrics
 import src.pEYES.sample_metrics as sample_metrics
 import src.pEYES.match_metrics as match_metrics
-import src.pEYES.visualization as visualization
+import src.pEYES.visualize as visualization
 
