@@ -1,5 +1,7 @@
 import unittest
 
+import numpy as np
+
 import src.pEYES._utils.constants as cnst
 from src.pEYES._utils.pixel_utils import *
 
@@ -11,8 +13,19 @@ class TestPixelUtils(unittest.TestCase):
     TOBII_RESOLUTION = (1920, 1080)         # pixels
 
     def test_cast_to_integers(self):
-        # TODO
-        pass
+        xs = np.arange(0.1, 5.1, 1)
+        ys = np.arange(5.1, 0.1, -1)
+        self.assertTrue(
+            np.allclose(np.vstack((xs, ys)).astype(int), np.vstack(cast_to_integers(xs, ys)))
+        )
+        self.assertTrue(
+            np.allclose(np.vstack((xs, ys)).astype(int), np.vstack(cast_to_integers(xs, ys, filter_warnings=False)))
+        )
+        xs[2] = np.nan
+        self.assertTrue(
+            np.allclose(np.vstack((xs, ys)).astype(int), np.vstack(cast_to_integers(xs, ys)))
+        )
+        self.assertWarns(RuntimeWarning, cast_to_integers, xs, ys, filter_warnings=False)
 
     def test_calculate_pixel_size(self):
         self.assertEqual(1, calculate_pixel_size(width=1, height=1, resolution=(1, 1)))

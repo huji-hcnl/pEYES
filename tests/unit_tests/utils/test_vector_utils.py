@@ -15,8 +15,9 @@ class TestVectorUtils(unittest.TestCase):
         self.assertRaises(ValueError, is_one_dimensional, [[1, 2], [3]])
 
     def test_normalize(self):
-        # TODO
-        pass
+        self.assertTrue(np.array_equal(normalize(np.array([1, 2, 3])), [0, 0.5, 1]))
+        self.assertTrue(np.array_equal(normalize(np.array([1, 2, np.nan])), [0, 1, np.nan], equal_nan=True))
+        self.assertRaises(ValueError, normalize, [[1, 2], [3, 4]])
 
     def test_get_chunk_indices(self):
         arr = [1, 1, 1, 2, 2, 3, 3, 3, 3]
