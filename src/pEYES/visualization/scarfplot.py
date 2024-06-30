@@ -25,7 +25,7 @@ def scarfplot_comparison_figure(
     fig = go.Figure()
     for i, l in enumerate(labels):
         bottom, top = 2 * i * scarf_height, (2 * i + 1) * scarf_height
-        fig = add_scarfplot(fig, t, l, top, bottom, label_colors=label_colors, show_colorbar=i == 0)
+        fig = add_scarfplot_to_figure(fig, t, l, top, bottom, label_colors=label_colors, show_colorbar=i == 0)
     names = kwargs.get("names", [str(i) for i in range(num_scarfs)])
     assert len(names) == num_scarfs
     fig.update_layout(
@@ -40,7 +40,7 @@ def scarfplot_comparison_figure(
     return fig
 
 
-def add_scarfplot(
+def add_scarfplot_to_figure(
         fig: go.Figure,
         t: np.ndarray,
         labels: EventLabelSequenceType,
@@ -52,7 +52,7 @@ def add_scarfplot(
         show_colorbar: bool = True,
 ) -> go.Figure:
     """
-    Adds a scarfplot to the figure.
+    Adds a scarfplot to the provided figure.
 
     :param fig: the figure to add the scarfplot to.
     :param t: the time axis, must have the same length as `labels`.
