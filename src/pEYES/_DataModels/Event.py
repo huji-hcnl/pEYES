@@ -117,8 +117,14 @@ class BaseEvent(ABC):
             reasons.append(cnst.MIN_DURATION_STR)
         if self.duration > self.get_max_duration():
             reasons.append(cnst.MAX_DURATION_STR)
-        # TODO: check min, max velocity, acceleration, dispersion
-        # TODO: check if inside the screen
+        if np.any(self._x < 0) or np.any(self._y < 0):
+            reasons.append("negative_pixel")
+        if (
+                np.any(self._x > cnfg.SCREEN_MONITOR[cnst.RESOLUTION_STR][0]) or
+                np.any(self._y > cnfg.SCREEN_MONITOR[cnst.RESOLUTION_STR][1])
+        ):
+            reasons.append("pixel_outside_screen")
+        # TODO: check min, max velocity, acceleration, dispersion, etc.
         return reasons
 
     def summary(self) -> pd.Series:
