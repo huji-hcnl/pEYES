@@ -1,7 +1,7 @@
 import unittest
 
-from src.pEYES._utils.pixel_utils import *
 import src.pEYES._utils.constants as cnst
+from src.pEYES._utils.pixel_utils import *
 
 
 class TestPixelUtils(unittest.TestCase):
