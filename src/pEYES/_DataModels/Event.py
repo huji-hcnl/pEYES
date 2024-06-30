@@ -20,8 +20,8 @@ class BaseEvent(ABC):
             x: np.ndarray = None,
             y: np.ndarray = None,
             pupil: np.ndarray = None,
-            viewer_distance: float = np.nan,
-            pixel_size: float = np.nan,
+            viewer_distance: float = cnfg.VIEWER_DISTANCE,
+            pixel_size: float = cnfg.SCREEN_MONITOR[cnst.PIXEL_SIZE_STR],
     ):
         _x = x if x is not None else np.full_like(t, np.nan, dtype=float)
         _y = y if y is not None else np.full_like(t, np.nan, dtype=float)
@@ -46,8 +46,8 @@ class BaseEvent(ABC):
             x: np.ndarray = None,
             y: np.ndarray = None,
             pupil: np.ndarray = None,
-            viewer_distance: float = np.nan,
-            pixel_size: float = np.nan,
+            viewer_distance: float = cnfg.VIEWER_DISTANCE,
+            pixel_size: float = cnfg.SCREEN_MONITOR[cnst.PIXEL_SIZE_STR],
     ) -> Optional["BaseEvent"]:
         """  Creates a single Event from the given data.  """
         if label == EventLabelEnum.UNDEFINED:
@@ -72,8 +72,8 @@ class BaseEvent(ABC):
             x: np.ndarray = None,
             y: np.ndarray = None,
             pupil: np.ndarray = None,
-            viewer_distance: float = np.nan,
-            pixel_size: float = np.nan,
+            viewer_distance: float = cnfg.VIEWER_DISTANCE,
+            pixel_size: float = cnfg.SCREEN_MONITOR[cnst.PIXEL_SIZE_STR],
     ) -> list["BaseEvent"]:
         if len(labels) != len(t):
             raise ValueError("Length of `labels` and `t` must be the same")

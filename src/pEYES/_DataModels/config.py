@@ -4,6 +4,15 @@ from src.pEYES._utils.pixel_utils import calculate_pixel_size as _calc_ps
 
 EPSILON = 1e-8
 
+VIEWER_DISTANCE = 60    # cm
+
+SCREEN_MONITOR = {
+    cnst.WIDTH_STR: cnst.TOBII_WIDTH,
+    cnst.HEIGHT_STR: cnst.TOBII_HEIGHT,
+    cnst.RESOLUTION_STR: cnst.TOBII_RESOLUTION,
+    cnst.PIXEL_SIZE_STR: _calc_ps(cnst.TOBII_WIDTH, cnst.TOBII_HEIGHT, cnst.TOBII_RESOLUTION),
+}
+
 EVENT_MAPPING = {
     EventLabelEnum.UNDEFINED: {
         cnst.LABEL_STR: EventLabelEnum.UNDEFINED.name,
@@ -41,11 +50,4 @@ EVENT_MAPPING = {
         cnst.MIN_DURATION_STR: 20,
         cnst.MAX_DURATION_STR: 2000
     }
-}
-
-SCREEN_MONITOR = {
-    cnst.WIDTH_STR: cnst.TOBII_WIDTH,
-    cnst.HEIGHT_STR: cnst.TOBII_HEIGHT,
-    cnst.RESOLUTION_STR: cnst.TOBII_RESOLUTION,
-    cnst.PIXEL_SIZE_STR: _calc_ps(cnst.TOBII_WIDTH, cnst.TOBII_HEIGHT, cnst.TOBII_RESOLUTION),
 }

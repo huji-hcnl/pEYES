@@ -2,14 +2,15 @@ from typing import Union, Sequence
 
 import numpy as np
 
+import src.pEYES._utils.constants as cnst
+import src.pEYES._DataModels.config as cnfg
+from src.pEYES._utils.event_utils import parse_label
 from src.pEYES._DataModels.Event import BaseEvent, EventSequenceType
 from src.pEYES._DataModels.UnparsedEventLabel import UnparsedEventLabelType
 from src.pEYES._DataModels.Detector import BaseDetector
 from src.pEYES._DataModels.Detector import (
     IVTDetector, IVVTDetector, IDTDetector, EngbertDetector, NHDetector, REMoDNaVDetector
 )
-
-from src.pEYES._utils.event_utils import parse_label
 
 
 def create_detector(
@@ -116,8 +117,8 @@ def create_events(
         x: np.ndarray,
         y: np.ndarray,
         pupil: np.ndarray,
-        viewer_distance: float,
-        pixel_size: float,
+        viewer_distance: cnfg.VIEWER_DISTANCE,
+        pixel_size: cnfg.SCREEN_MONITOR[cnst.PIXEL_SIZE_STR],
 ) -> Union[BaseEvent, EventSequenceType]:
     """
     Create gaze-events from the given data.
