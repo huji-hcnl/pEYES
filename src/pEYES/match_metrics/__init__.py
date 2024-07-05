@@ -1,7 +1,7 @@
 from src.pEYES._DataModels.EventMatcher import OneToOneEventMatchesType
 
-from src.pEYES.match_metrics.get_features import get_features as features
-from src.pEYES.match_metrics.match_evaluation import match_ratio, precision_recall_f1, d_prime
+from src.pEYES.match_metrics._get_features import get_features as features
+from src.pEYES.match_metrics._match_evaluation import match_ratio, precision_recall_f1, d_prime
 
 
 def onset_difference(matches: OneToOneEventMatchesType):
