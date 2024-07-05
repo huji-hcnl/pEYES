@@ -3,7 +3,6 @@ from src.pEYES._DataModels.EventLabelEnum import EventLabelEnum as _EventLabelEn
 
 from src.pEYES.event_metrics.get_features import get_features as _features
 from src.pEYES.event_metrics.counts_and_rates import event_rate as _event_rate
-
 from src.pEYES.event_metrics.counts_and_rates import counts, microsaccade_ratio
 from src.pEYES.event_metrics.transition_matrix import transition_matrix
 
