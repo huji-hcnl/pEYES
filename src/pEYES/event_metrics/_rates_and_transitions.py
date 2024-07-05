@@ -5,16 +5,8 @@ from src.pEYES._utils.constants import MILLISECONDS_PER_SECOND
 from src.pEYES._DataModels.Event import EventSequenceType
 from src.pEYES._DataModels.UnparsedEventLabel import UnparsedEventLabelType
 
-from src.pEYES._utils.event_utils import count_labels as _count
 from src.pEYES._utils.event_utils import parse_label as _parse_label
-
-
-def counts(events: EventSequenceType) -> pd.Series:
-    """
-    Count the number of occurrences of each event-label within the given events.
-    Returns a pandas Series mapping each event-label to its count.
-    """
-    return _count(events)
+from src.pEYES._utils.metric_utils import transition_matrix as _transition_matrix
 
 
 def event_rate(
@@ -51,3 +43,15 @@ def microsaccade_ratio(events: EventSequenceType, threshold: float = 1.0, zero_d
         return len(microsaccades) / len(saccades)
     except ZeroDivisionError:
         return zero_division
+
+
+def transition_matrix(
+        seq: EventSequenceType,
+        normalize_rows: bool = False
+) -> pd.DataFrame:
+    """
+    Calculates the transition matrix from a sequence of event.
+    If `normalize_rows` is True, the matrix will be normalized by the sum of each row, i.e. contains transition probabilities.
+    Returns a DataFrame where rows indicate the origin event-label and columns indicate the destination event-label.
+    """
+    return _transition_matrix([e.label for e in seq], normalize_rows)
