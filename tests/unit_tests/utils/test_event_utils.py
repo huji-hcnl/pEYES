@@ -48,6 +48,16 @@ class TestEventUtils(unittest.TestCase):
         exp[EventLabelEnum.SMOOTH_PURSUIT] = 1
         self.assertTrue(count_labels(events).equals(exp))
 
+    def test_aggregate_events(self):
+        events = [
+            BaseEvent.make(EventLabelEnum.FIXATION, np.arange(10)),
+            BaseEvent.make(EventLabelEnum.SACCADE, np.arange(10)),
+        ] * 2 + [
+            BaseEvent.make(EventLabelEnum.FIXATION, np.arange(10)),
+            BaseEvent.make(EventLabelEnum.SMOOTH_PURSUIT, np.arange(10)),
+        ]
+        aggregated = aggregate_events(events)
+
     def test_microsaccade_ratio(self):
         viewer_distance, pixel_size = 60, 0.3
         events = []

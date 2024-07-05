@@ -57,6 +57,7 @@ ACCELERATION_STR = "acceleration"
 AMPLITUDE_STR = "amplitude"
 AZIMUTH_STR = "azimuth"
 ANGLE_STR = "angle"
+COUNT_STR = "count"
 
 MAX_DURATION_STR, MIN_DURATION_STR = "max_duration", "min_duration"
 START_TIME_STR, END_TIME_STR = "start_time", "end_time"

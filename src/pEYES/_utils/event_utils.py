@@ -69,6 +69,26 @@ def count_labels(data: Optional[Sequence[Union[EventLabelEnum, BaseEvent]]]) -> 
     return pd.concat([counts, missing_labels]).sort_index()
 
 
+def aggregate_events(events: EventSequenceType) -> pd.DataFrame:
+    """
+    Aggregates the given events into a DataFrame, where each row is an event-label and columns are event features.
+    Values of the same event-label are grouped together as lists (e.g. aggregated.loc["SACCADE", "amplitude"] is a list
+    of all saccade amplitudes in the given events).
+    """
+    summary = pd.DataFrame([e.summary() for e in events])
+    try:
+        aggregated = summary.groupby(cnst.LABEL_STR).agg(list)    # rows are event labels, columns are features
+    except KeyError:
+        aggregated = pd.DataFrame(index=[l for l in EventLabelEnum], columns=[])
+    for l in EventLabelEnum:
+        if l not in aggregated.index:
+            aggregated.loc[l] = [[] for _ in range(len(aggregated.columns))]
+    if aggregated.empty:
+        return aggregated.sort_index()
+    aggregated[cnst.COUNT_STR] = aggregated[cnst.DURATION_STR].map(len)
+    return aggregated.sort_index()
+
+
 def microsaccade_ratio(events: EventSequenceType, amplitude_threshold) -> float:
     """
     Calculates the ratio of microsaccades to saccades. Returns NaN if there are no saccades.

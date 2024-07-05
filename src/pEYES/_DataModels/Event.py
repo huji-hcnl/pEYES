@@ -1,3 +1,4 @@
+import warnings
 from abc import ABC
 from typing import final, List, Optional, Sequence
 
@@ -129,7 +130,7 @@ class BaseEvent(ABC):
 
     def summary(self) -> pd.Series:
         d = {
-            cnst.LABEL_STR: self.label.name,
+            cnst.LABEL_STR: self.label,
             cnst.START_TIME_STR: self.start_time, cnst.END_TIME_STR: self.end_time, cnst.DURATION_STR: self.duration,
             cnst.DISTANCE_STR: self.distance, cnst.AMPLITUDE_STR: self.amplitude, cnst.AZIMUTH_STR: self.azimuth,
             cnst.CUMULATIVE_DISTANCE_STR: self.cumulative_distance, cnst.CUMULATIVE_AMPLITUDE_STR: self.cumulative_amplitude,
@@ -281,17 +282,21 @@ class BaseEvent(ABC):
     @property
     def center_pixel(self) -> Tuple[float, float]:
         """  Returns the mean coordinates of the event on the X,Y axes  """
-        x_mean = float(np.nanmean(self._x))
-        y_mean = float(np.nanmean(self._y))
-        return x_mean, y_mean
+        with warnings.catch_warnings():
+            warnings.simplefilter("ignore", category=RuntimeWarning)
+            x_mean = float(np.nanmean(self._x))
+            y_mean = float(np.nanmean(self._y))
+            return x_mean, y_mean
 
     @final
     @property
     def pixel_std(self) -> Tuple[float, float]:
         """  Returns the standard deviation of the event (in pixel units)  """
-        x_std = float(np.nanstd(self._x))
-        y_std = float(np.nanstd(self._y))
-        return x_std, y_std
+        with warnings.catch_warnings():
+            warnings.simplefilter("ignore", category=RuntimeWarning)
+            x_std = float(np.nanstd(self._x))
+            y_std = float(np.nanstd(self._y))
+            return x_std, y_std
 
     @final
     @property

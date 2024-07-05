@@ -1,6 +1,7 @@
 import os
 
 import numpy as np
+import pandas as pd
 
 import src.pEYES as peyes
 
@@ -12,6 +13,10 @@ trial1 = dataset[dataset[peyes.TRIAL_ID_STR] == 1]
 t, x, y = trial1[peyes.T].values, trial1[peyes.X].values, trial1[peyes.Y].values
 vd, ps = trial1[peyes.VIEWER_DISTANCE_STR].iloc[0], trial1[peyes.PIXEL_SIZE_STR].iloc[0]
 pupil = trial1[peyes.PUPIL].values
+
+ra_events = peyes.create_events(trial1['RA'].values, t, x, y, pupil=pupil, viewer_distance=vd, pixel_size=ps)
+summary = peyes.summarize_events(ra_events)
+aggregated = aggregate_events(ra_events)
 
 ####
 
