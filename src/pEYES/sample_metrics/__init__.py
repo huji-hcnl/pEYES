@@ -3,9 +3,8 @@ from typing import Union, Optional
 from src.pEYES._DataModels.EventLabelEnum import EventLabelSequenceType
 from src.pEYES._DataModels.UnparsedEventLabel import UnparsedEventLabelType, UnparsedEventLabelSequenceType
 
-from src.pEYES.sample_metrics.confusion_matrix import confusion_matrix
-from src.pEYES.sample_metrics.transition_matrix import transition_matrix
-from src.pEYES.sample_metrics.calculate_metrics import calculate
+from src.pEYES.sample_metrics._counts_and_matrices import label_counts, transition_matrix, confusion_matrix
+from src.pEYES.sample_metrics._calculate_metrics import calculate
 
 
 def accuracy(ground_truth: EventLabelSequenceType, prediction: EventLabelSequenceType,) -> float:
