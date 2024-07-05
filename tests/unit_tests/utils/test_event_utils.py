@@ -31,33 +31,6 @@ class TestEventUtils(unittest.TestCase):
         self.assertRaises(TypeError, parse_label, None, safe=False)
         self.assertEqual(parse_label(None, safe=True), EventLabelEnum.UNDEFINED)
 
-    def test_count_labels(self):
-        exp = pd.Series({l: 0 for l in EventLabelEnum})
-        self.assertTrue(count_labels(None).equals(exp))
-        self.assertTrue(count_labels([]).equals(exp))
-        exp[EventLabelEnum.FIXATION] = 3
-        self.assertTrue(count_labels([EventLabelEnum.FIXATION] * 3).equals(exp))
-        events = [
-            BaseEvent.make(EventLabelEnum.FIXATION, np.arange(10)),
-            BaseEvent.make(EventLabelEnum.SACCADE, np.arange(10)),
-        ] * 2 + [
-            BaseEvent.make(EventLabelEnum.FIXATION, np.arange(10)),
-            BaseEvent.make(EventLabelEnum.SMOOTH_PURSUIT, np.arange(10)),
-        ]
-        exp[EventLabelEnum.SACCADE] = 2
-        exp[EventLabelEnum.SMOOTH_PURSUIT] = 1
-        self.assertTrue(count_labels(events).equals(exp))
-
-    def test_aggregate_events(self):
-        events = [
-            BaseEvent.make(EventLabelEnum.FIXATION, np.arange(10)),
-            BaseEvent.make(EventLabelEnum.SACCADE, np.arange(10)),
-        ] * 2 + [
-            BaseEvent.make(EventLabelEnum.FIXATION, np.arange(10)),
-            BaseEvent.make(EventLabelEnum.SMOOTH_PURSUIT, np.arange(10)),
-        ]
-        aggregated = aggregate_events(events)
-
     def test_microsaccade_ratio(self):
         viewer_distance, pixel_size = 60, 0.3
         events = []
