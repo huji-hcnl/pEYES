@@ -152,8 +152,9 @@ class Lund2013DatasetLoader(BaseDatasetLoader):
         file_names.extend(cls.__CORRECTION_FILES)
 
         # read all files into a list of dataframes
+        trial_id = 0
         dataframes = {}
-        for i, f in tqdm(enumerate(file_names), desc="Processing Files", disable=not verbose):
+        for f in tqdm(file_names, desc="Processing Files", disable=not verbose):
             file = zip_file.open(f)
             gaze_data = cls.__read_eyetracker_data(file)
             subject_id, stimulus_type, stimulus_name, rater = cls.__extract_metadata(file)
@@ -162,7 +163,8 @@ class Lund2013DatasetLoader(BaseDatasetLoader):
             # write the DF to a dict based on the subject id, stimulus type, stimulus name, or add to existing DF
             existing_df = dataframes.get((subject_id, stimulus_type, stimulus_name), None)
             if existing_df is None:
-                gaze_data[cnst.TRIAL_ID_STR] = i + 1
+                trial_id += 1
+                gaze_data[cnst.TRIAL_ID_STR] = trial_id
                 gaze_data[cnst.SUBJECT_ID_STR] = subject_id
                 gaze_data[cnst.STIMULUS_TYPE_STR] = stimulus_type
                 gaze_data[cnst.STIMULUS_NAME_STR] = stimulus_name
