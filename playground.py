@@ -7,6 +7,8 @@ import plotly.io as pio
 from plotly.subplots import make_subplots
 
 import src.pEYES as peyes
+import src.pEYES._utils.constants as cnst
+from src.pEYES._utils.event_utils import parse_label
 
 CWD = os.getcwd()
 pio.renderers.default = "browser"
@@ -36,8 +38,7 @@ features = features_by_labels(multi_trial_events)
 fig = event_summary(multi_trial_events, title="RA Event Summary", show_outliers=True)
 fig.show()
 
-
-fig.update_layout(violingap=1/6)
+fig.update_layout(violingroupgap=0.1)
 fig.show()
 
 
