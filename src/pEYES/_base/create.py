@@ -139,5 +139,5 @@ def create_events(
         label = parse_label(labels)
         return BaseEvent.make(label, t, x, y, pupil, viewer_distance, pixel_size)
     return BaseEvent.make_multiple(
-        np.ndarray([parse_label(l) for l in labels]), t, x, y, pupil, viewer_distance, pixel_size
+        np.array([parse_label(l) for l in labels]), t, x, y, pupil, viewer_distance, pixel_size
     )
