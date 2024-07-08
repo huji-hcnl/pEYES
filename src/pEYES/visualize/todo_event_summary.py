@@ -3,20 +3,12 @@ import pandas as pd
 import plotly.graph_objects as go
 from plotly.subplots import make_subplots
 
+import src.pEYES._utils.constants as cnst
 from src.pEYES._DataModels.Event import EventSequenceType
-
-from src.pEYES._utils.event_utils import count_labels
+from src.pEYES.event_metrics import features_by_labels
 
 __INLIERS_STR, __OUTLIERS_STR = "Inliers", "Outliers"
-__COUNTS_STR = "Counts"
-__DURATIONS_STR = "Durations"
-__AMPLITUDES_STR = "Amplitudes"
-__AMPLITUDE_VS_DURATION_STR = f"{__AMPLITUDES_STR} vs. {__DURATIONS_STR}"
-
-
-def _aggregate_events(events: EventSequenceType) -> pd.DataFrame:
-    # TODO
-    return None
+__AMPLITUDE_VS_DURATION_STR = f"{cnst.AMPLITUDE_STR} vs. {cnst.DURATION_STR}"
 
 
 def event_summary(
@@ -25,55 +17,79 @@ def event_summary(
         inlier_color: str = '#0000ff',
         outlier_color: str = '#ff0000',
         opacity: float = 0.6,
+        show_outliers: bool = True,
 ) -> go.Figure:
+    subplots = {
+        cnst.COUNT_STR: '#',
+        cnst.DURATION_STR: 'ms',
+        cnst.AMPLITUDE_STR: 'deg',
+    }
     fig = make_subplots(
-        rows=2, cols=2,
-        subplot_titles=[__COUNTS_STR, __DURATIONS_STR, __AMPLITUDES_STR, __AMPLITUDE_VS_DURATION_STR],
+        cols=1, rows=len(subplots), subplot_titles=list(map(lambda met: met.title(), subplots.keys()))
     )
-    inliers, outliers = [e for e in events if not e.is_outlier], [e for e in events if e.is_outlier]
+    inlier_features = features_by_labels(list(filter(lambda e: not e.is_outlier, events)))
+    outlier_features = features_by_labels(list(filter(lambda e: e.is_outlier, events)))
+    assert inlier_features.index.equals(outlier_features.index)
+    event_labels = inlier_features.index.tolist()
 
-    # counts sub figure
-    inlier_count, outlier_count = count_labels(inliers), count_labels(outliers)
-    fig.add_trace(
-        row=1, col=1,
-        trace=go.Bar(
-            name=__INLIERS_STR, x=list(inlier_count.keys()), y=list(inlier_count.values()), marker_color=inlier_color,
+    for r, (metric, measure) in enumerate(subplots.items()):
+        if r == 0:
+            # sub-figure: counts
+            fig.add_trace(
+                col=1, row=r+1,
+                trace=go.Bar(
+                    name=__INLIERS_STR, legendgroup=__INLIERS_STR,
+                    x=event_labels, y=inlier_features[metric].values,
+                    marker_color=inlier_color, opacity=opacity,
+                    showlegend=True,
+
+                )
+            )
+            if show_outliers:
+                fig.add_trace(
+                    col=1, row=r+1,
+                    trace=go.Bar(
+                        name=__OUTLIERS_STR, legendgroup=__OUTLIERS_STR,
+                        x=event_labels, y=outlier_features[metric].values,
+                        marker_color=outlier_color, opacity=opacity,
+                        showlegend=True,
+                    )
+                )
+        else:
+            # sub-figure: durations and amplitudes
+            for evnt in event_labels:
+                fig.add_trace(
+                    row=r+1, col=1,
+                    trace=go.Violin(
+                        name=evnt, legendgroup=evnt, scalegroup=evnt, side='positive', x0=evnt,
+                        y=inlier_features.loc[evnt, metric], fillcolor=inlier_color, opacity=opacity,
+                        box_visible=True, meanline_visible=True, line_color='black',
+                        showlegend=False,
+                    )
+                )
+                if show_outliers:
+                    fig.add_trace(
+                        row=r+1, col=1,
+                        trace=go.Violin(
+                            name=evnt, legendgroup=evnt, scalegroup=evnt, side='negative', x0=evnt,
+                            y=outlier_features.loc[evnt, metric], fillcolor=outlier_color, opacity=opacity,
+                            box_visible=True, meanline_visible=True, line_color='black',
+                            showlegend=False,
+                        )
+                    )
+        fig.update_yaxes(col=1, row=r+1, title_text=measure)
+        fig.update_xaxes(
+            col=1, row=r + 1, title_text='Event Labels',
+            type='category', categoryorder='array', categoryarray=event_labels
         )
-    )
-    fig.add_trace(
-        row=1, col=1,
-        trace=go.Bar(name=__OUTLIERS_STR, x=list(outlier_count.keys()), y=list(outlier_count.values())),
-    )
-
-    # durations sub figure
-    inlier_durations, outlier_durations = [e.duration for e in inliers], [e.duration for e in outliers]
-    fig.add_trace(
-        row=1, col=2,
-        trace=go.Violin(
-            y=inlier_durations,
-            name=__INLIERS_STR, legendgroup=__INLIERS_STR, scalegroup=__INLIERS_STR, side='positive',
-            box_visible=True, meanline_visible=True, line_color='black',
-            fillcolor='#0000ff', opacity=opacity,
-        ),
-    )
-    fig.add_trace(
-        row=1, col=2,
-        trace=go.Violin(
-            y=outlier_durations,
-            name=__OUTLIERS_STR, legendgroup=__OUTLIERS_STR, scalegroup=__OUTLIERS_STR, side='negative',
-            box_visible=True, meanline_visible=True, line_color='black',
-            fillcolor='#ff0000', opacity=opacity,
-        ),
-    )
-
     fig.update_layout(
+        title=title,
         barmode='stack',
         violinmode='overlay',
         violingap=0,
         violingroupgap=0,
     )
-
-    return None
+    return fig
 
 
 
