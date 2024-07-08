@@ -100,7 +100,11 @@ class BaseEvent(ABC):
 
     @final
     def velocities(self, unit: str = 'px') -> np.ndarray:
-        """  Calculates the velocity of the event in the given unit, which is either `px`, `deg`, or `rad`.  """
+        """
+        Calculates the velocity (distance per second) of each sample within the event.
+        :param unit: determines the nominator units
+        :return: np.ndarray of velocities (units are one of px/s, deg/s, rad/s)
+        """
         px_velocities = calculate_velocities(self._x, self._y, self._t)
         unit = unit.lower()
         if unit in {"px", "pixel", "pixels", "px/sec"}:
