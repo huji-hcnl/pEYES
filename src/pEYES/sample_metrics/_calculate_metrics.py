@@ -10,8 +10,6 @@ from src.pEYES._DataModels.UnparsedEventLabel import UnparsedEventLabelType, Unp
 from src.pEYES._utils.event_utils import parse_label
 from src.pEYES._utils.metric_utils import complement_normalized_levenshtein_distance as _comp_nld
 
-_parse_vectorized = np.vectorize(parse_label)
-
 
 def calculate(
         ground_truth: EventLabelSequenceType,

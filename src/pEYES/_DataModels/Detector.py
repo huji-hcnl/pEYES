@@ -9,7 +9,7 @@ import src.pEYES._DataModels.config as cnfg
 from src.pEYES._utils.vector_utils import *
 from src.pEYES._utils.pixel_utils import *
 from src.pEYES._utils.event_utils import calculate_sampling_rate, parse_label
-from src.pEYES._DataModels.EventLabelEnum import EventLabelEnum
+from src.pEYES._DataModels.EventLabelEnum import EventLabelEnum, EventLabelSequenceType
 
 
 class BaseDetector(ABC):
@@ -65,7 +65,7 @@ class BaseDetector(ABC):
             y: np.ndarray,
             viewer_distance_cm: float,
             pixel_size_cm: float,
-    ) -> (np.ndarray, dict):
+    ) -> (EventLabelSequenceType, dict):
         if not np.isfinite(viewer_distance_cm) or viewer_distance_cm <= 0:
             raise ValueError("Viewer distance must be a positive finite number")
         if not np.isfinite(pixel_size_cm) or pixel_size_cm <= 0:
@@ -82,7 +82,7 @@ class BaseDetector(ABC):
         labels = self._detect_impl(t, x_copy, y_copy, labels, viewer_distance_cm, pixel_size_cm)
         labels = merge_chunks(labels, self.min_event_samples)
         labels = reset_short_chunks(labels, self.min_event_samples, EventLabelEnum.UNDEFINED)
-        labels = np.vectorize(parse_label)(labels)
+        labels = [parse_label(l) for l in labels]
         self._metadata.update({
             cnst.SAMPLING_RATE_STR: self.sr,
             cnst.PIXEL_SIZE_STR: pixel_size_cm,
