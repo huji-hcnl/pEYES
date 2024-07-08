@@ -4,6 +4,7 @@ import numpy as np
 import pandas as pd
 import plotly.graph_objects as go
 import plotly.io as pio
+import plotly.express as px
 from plotly.subplots import make_subplots
 
 import src.pEYES as peyes
@@ -16,11 +17,11 @@ pio.renderers.default = "browser"
 #########
 
 from src.pEYES.event_metrics import features_by_labels
-from src.pEYES.visualize.todo_event_summary import event_summary
+from src.pEYES.visualize.todo_event_summary import event_summary, fixation_summary
 
 dataset = peyes.datasets.lund2013(directory=os.path.join(CWD, "output", "datasets"), save=True, verbose=True)
 multi_trial_events = []
-for i in range(1, 11):
+for i in range(1, 21):
     trial = dataset[dataset[peyes.TRIAL_ID_STR] == i]
     ra_events = peyes.create_events(
         labels=trial['RA'].values,
@@ -34,69 +35,38 @@ for i in range(1, 11):
     multi_trial_events.extend(ra_events)
 summary = peyes.summarize_events(multi_trial_events)
 features = features_by_labels(multi_trial_events)
+labels = [parse_label(l) for l in features.index]
 
-fig = event_summary(multi_trial_events, title="RA Event Summary", show_outliers=True)
-fig.show()
+# fig = event_summary(multi_trial_events, show_outliers=True)
+# fig.show()
 
-fig.update_layout(violingroupgap=0.1)
-fig.show()
+fix_fig = fixation_summary(multi_trial_events, show_outliers=True)
+fix_fig.show()
 
+del i, trial, ra_events
 
-#########
+###############
 
-fig.add_trace(
-    col=1, row=2,
-    trace=go.Violin(x0=0, y=[np.nan], name='placeholder', side='positive')
+num_bins = 16
+half_bin = 360 / num_bins / 2
+edges = np.linspace(0, 360, num_bins + 1, endpoint=True)
+centers = (edges[1:] + edges[:-1]) / 2 - half_bin
+
+fig = make_subplots(
+    cols=6, rows=2, specs=[[{'type': 'polar'}] * 6, [{'colspan': 6}, None, None, None, None, None]],
+    subplot_titles=[f"{l}" for l in labels] + ["Azimuth Distribution"]
 )
-fig.add_trace(
-    col=1, row=2,
-    trace=go.Violin(x0=0, y=[np.nan]*100, name='placeholder', side='negative')
-)
-
-fig.update_xaxes(
-    col=1, row=2, title_text='Event Labels',
-    type='category', categoryorder='array', categoryarray=list(range(6))
-)
-
-fig.update_layout(sharex=True)
-
+for i in range(2):
+    if i == 1:
+        pass
+    else:
+        for j, evnt in enumerate(labels):
+            azimuths = (np.array(features.loc[evnt, cnst.AZIMUTH_STR]) + half_bin) % 360
+            counts, _ = np.histogram(azimuths, bins=edges)
+            fig.add_trace(
+                col=j + 1, row=i + 1,
+                trace=go.Barpolar(
+                    r=counts,
+                )
+            )
 fig.show()
-
-
-#############
-
-import plotly.graph_objects as go
-from plotly.subplots import make_subplots
-
-measure1 = {
-    'a': [1, 2, 3, 4, 5, 5, 4, 3, 2, 1],
-    'b': [1, 2, 1, 3, 1, 4, 1, 5, 1, 1],
-    'c': [1, 1, 1, 1, 1, 1, 1, 1, 1, 1]
-}
-measure2 = {
-    'a': [5, 4, 3, 2, 1, 1, 2, 3, 4, 5],
-    'b': [2, 2, 2, 2, 2, 3, 3, 3, 3, 3],
-    'c': []
-}
-
-fig = make_subplots(cols=1, rows=2, shared_xaxes=True)
-
-for i, key in enumerate(measure1.keys()):
-    fig.add_trace(
-        col=1, row=1,
-        trace=go.Violin(
-            name=key, legendgroup=key, x0=key,
-            y=measure1[key], showlegend=True, side='positive'
-        )
-    )
-    fig.add_trace(
-        col=1, row=2,
-        trace=go.Violin(
-            name=key, legendgroup=key, x0=key,
-            y=measure2[key], showlegend=False, side=None
-        )
-    )
-
-fig.show()
-
-

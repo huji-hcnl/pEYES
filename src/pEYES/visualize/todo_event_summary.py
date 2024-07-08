@@ -6,8 +6,11 @@ from plotly.subplots import make_subplots
 import src.pEYES._utils.constants as cnst
 import src.pEYES._utils.visualization_utils as vis_utils
 from src.pEYES._utils.event_utils import parse_label
-from src.pEYES._DataModels.Event import EventSequenceType
 from src.pEYES.event_metrics import features_by_labels
+from src.pEYES._base.postprocess_events import summarize_events
+
+from src.pEYES._DataModels.Event import EventSequenceType
+from src.pEYES._DataModels.EventLabelEnum import EventLabelEnum
 
 __INLIERS_STR, __OUTLIERS_STR = "inliers", "outliers"
 
@@ -47,7 +50,7 @@ def event_summary(
     }
     fig = make_subplots(
         cols=1, rows=len(subplots), shared_xaxes=True,
-        subplot_titles=list(map(lambda met: met.title(), subplots.keys()))
+        subplot_titles=list(map(lambda met: met.replace('_', ' ').title(), subplots.keys()))
     )
     for r, (metric, measure) in enumerate(subplots.items()):
         for evnt in event_labels:
@@ -103,6 +106,67 @@ def event_summary(
         violinmode='overlay',
         violingap=0,
         violingroupgap=0.1,
+    )
+    return fig
+
+
+def fixation_summary(
+        fixations: EventSequenceType,
+        **kwargs,
+) -> go.Figure:
+    summary_df = summarize_events(list(filter(lambda e: e.label == EventLabelEnum.FIXATION, fixations)))
+    inlier_df, outlier_df = summary_df[~summary_df[cnst.IS_OUTLIER_STR]], summary_df[summary_df[cnst.IS_OUTLIER_STR]]
+    inlier_color = kwargs.get("inlier_color", f"rgb{vis_utils.get_label_colormap(None)[EventLabelEnum.FIXATION]}")
+    show_outliers = kwargs.get("show_outliers", False)
+    outlier_color = kwargs.get("outlier_color", f"rgb{vis_utils.get_label_colormap(None)[EventLabelEnum.FIXATION]}")
+    opacity = kwargs.get("opacity", 0.5)
+    subplots = {
+        cnst.DURATION_STR: 'ms',
+        cnst.CENTER_PIXEL_STR: 'x coordinate',
+        cnst.PIXEL_STD_STR: 'px',
+        cnst.PEAK_VELOCITY_STR: 'deg/s',
+    }
+    fig = make_subplots(
+        rows=2, cols=2,
+        subplot_titles=list(map(lambda met: met.replace('_', ' ').title(), subplots.keys()))
+    )
+    for i, (metric, measure) in enumerate(subplots.items()):
+        r, c = divmod(i, 2)
+        if metric == cnst.CENTER_PIXEL_STR:
+            px = pd.DataFrame(inlier_df[cnst.CENTER_PIXEL_STR].to_list(), columns=[cnst.X, cnst.Y])
+            inlier_trace = go.Scatter(
+                x=px[cnst.X], y=px[cnst.Y], mode="markers", name=None, showlegend=False,
+                marker=dict(size=kwargs.get("marker_size", 5), color=inlier_color),
+            )
+            fig.update_yaxes(title_text="y coordinate", row=r + 1, col=c + 1)
+            if show_outliers:
+                px = pd.DataFrame(outlier_df[cnst.CENTER_PIXEL_STR].to_list(), columns=[cnst.X, cnst.Y])
+                outlier_trace = go.Scatter(
+                    x=px[cnst.X], y=px[cnst.Y], mode="markers", name=None, showlegend=False,
+                    marker=dict(size=kwargs.get("marker_size", 5), color=outlier_color, opacity=opacity),
+                )
+        else:
+            inlier_trace = go.Violin(
+                x=inlier_df[metric], spanmode='hard', side='positive', showlegend=False,
+                name=metric, legendgroup=metric, scalegroup=metric,
+                fillcolor=inlier_color, box_visible=True, meanline_visible=True, line_color='black',
+            )
+            if show_outliers:
+                outlier_trace = go.Violin(
+                    x=outlier_df[metric], spanmode='hard', side='positive', showlegend=False,
+                    name=metric, legendgroup=metric, scalegroup=metric,
+                    fillcolor=outlier_color, opacity=opacity,
+                    box_visible=True, meanline_visible=True, line_color='black',
+                )
+        fig.add_trace(inlier_trace, row=r+1, col=c+1)
+        if show_outliers:
+            fig.add_trace(outlier_trace, row=r+1, col=c+1)
+        fig.update_xaxes(title_text=measure, row=r+1, col=c+1)
+    fig.update_layout(
+        title=kwargs.get("title", f"{EventLabelEnum.FIXATION.name.title()} Summary"),
+        violinmode='overlay',
+        violingap=0,
+        violingroupgap=0,
     )
     return fig
 
