@@ -29,6 +29,7 @@ def event_summary(
         cnst.COUNT_STR: '# instances',
         cnst.DURATION_STR: 'ms',
         cnst.AMPLITUDE_STR: 'deg',
+        cnst.PEAK_VELOCITY_STR: 'deg/s',
     }
     fig = make_subplots(
         cols=1, rows=len(subplots), shared_xaxes=True,
@@ -92,12 +93,6 @@ def event_summary(
     return fig
 
 
-
-# TODO: all-event summary figure - a multi-panel figure with the following panels:
-    # event counts (bar plot)
-    # event durations (histogram / box plot / violin plot)
-    # event amplitudes (histogram / box plot / violin plot)
-    # event amplitude vs duration (scatter plot with colors based on event labels)
 
 # TODO: saccade summary figure - a multi-panel figure with the following panels:
     # saccade durations histogram / violin
