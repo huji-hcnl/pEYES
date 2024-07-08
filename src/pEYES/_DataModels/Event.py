@@ -137,6 +137,7 @@ class BaseEvent(ABC):
             cnst.LABEL_STR: self.label,
             cnst.START_TIME_STR: self.start_time, cnst.END_TIME_STR: self.end_time, cnst.DURATION_STR: self.duration,
             cnst.DISTANCE_STR: self.distance, cnst.AMPLITUDE_STR: self.amplitude, cnst.AZIMUTH_STR: self.azimuth,
+            cnst.PEAK_VELOCITY_STR: self.peak_velocity, cnst.MEDIAN_VELOCITY_STR: self.median_velocity,
             cnst.CUMULATIVE_DISTANCE_STR: self.cumulative_distance, cnst.CUMULATIVE_AMPLITUDE_STR: self.cumulative_amplitude,
             cnst.CENTER_PIXEL_STR: self.center_pixel, cnst.PIXEL_STD_STR: self.pixel_std,
             cnst.IS_OUTLIER_STR: self.is_outlier, self._OUTLIER_REASONS_STR: self.get_outlier_reasons()
@@ -341,6 +342,18 @@ class BaseEvent(ABC):
     def y_dispersion(self) -> float:
         """  Returns the vertical dispersion of the event (visual degree units)  """
         return pixels_to_visual_angle(np.max(self._y) - np.min(self._y), self._viewer_distance, self._pixel_size)
+
+    @final
+    @property
+    def peak_velocity(self) -> float:
+        """  Returns the maximum velocity during the event (visual degree / second)  """
+        return np.nanmax(self.velocities(unit='deg'))
+
+    @final
+    @property
+    def median_velocity(self) -> float:
+        """  Returns the median velocity during the event (visual degree / second)  """
+        return np.nanmedian(self.velocities(unit='deg'))
 
     def __hash__(self):
         return hash((

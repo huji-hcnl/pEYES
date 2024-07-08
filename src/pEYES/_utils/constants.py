@@ -61,8 +61,8 @@ COUNT_STR = "count"
 
 MAX_DURATION_STR, MIN_DURATION_STR = "max_duration", "min_duration"
 START_TIME_STR, END_TIME_STR = "start_time", "end_time"
-CUMULATIVE_DISTANCE_STR = "cumulative_distance"
-CUMULATIVE_AMPLITUDE_STR = "cumulative_amplitude"
-CENTER_PIXEL_STR = "center_pixel"
-PIXEL_STD_STR = "pixel_std"
-
+CUMULATIVE_DISTANCE_STR = f"cumulative_{DISTANCE_STR}"
+CUMULATIVE_AMPLITUDE_STR = f"cumulative_{AMPLITUDE_STR}"
+PEAK_VELOCITY_STR, MEDIAN_VELOCITY_STR = f"peak_{VELOCITY_STR}", f"median_{VELOCITY_STR}"
+CENTER_PIXEL_STR = f"center_{PIXELS_STR}"
+PIXEL_STD_STR = f"{PIXELS_STR}_std"
