@@ -1,4 +1,3 @@
-import numpy as np
 import pandas as pd
 import plotly.graph_objects as go
 from plotly.subplots import make_subplots
@@ -169,7 +168,6 @@ def fixation_summary(
         violingroupgap=0,
     )
     return fig
-
 
 
 # TODO: saccade summary figure - a multi-panel figure with the following panels:

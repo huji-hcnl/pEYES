@@ -39,6 +39,7 @@ ACCELERATION_STR, ACCELERATIONS_STR = "acceleration", "accelerations"
 AMPLITUDE_STR, AMPLITUDES_STR = "amplitude", "amplitudes"
 AZIMUTH_STR, AZIMUTHS_STR = "azimuth", "azimuths"
 ANGLE_STR, ANGLES_STR = "angle", "angles"
+COUNT_STR, COUNTS_STR = "count", "counts"
 
 #### Trial Field Names  ####
 SUBJECT_STR = "subject"
