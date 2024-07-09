@@ -1,0 +1,22 @@
+[project]
+name = "peyes"
+version = "0.0.5"
+authors = [
+    {name="Human Cognitive Neuroscience Lab @ HUJI", email="hcnl@mail.huji.ac.il", website="https://www.hcnl.org/"},
+    {name="Jonathan Nir", email="jonathan.nir@mail.huji.ac.il"},
+]
+description = "A package for eye tracking data analysis and visualization"
+readme = "README.md"
+dependencies = "requirements.txt"
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "License :: OSI Approved :: MIT License",
+]
+
+[project.urls]
+"Homepage" = "https://github.com/huji-hcnl/pEYES"
+"Bug Tracker" = "https://github.com/huji-hcnl/pEYES/issues"
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"

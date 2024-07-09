@@ -1,6 +1,3 @@
-
-__version__ = '0.1.0'  # TODO: update automatically
-
 from src.pEYES._utils.constants import *
 
 from src.pEYES._DataModels.EventLabelEnum import EventLabelEnum as Labels
