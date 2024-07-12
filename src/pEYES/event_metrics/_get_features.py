@@ -22,6 +22,8 @@ def features_by_labels(events: EventSequenceType) -> pd.DataFrame:
     for l in EventLabelEnum:
         if l not in aggregated.index:
             aggregated.loc[l] = [[] for _ in range(len(aggregated.columns))]
+    # remove undefined events, these shouldn't exist in the first place:
+    aggregated.drop(index=EventLabelEnum.UNDEFINED, inplace=True, errors="ignore")
     if aggregated.empty:
         return aggregated.sort_index()
     aggregated[cnst.COUNT_STR] = aggregated[cnst.DURATION_STR].map(len)
