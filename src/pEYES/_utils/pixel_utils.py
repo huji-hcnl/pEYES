@@ -29,6 +29,35 @@ def cast_to_integers(xs: np.ndarray, ys: np.ndarray, filter_warnings: bool = Tru
     return x_int, y_int
 
 
+def line_dispersion(xs: np.ndarray, ys: np.ndarray) -> float:
+    """
+    Calculates the line-dispersion (1D) of the given array of pixels, in pixel units.
+    The line-dispersion is the sum of the differences between the maximum and minimum values of the x and y coordinates.
+
+    :param xs: 1D array of x coordinates
+    :param ys: 1D array of y coordinates
+    :return: sum of dispersion along x and y axes
+    """
+    x_disp = np.nanmax(xs) - np.nanmin(xs)
+    y_disp = np.nanmax(ys) - np.nanmin(ys)
+    return x_disp + y_disp
+
+
+def ellipse_dispersion(xs: np.ndarray, ys: np.ndarray) -> float:
+    """
+    Calculates the ellipse-dispersion (2D) of the given array of pixels, in pixel^2 units.
+    The ellipse-dispersion is the area of the ellipse that has the same horizontal and vertical radii as the
+    bounding box of the given pixels.
+
+    :param xs: 1D array of x coordinates
+    :param ys: 1D array of y coordinates
+    :return: area of ellipse that bounds the given pixels
+    """
+    horizontal_radius = 0.5 * (np.nanmax(xs) - np.nanmin(xs))
+    vertical_radius = 0.5 * (np.nanmax(ys) - np.nanmin(ys))
+    return np.pi * horizontal_radius * vertical_radius
+
+
 def calculate_pixel_size(width: float, height: float, resolution: Tuple[int, int]) -> float:
     """ Calculates the approximate length of one pixel in centimeters (assuming square pixels): cm/px """
     diagonal_length = np.sqrt(np.power(width, 2) + np.power(height, 2))  # size of diagonal in centimeters
@@ -149,4 +178,3 @@ def calculate_azimuth(
     if use_radians:
         return angle_rad
     return np.rad2deg(angle_rad)
-
