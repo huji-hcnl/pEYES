@@ -21,9 +21,10 @@ def event_summary(events: EventSequenceType, **kwargs) -> go.Figure:
     """
     Creates a summary figure of the provided events. The figure contains four panels:
         1. A bar plot of the count of each event label.
-        2. A violin plot showing the distribution of durations per event label.
-        3. A violin plot showing the distribution of amplitudes per event label.
-        4. A violin plot showing the distribution of peak velocities per event label.
+        2. A violin plot showing the distribution of durations, per event label.
+        3. A violin plot showing the distribution of amplitudes, per event label.
+        4. A violin plot showing the distribution of peak velocities, per event label.
+        5. A violin plot showing the distribution of areas of the ellipse bound each event, per event label.
 
     :param events: list (or other sequence) of events.
     :keyword label_colors: A dictionary mapping event labels to their respective colors. If a label is missing, the
@@ -45,6 +46,7 @@ def event_summary(events: EventSequenceType, **kwargs) -> go.Figure:
         cnst.DURATION_STR: 'ms',
         cnst.AMPLITUDE_STR: 'deg',
         cnst.PEAK_VELOCITY_STR: 'deg/s',
+        cnst.ELLIPSE_AREA_STR: 'deg^2',
     }
     fig = make_subplots(
         cols=1, rows=len(subplots), shared_xaxes=True,
