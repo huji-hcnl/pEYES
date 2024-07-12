@@ -16,9 +16,6 @@ pio.renderers.default = "browser"
 
 #########
 
-from src.pEYES.event_metrics import features_by_labels
-from src.pEYES.visualize._event_summary import event_summary, fixation_summary, saccade_summary
-
 dataset = peyes.datasets.lund2013(directory=os.path.join(CWD, "output", "datasets"), save=True, verbose=True)
 multi_trial_events = []
 for i in range(1, 21):
@@ -34,16 +31,18 @@ for i in range(1, 21):
     )
     multi_trial_events.extend(ra_events)
 summary = peyes.summarize_events(multi_trial_events)
-features = features_by_labels(multi_trial_events)
+features = peyes.event_metrics.features_by_labels(multi_trial_events)
 labels = [parse_label(l) for l in features.index]
 
-fig = event_summary(multi_trial_events, show_outliers=True)
+del i, trial, ra_events
+
+#########
+
+fig = peyes.visualize.event_summary(multi_trial_events, show_outliers=True)
 fig.show()
 
-fix_fig = fixation_summary(multi_trial_events, show_outliers=True)
+fix_fig = peyes.visualize.fixation_summary(multi_trial_events, show_outliers=True)
 fix_fig.show()
 
-sac_fig = saccade_summary(multi_trial_events, show_outliers=True)
+sac_fig = peyes.visualize.saccade_summary(multi_trial_events, show_outliers=True)
 sac_fig.show()
-
-del i, trial, ra_events
