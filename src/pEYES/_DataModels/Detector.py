@@ -432,7 +432,7 @@ class IDTDetector(BaseDetector, IThresholdDetector):
         start_idx, end_idx = 0, ws
         is_fixation = False
         while end_idx <= len(t):
-            dispersion = self._calculate_dispersion_length_px(x[start_idx:end_idx], y[start_idx:end_idx])
+            dispersion = line_dispersion(x[start_idx:end_idx], y[start_idx:end_idx])
             if dispersion < px_threshold:
                 # label all samples in the window as fixation and expand window to the right
                 is_fixation = True
@@ -474,13 +474,6 @@ class IDTDetector(BaseDetector, IThresholdDetector):
     def _calculate_dispersion_length_px(xs: np.ndarray, ys: np.ndarray) -> float:
         """ Calculates the dispersion length of the gaze points (px units) """
         return max(xs) - min(xs) + max(ys) - min(ys)
-
-    @staticmethod
-    def _calculate_dispersion_area_px(xs: np.ndarray, ys: np.ndarray) -> float:
-        """ Calculates the area of the ellipse that fits the window of gaze points (px^2 units) """
-        horiz_axis = 0.5 * (max(xs) - min(xs))
-        vert_axis = 0.5 * (max(ys) - min(ys))
-        return np.pi * horiz_axis * vert_axis
 
 
 class EngbertDetector(BaseDetector):
