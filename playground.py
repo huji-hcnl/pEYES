@@ -17,7 +17,7 @@ pio.renderers.default = "browser"
 #########
 
 from src.pEYES.event_metrics import features_by_labels
-from src.pEYES.visualize.todo_event_summary import event_summary, fixation_summary, saccade_summary
+from src.pEYES.visualize._event_summary import event_summary, fixation_summary, saccade_summary
 
 dataset = peyes.datasets.lund2013(directory=os.path.join(CWD, "output", "datasets"), save=True, verbose=True)
 multi_trial_events = []
