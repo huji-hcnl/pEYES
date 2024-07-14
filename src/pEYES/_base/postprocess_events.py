@@ -40,13 +40,14 @@ def events_to_labels(events: EventSequenceType, sampling_rate: float, num_sample
     return out
 
 
-def events_to_mne_channels(
+def events_to_boolean_channels(
         events: EventSequenceType,
         sampling_rate: float,
         num_samples=None,
 ) -> (np.ndarray, np.ndarray):
     """
-    Converts the given events to MNE-style channel arrays, one indicating event onsets and the other indicating offsets.
+    Converts the given events to boolean arrays (MNE-style event channels), one indicating event onsets and the other
+    indicating event offsets.
 
     :param events: array-like of Event objects
     :param sampling_rate: the sampling rate of the output arrays

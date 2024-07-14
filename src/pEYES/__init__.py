@@ -6,7 +6,7 @@ import src.pEYES._DataModels.config as config
 from src.pEYES._base.parse import parse
 from src.pEYES._base.create import create_detector, create_events
 from src.pEYES._base.match import match
-from src.pEYES._base.postprocess_events import summarize_events, events_to_labels, events_to_mne_channels
+from src.pEYES._base.postprocess_events import summarize_events, events_to_labels, events_to_boolean_channels
 
 import src.pEYES.datasets as datasets
 import src.pEYES.event_metrics as event_metrics
