@@ -64,8 +64,9 @@ def channel_signal_detection_measures(
     """
     gt_chan, pred_chan = _to_channels(ground_truth, prediction, sampling_rate, channel_type, min_num_samples)
     p, pp = gt_chan.sum(), pred_chan.sum()  # number of positive samples in GT and prediction
-    all_matched_diffs = channel_timing_differences(ground_truth, prediction, sampling_rate, channel_type,
-                                                   min_num_samples)
+    all_matched_diffs = channel_timing_differences(
+        ground_truth, prediction, sampling_rate, channel_type, min_num_samples
+    )
     if isinstance(threshold, int):
         threshold = [threshold]
     results = {}
