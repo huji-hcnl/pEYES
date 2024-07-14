@@ -1,7 +1,6 @@
-from typing import Union, Sequence, Optional
+from typing import Optional
 
 import numpy as np
-import pandas as pd
 
 import src.pEYES._utils.constants as cnst
 from src.pEYES._DataModels.EventLabelEnum import EventLabelEnum
