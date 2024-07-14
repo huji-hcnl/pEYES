@@ -31,6 +31,8 @@ def pair_boolean_arrays(arr1: np.ndarray, arr2: np.ndarray) -> np.ndarray:
     :param arr1: boolean array
     :param arr2: boolean array
     :return: array of integer pairs (matched indices), with shape m×2 (0 <= m <= min(sum(arr1), sum(arr2))
+
+    :raises ValueError: if the input arrays are not one-dimensional or have different lengths
     """
     if not is_one_dimensional(arr1) or not is_one_dimensional(arr2):
         raise ValueError("input arrays must be one-dimensional")
