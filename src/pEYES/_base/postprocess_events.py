@@ -8,6 +8,19 @@ from src.pEYES._DataModels.Event import BaseEvent, EventSequenceType
 from src.pEYES._DataModels.EventLabelEnum import EventLabelEnum
 
 
+def summarize_events(
+        events: Union[BaseEvent, EventSequenceType],
+) -> pd.DataFrame:
+    """ Converts the given event(s) to a DataFrame, where each row is an event and columns are event features. """
+    if isinstance(events, BaseEvent):
+        s = events.summary()
+        return s.to_frame()
+    if len(events) == 0:
+        return pd.DataFrame()
+    summaries = [e.summary() for e in events]
+    return pd.DataFrame(summaries)
+
+
 def events_to_labels(
         events: Union[BaseEvent, EventSequenceType],
         sampling_rate: float,
@@ -43,16 +56,3 @@ def events_to_labels(
         end_sample = int(np.round(end_time * sampling_rate / cnst.MILLISECONDS_PER_SECOND))
         out[start_sample:end_sample] = e.label
     return out
-
-
-def summarize_events(
-        events: Union[BaseEvent, EventSequenceType],
-) -> pd.DataFrame:
-    """ Converts the given event(s) to a DataFrame, where each row is an event and columns are event features. """
-    if isinstance(events, BaseEvent):
-        s = events.summary()
-        return s.to_frame()
-    if len(events) == 0:
-        return pd.DataFrame()
-    summaries = [e.summary() for e in events]
-    return pd.DataFrame(summaries)

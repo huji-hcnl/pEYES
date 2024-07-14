@@ -9,7 +9,7 @@ import src.pEYES._utils.constants as cnst
 import src.pEYES._utils.visualization_utils as vis_utils
 from src.pEYES._utils.event_utils import parse_label
 from src.pEYES.event_metrics import features_by_labels
-from src.pEYES._base.postprocess_events import summarize_events
+from src.pEYES import summarize_events
 
 from src.pEYES._DataModels.Event import EventSequenceType
 from src.pEYES._DataModels.EventLabelEnum import EventLabelEnum
