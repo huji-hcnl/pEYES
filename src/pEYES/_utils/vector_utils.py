@@ -32,14 +32,12 @@ def pair_boolean_arrays(arr1: np.ndarray, arr2: np.ndarray) -> np.ndarray:
     :param arr2: boolean array
     :return: array of integer pairs (matched indices), with shape m×2 (0 <= m <= min(sum(arr1), sum(arr2))
 
-    :raises ValueError: if the input arrays are not one-dimensional or have different lengths
+    :raises ValueError: if the input arrays are not one-dimensional
     """
     if not is_one_dimensional(arr1) or not is_one_dimensional(arr2):
         raise ValueError("input arrays must be one-dimensional")
     arr1 = np.asarray(arr1).reshape(-1).astype(bool)
     arr2 = np.asarray(arr2).reshape(-1).astype(bool)
-    if len(arr1) != len(arr2):
-        raise ValueError("input arrays must have the same length")
     arr1_idxs, arr2_idxs = np.where(arr1)[0], np.where(arr2)[0]
     diffs = abs(arr1_idxs[:, None] - arr2_idxs[None, :])
     if diffs.size == 0:
