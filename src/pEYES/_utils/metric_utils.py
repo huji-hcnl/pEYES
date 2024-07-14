@@ -43,6 +43,7 @@ def dprime(p: int, n: float, pp: int, tp: int, correction: Optional[str]) -> flo
     """
     Calculates d-prime while optionally applying a correction for floor/ceiling effects on the hit-rate and/or
     false-alarm rate. See information on correction methods at https://stats.stackexchange.com/a/134802/288290.
+    See implementation details at https://lindeloev.net/calculating-d-in-python-and-php/.
 
     :param p: int; number of positive GT events
     :param n: int; number of negative GT events
@@ -52,7 +53,8 @@ def dprime(p: int, n: float, pp: int, tp: int, correction: Optional[str]) -> flo
     :return: float; the d-prime value
     """
     hr, far = _dprime_rates(p, n, pp, tp, correction)
-    return norm.ppf(hr) - norm.ppf(far)
+    d_prime = norm.ppf(hr) - norm.ppf(far)
+    return d_prime
 
 
 def _dprime_rates(p: int, n: float, pp: int, tp: int, correction: Optional[str]) -> (float, float):
