@@ -19,6 +19,29 @@ class TestVectorUtils(unittest.TestCase):
         self.assertTrue(np.array_equal(normalize(np.array([1, 2, np.nan])), [0, 1, np.nan], equal_nan=True))
         self.assertRaises(ValueError, normalize, [[1, 2], [3, 4]])
 
+    def test_pair_boolean_arrays(self):
+        arr1 = np.array([True, False, True, False, True])
+        arr2 = np.array([False, True, True, False, True])
+        obs = pair_boolean_arrays(arr1, arr2)
+        exp = np.array([[0, 1], [2, 2], [4, 4]])
+        self.assertTrue(np.array_equal(obs, exp))
+        arr2 = np.array([False, True, False, False, True])
+        obs = pair_boolean_arrays(arr1, arr2)
+        exp = np.array([[0, 1], [4, 4]])
+        self.assertTrue(np.array_equal(obs, exp))
+        arr2 = np.array([True, True, False, False, True])
+        obs = pair_boolean_arrays(arr1, arr2)
+        exp = np.array([[0, 0], [4, 4]])
+        self.assertTrue(np.array_equal(obs, exp))
+        arr2 = np.array([False, False, False, False, False])
+        obs = pair_boolean_arrays(arr1, arr2)
+        exp = np.empty((0, 2))
+        self.assertTrue(np.array_equal(obs, exp))
+        self.assertRaises(ValueError, pair_boolean_arrays, [[True, False], [True, False]], [True, False])
+        self.assertRaises(ValueError, pair_boolean_arrays, [True, False], [[True, False], [True, False]])
+        self.assertRaises(ValueError, pair_boolean_arrays, [True, False], [True, False, True])
+        self.assertRaises(ValueError, pair_boolean_arrays, [True, False, True], [True, False])
+
     def test_get_chunk_indices(self):
         arr = [1, 1, 1, 2, 2, 3, 3, 3, 3]
         obs = get_chunk_indices(arr)
