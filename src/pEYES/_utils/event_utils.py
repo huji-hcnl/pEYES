@@ -21,6 +21,34 @@ def calculate_sampling_rate(ms: np.ndarray) -> float:
     return sr
 
 
+def calculate_num_samples(
+        start_time: float, end_time: float, sampling_rate: float, min_samples: int = 1
+) -> int:
+    """
+    Calculates the number of samples between the given start and end times, given the sampling rate. The number of
+    samples is rounded up to the nearest integer, but at least `min_samples` are returned.
+
+    :param start_time: the start time in milliseconds
+    :param end_time: the end time in milliseconds
+    :param sampling_rate: the sampling rate in Hz
+    :param min_samples: the minimum number of samples to return
+
+    :return: the number of samples
+
+    :raises ValueError: if the start or end times are invalid (not finite or start > end)
+    :raises ValueError: if the sampling rate is invalid (not finite or non-positive)
+    :raises RuntimeError: if an error occurs during the calculation
+    """
+    if not np.isfinite(start_time) or not np.isfinite(end_time) or start_time > end_time:
+        raise ValueError("Invalid start or end time")
+    if not np.isfinite(sampling_rate) or sampling_rate <= 0:
+        raise ValueError("sampling rate must be a positive finite number")
+    res = np.ceil((end_time - start_time) * sampling_rate / cnst.MILLISECONDS_PER_SECOND)
+    if not np.isfinite(res) or res < 0:
+        raise RuntimeError("Error calculating number of samples")
+    return max(int(res), min_samples)
+
+
 def parse_label(
         val: Optional[UnparsedEventLabelType],
         safe: bool = True

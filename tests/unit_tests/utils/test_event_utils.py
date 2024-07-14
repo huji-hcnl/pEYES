@@ -18,6 +18,15 @@ class TestEventUtils(unittest.TestCase):
         t = np.setdiff1d(np.arange(10), [2, 5, 8])
         self.assertEqual(calculate_sampling_rate(t), cnst.MILLISECONDS_PER_SECOND / 1.5)
 
+    def test_calculate_num_samples(self):
+        self.assertEqual(calculate_num_samples(0, 1000, 1000), 1000)
+        self.assertEqual(calculate_num_samples(0, 1000.1, 1000), 1001)
+        self.assertEqual(calculate_num_samples(500, 1000, 600), 300)
+        self.assertEqual(calculate_num_samples(500, 1000, 600, 400), 400)
+        self.assertRaises(ValueError, calculate_num_samples, 0, 1000, 0)
+        self.assertRaises(ValueError, calculate_num_samples, 0, 1000, np.inf)
+        self.assertRaises(ValueError, calculate_num_samples, np.nan, 1000, 100)
+
     def test_parse_label(self):
         self.assertEqual(parse_label(EventLabelEnum.FIXATION), EventLabelEnum.FIXATION)
         self.assertEqual(parse_label(BaseEvent.make(EventLabelEnum.FIXATION, np.arange(10))), EventLabelEnum.FIXATION)
