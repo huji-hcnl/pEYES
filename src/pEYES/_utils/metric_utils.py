@@ -1,3 +1,4 @@
+import warnings
 from itertools import islice
 from typing import Sequence, Optional
 
@@ -39,10 +40,10 @@ def complement_normalized_levenshtein_distance(
     return 1 - normalized_d
 
 
-def dprime(p: int, n: float, pp: int, tp: int, correction: Optional[str]) -> float:
+def dprime_and_criterion(p: int, n: float, pp: int, tp: int, correction: Optional[str]) -> (float, float):
     """
-    Calculates d-prime while optionally applying a correction for floor/ceiling effects on the hit-rate and/or
-    false-alarm rate. See information on correction methods at https://stats.stackexchange.com/a/134802/288290.
+    Calculates d-prime and criterion while optionally applying a correction for floor/ceiling effects on the hit-rate
+    and/or false-alarm rate. See information on correction methods at https://stats.stackexchange.com/a/134802/288290.
     See implementation details at https://lindeloev.net/calculating-d-in-python-and-php/.
 
     :param p: int; number of positive GT events
@@ -50,11 +51,16 @@ def dprime(p: int, n: float, pp: int, tp: int, correction: Optional[str]) -> flo
     :param pp: int; number of positive predicted events
     :param tp: int; number of true positive predictions
     :param correction: str; optional correction method for floor/ceiling effects
-    :return: float; the d-prime value
+    :return:
+        - d_prime: float; the d-prime value
+        - criterion: float; the criterion value
     """
     hr, far = _dprime_rates(p, n, pp, tp, correction)
-    d_prime = norm.ppf(hr) - norm.ppf(far)
-    return d_prime
+    with warnings.catch_warnings():
+        warnings.simplefilter("ignore", RuntimeWarning)
+        d_prime = norm.ppf(hr) - norm.ppf(far)
+        criterion = -0.5 * (norm.ppf(hr) + norm.ppf(far))
+        return d_prime, criterion
 
 
 def _dprime_rates(p: int, n: float, pp: int, tp: int, correction: Optional[str]) -> (float, float):

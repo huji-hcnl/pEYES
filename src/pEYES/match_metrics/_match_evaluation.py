@@ -8,7 +8,7 @@ from src.pEYES._DataModels.EventMatcher import OneToOneEventMatchesType
 from src.pEYES._DataModels.UnparsedEventLabel import UnparsedEventLabelType, UnparsedEventLabelSequenceType
 
 from src.pEYES._utils.event_utils import parse_label
-from src.pEYES._utils.metric_utils import dprime
+from src.pEYES._utils.metric_utils import dprime_and_criterion
 
 
 def match_ratio(
@@ -60,7 +60,7 @@ def precision_recall_f1(
     return precision, recall, f1
 
 
-def d_prime(
+def d_prime_and_criterion(
         ground_truth: EventSequenceType,
         prediction: EventSequenceType,
         matches: OneToOneEventMatchesType,
@@ -68,18 +68,21 @@ def d_prime(
         correction: Optional[str] = "loglinear",
 ) -> float:
     """
-    Calculates d-prime while optionally applying a correction for floor/ceiling effects on the hit-rate and/or
-    false-alarm rate. See information on correction methods at https://stats.stackexchange.com/a/134802/288290.
+    Calculates d-prime and criterion while optionally applying a correction for floor/ceiling effects on the hit-rate
+    and/or false-alarm rate. See information on correction methods at https://stats.stackexchange.com/a/134802/288290.
+    See implementation details at https://lindeloev.net/calculating-d-in-python-and-php/.
 
     :param ground_truth: all ground-truth events
     :param prediction: all predicted events
     :param matches: the one-to-one matches between (subset of) ground-truth and (subset of) predicted events
     :param positive_label: event-label to consider as "positive" events
     :param correction: optional floor/ceiling correction method when calculating hit-rate and false-alarm rate
-    :return: the d-prime value
+    :return:
+        - d_prime: float; the d-prime value
+        - criterion: float; the criterion value
     """
     p, n, pp, tp = _extract_contingency_values(ground_truth, prediction, matches, positive_label)
-    return dprime(p, n, pp, tp, correction)
+    return dprime_and_criterion(p, n, pp, tp, correction)
 
 
 def _extract_contingency_values(
