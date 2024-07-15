@@ -17,6 +17,8 @@ CWD = os.getcwd()
 OUTPUT_DIR = os.path.join(CWD, "output")
 DATASETS_DIR = os.path.join(CWD, "output", "datasets")
 
+LABELER_STR = "labeler"
+
 DATASET_ANNOTATORS = {
     "lund2013": ["RA", "MN"],
     "irf": ['RZ'],
@@ -127,5 +129,5 @@ def _process_dataset(
         events.index.names = [peyes.TRIAL_ID_STR, f"{peyes.EVENT_STR}_id"]
         metadata = pd.concat(metadata, axis=0)
         metadata.index.names = [peyes.TRIAL_ID_STR, "field_name"]
-        labels.columns.names = events.columns.names = metadata.columns.names = ["labeler", "iteration"]
+        labels.columns.names = events.columns.names = metadata.columns.names = [LABELER_STR, peyes.ITERATION_STR]
         return labels, events, metadata
