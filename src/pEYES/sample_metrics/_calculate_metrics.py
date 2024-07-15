@@ -80,11 +80,11 @@ def _calculate_impl(
     if metric_lower == "1_nld" or metric_lower == "complement_nld":
         return _comp_nld(ground_truth, prediction)
     if metric_lower == "recall":
-        return met.recall_score(ground_truth, prediction, labels=pos_labels, average=average)
+        return met.recall_score(ground_truth, prediction, labels=list(pos_labels), average=average)
     if metric_lower == "precision":
-        return met.precision_score(ground_truth, prediction, labels=pos_labels, average=average)
+        return met.precision_score(ground_truth, prediction, labels=list(pos_labels), average=average)
     if metric_lower == "f1":
-        return met.f1_score(ground_truth, prediction, labels=pos_labels, average=average)
+        return met.f1_score(ground_truth, prediction, labels=list(pos_labels), average=average)
     if metric_lower.replace('_', '') in {"dprime", "d'", "criterion"}:
         p = np.sum([1 for label in ground_truth if label in pos_labels])
         n = len(ground_truth) - p
