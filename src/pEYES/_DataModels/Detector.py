@@ -990,9 +990,9 @@ class NHDetector(BaseDetector):
 
         # extract saccade indices to ready-to-use lists
         saccade_info_list = sorted(saccade_info.items(), key=lambda x: x[0])
-        saccade_onset_idxs = [info[1][0] for info in saccade_info_list]
-        saccade_peak_idxs = [info[1][1] for info in saccade_info_list]
-        saccade_offset_idxs = [info[1][2] for info in saccade_info_list]
+        saccade_onset_idxs = np.array([info[1][0] for info in saccade_info_list])
+        saccade_peak_idxs = np.array([info[1][1] for info in saccade_info_list])
+        saccade_offset_idxs = np.array([info[1][2] for info in saccade_info_list])
 
         # find PSO start & end idxs after each saccade
         sac_id = 0
