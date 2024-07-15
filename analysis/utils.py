@@ -1,4 +1,5 @@
 import os
+import time
 import copy
 import warnings
 from typing import List
@@ -13,6 +14,7 @@ from src.pEYES._DataModels.Detector import BaseDetector
 
 
 CWD = os.getcwd()
+OUTPUT_DIR = os.path.join(CWD, "output")
 DATASETS_DIR = os.path.join(CWD, "output", "datasets")
 
 DATASET_ANNOTATORS = {
@@ -28,7 +30,28 @@ DEFAULT_DETECTORS = [
 ###########################################
 
 
-def load_dataset(dataset_name: str, verbose: bool = True) -> pd.DataFrame:
+def default_load_or_process(
+        dataset_name: str, verbose: bool = True
+) -> (pd.DataFrame, pd.DataFrame, pd.DataFrame, pd.DataFrame):
+    dataset = _load_dataset(dataset_name, verbose=True)
+    default_output_dir = os.path.join(OUTPUT_DIR, dataset_name, "default")
+    os.makedirs(default_output_dir, exist_ok=True)
+    try:
+        labels = pd.read_pickle(os.path.join(default_output_dir, "labels.pkl"))
+        events = pd.read_pickle(os.path.join(default_output_dir, "events.pkl"))
+        metadata = pd.read_pickle(os.path.join(default_output_dir, "metadata.pkl"))
+    except FileNotFoundError:
+        labels, events, metadata = _process_dataset(
+            dataset, DEFAULT_DETECTORS, DATASET_ANNOTATORS[dataset_name], verbose=verbose
+        )
+        print(f"Saving processed data to {default_output_dir}...")
+        labels.to_pickle(os.path.join(default_output_dir, "labels.pkl"))
+        events.to_pickle(os.path.join(default_output_dir, "events.pkl"))
+        metadata.to_pickle(os.path.join(default_output_dir, "metadata.pkl"))
+    return dataset, labels, events, metadata
+
+
+def _load_dataset(dataset_name: str, verbose: bool = True) -> pd.DataFrame:
     if dataset_name == "lund2013":
         dataset = peyes.datasets.lund2013(directory=DATASETS_DIR, save=True, verbose=verbose)
     elif dataset_name == "irf":
@@ -40,7 +63,7 @@ def load_dataset(dataset_name: str, verbose: bool = True) -> pd.DataFrame:
     return dataset
 
 
-def process_dataset(
+def _process_dataset(
         dataset: pd.DataFrame,
         detectors: List[BaseDetector],
         annotators: List[str],
