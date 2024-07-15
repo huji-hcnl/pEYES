@@ -41,6 +41,7 @@ AMPLITUDE_STR, AMPLITUDES_STR = "amplitude", "amplitudes"
 AZIMUTH_STR, AZIMUTHS_STR = "azimuth", "azimuths"
 ANGLE_STR, ANGLES_STR = "angle", "angles"
 COUNT_STR, COUNTS_STR = "count", "counts"
+ITERATION_STR, ITERATIONS_STR = "iteration", "iterations"
 
 #### Trial Field Names  ####
 SUBJECT_STR = "subject"
