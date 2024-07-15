@@ -1,3 +1,4 @@
+import warnings
 from typing import Dict, Union, Optional
 
 import numpy as np
@@ -45,12 +46,14 @@ def calculate(
     :return: the calculated metric(s) as a single float (if only one metric is specified) or a dictionary of metric
         names to values
     """
-    results: Dict[str, float] = {}
-    for metric in tqdm(metrics, desc="Calculating Metrics", disable=not verbose):
-        results[metric] = _calculate_impl(ground_truth, prediction, metric, pos_labels, average, correction)
-    if len(results) == 1:
-        return next(iter(results.values()))
-    return results
+    with warnings.catch_warnings():
+        warnings.simplefilter("ignore", category=UserWarning)
+        results: Dict[str, float] = {}
+        for metric in tqdm(metrics, desc="Calculating Metrics", disable=not verbose):
+            results[metric] = _calculate_impl(ground_truth, prediction, metric, pos_labels, average, correction)
+        if len(results) == 1:
+            return next(iter(results.values()))
+        return results
 
 
 def _calculate_impl(
@@ -80,11 +83,11 @@ def _calculate_impl(
     if metric_lower == "1_nld" or metric_lower == "complement_nld":
         return _comp_nld(ground_truth, prediction)
     if metric_lower == "recall":
-        return met.recall_score(ground_truth, prediction, labels=pos_labels, average=average)
+        return met.recall_score(ground_truth, prediction, labels=pos_labels, average=average, zero_division=np.nan)
     if metric_lower == "precision":
-        return met.precision_score(ground_truth, prediction, labels=pos_labels, average=average)
+        return met.precision_score(ground_truth, prediction, labels=pos_labels, average=average, zero_division=np.nan)
     if metric_lower == "f1":
-        return met.f1_score(ground_truth, prediction, labels=pos_labels, average=average)
+        return met.f1_score(ground_truth, prediction, labels=pos_labels, average=average, zero_division=np.nan)
     if metric_lower.replace('_', '') in {"dprime", "d'", "criterion"}:
         if pos_labels is None or pos_labels == 0 or pos_labels == list(set([parse_label(label) for label in pos_labels])):
             raise ValueError("Positive labels must be specified for d-prime and criterion calculations.")
