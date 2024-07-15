@@ -21,7 +21,11 @@ DATASET_ANNOTATORS = {
     "hfc": ['DN', 'IH', 'JB', 'JF', 'JV', 'KH', 'MN', 'MS', 'PZ', 'RA', 'RH', 'TC']
 }
 DETECTOR_NAMES = ["ivt", "ivvt", "idt", "engbert", "nh", "remodnav"]
-DEFAULT_DETECTORS = [peyes.create_detector(det, missing_value=np.nan, min_event_duration=4, pad_blinks_time=0) for det in DETECTOR_NAMES]
+DEFAULT_DETECTORS = [
+    peyes.create_detector(det, missing_value=np.nan, min_event_duration=4, pad_blinks_time=0) for det in DETECTOR_NAMES
+]
+
+###########################################
 
 
 def load_dataset(dataset_name: str, verbose: bool = True) -> pd.DataFrame:
