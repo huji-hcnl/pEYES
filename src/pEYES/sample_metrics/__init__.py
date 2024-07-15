@@ -53,3 +53,20 @@ def f1_score(
 ) -> float:
     return calculate(ground_truth, prediction, "f1", pos_labels=pos_labels, average=average)
 
+
+def d_prime(
+        ground_truth: EventLabelSequenceType,
+        prediction: EventLabelSequenceType,
+        pos_labels: Union[UnparsedEventLabelType, UnparsedEventLabelSequenceType],
+        correction: str = "loglinear",
+) -> float:
+    return calculate(ground_truth, prediction, "d_prime", pos_labels=pos_labels, correction=correction)
+
+
+def criterion(
+        ground_truth: EventLabelSequenceType,
+        prediction: EventLabelSequenceType,
+        pos_labels: Union[UnparsedEventLabelType, UnparsedEventLabelSequenceType],
+        correction: str = "loglinear",
+) -> float:
+    return calculate(ground_truth, prediction, "criterion", pos_labels=pos_labels, correction=correction)
