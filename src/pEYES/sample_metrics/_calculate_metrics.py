@@ -64,9 +64,9 @@ def _calculate_impl(
     assert len(ground_truth) == len(prediction), "Ground truth and prediction must have the same length."
     pos_labels = pos_labels or set(EventLabelEnum)
     if isinstance(pos_labels, UnparsedEventLabelType):
-        pos_labels = {parse_label(pos_labels)}
+        pos_labels = [parse_label(pos_labels)]
     else:
-        pos_labels = set([parse_label(label) for label in pos_labels])
+        pos_labels = list(set([parse_label(label) for label in pos_labels]))
     metric_lower = metric.lower().strip().replace(" ", "_").replace("-", "_").removesuffix("_score")
     average = average.lower().strip()
     if metric_lower == "accuracy":
@@ -80,12 +80,14 @@ def _calculate_impl(
     if metric_lower == "1_nld" or metric_lower == "complement_nld":
         return _comp_nld(ground_truth, prediction)
     if metric_lower == "recall":
-        return met.recall_score(ground_truth, prediction, labels=list(pos_labels), average=average)
+        return met.recall_score(ground_truth, prediction, labels=pos_labels, average=average)
     if metric_lower == "precision":
-        return met.precision_score(ground_truth, prediction, labels=list(pos_labels), average=average)
+        return met.precision_score(ground_truth, prediction, labels=pos_labels, average=average)
     if metric_lower == "f1":
-        return met.f1_score(ground_truth, prediction, labels=list(pos_labels), average=average)
+        return met.f1_score(ground_truth, prediction, labels=pos_labels, average=average)
     if metric_lower.replace('_', '') in {"dprime", "d'", "criterion"}:
+        if pos_labels is None or pos_labels == 0 or pos_labels == list(set([parse_label(label) for label in pos_labels])):
+            raise ValueError("Positive labels must be specified for d-prime and criterion calculations.")
         p = np.sum([1 for label in ground_truth if label in pos_labels])
         n = len(ground_truth) - p
         pp = np.sum([1 for label in prediction if label in pos_labels])
