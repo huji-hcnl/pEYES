@@ -1,5 +1,7 @@
 import os
 import copy
+import warnings
+from typing import List, Dict, Union, Optional
 
 import numpy as np
 import pandas as pd
@@ -13,28 +15,44 @@ import src.pEYES as peyes
 import src.pEYES._utils.constants as cnst
 from src.pEYES._utils.event_utils import parse_label
 from src.pEYES._DataModels.EventLabelEnum import EventLabelEnum
+from src.pEYES._DataModels.UnparsedEventLabel import UnparsedEventLabelType, UnparsedEventLabelSequenceType
 
 import analysis.utils as u
+import analysis.preprocess as pp
 
 pio.renderers.default = "browser"
 
 ###################
 
-dataset, labels, events, metadata = u.default_load_or_process("lund2013", verbose=False)
+dataset, labels, events, metadata = pp.run_default("lund2013", verbose=False)
 
 ###################
 
-for tr in labels.index.get_level_values(level=peyes.TRIAL_ID_STR):
-    for gt_labeler in u.DATASET_ANNOTATORS['lund2013']:
-        gt_labels = labels.loc[tr, gt_labeler].dropna().values.flatten()
-        for other_labeler in labels.columns.get_level_values(u.LABELER_STR).unique():
-            if other_labeler == gt_labeler or other_labeler == "MN":
+gt_labelers = u.DATASET_ANNOTATORS["lund2013"]
+pred_labelers = events.columns.get_level_values(level=u.LABELER_STR).unique()
+matching_schemes = {
+    'onset': dict(max_onset_difference=15),
+    'offset': dict(max_offset_difference=15),
+    'window': dict(max_onset_difference=15, max_offset_difference=15),
+    'l2': dict(max_l2=15),
+    'iou': dict(min_iou=1/3),
+    'max_overlap': dict(min_overlap=0.5),
+}
+
+results = dict()
+for tr in tqdm(events.index.get_level_values(level=peyes.TRIAL_ID_STR).unique(), desc="Trials"):
+    for gt_labeler in gt_labelers:
+        gt_events = events.loc[tr, gt_labeler].dropna().values.flatten()
+        if gt_events.size == 0:
+            continue
+        for pred_labeler in pred_labelers:
+            if gt_labeler == pred_labeler:
                 continue
-            other_labels_df = labels.loc[tr, other_labeler]
-            for it in other_labels_df.columns.get_level_values(peyes.ITERATION_STR).unique():
-                other_labels = other_labels_df[it].dropna().values.flatten()
-                res = peyes.sample_metrics.calculate(gt_labels, other_labels)
-                break
-            break
-        break
-    break
+            pred_events = events.loc[tr, pred_labeler].dropna().values.flatten()
+            if pred_events.size == 0:
+                continue
+            for match_by, kwargs in matching_schemes.items():
+                matches = peyes.match(gt_events, pred_events, match_by, allow_xmatch=False, **kwargs)
+                results[(tr, gt_labeler, pred_labeler, match_by)] = matches
+
+# TODO: rewrite this as a function in `preprocess.py` and use it in the pipeline
