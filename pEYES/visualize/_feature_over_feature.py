@@ -39,14 +39,13 @@ def main_sequence(
         )
     else:
         raise KeyError(f"Invalid `y_feature` argument: {y_feature}. Must be `duration` or `peak_velocity`.")
-    fig, stat_results = feature_vs_feature(
-        events=saccades, x_feature="amplitude", x_feature_units="deg", include_outliers=include_outliers,
-        trendline="trace", marginal_x='box', marginal_y='box', **params
-    )
+    fig, stat_results = feature_over_feature(events=saccades, x_feature="amplitude", x_feature_units="deg",
+                                             include_outliers=include_outliers, trendline="trace", marginal_x='box',
+                                             marginal_y='box', **params)
     return fig, stat_results
 
 
-def feature_vs_feature(
+def feature_over_feature(
         events: EventSequenceType, x_feature: str, y_feature: str, title: str = None, **kwargs
 ) -> (go.Figure, pd.DataFrame):
     """
