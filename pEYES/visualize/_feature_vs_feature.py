@@ -6,7 +6,7 @@ import pEYES._utils.constants as cnst
 from pEYES._DataModels.Event import EventSequenceType
 from pEYES._DataModels.EventLabelEnum import EventLabelEnum
 
-from src.pEYES import summarize_events
+from pEYES import summarize_events
 
 
 def main_sequence(
