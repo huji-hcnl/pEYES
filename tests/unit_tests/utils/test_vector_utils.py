@@ -2,7 +2,7 @@ import unittest
 
 import numpy as np
 
-from src.pEYES._utils.vector_utils import *
+from pEYES._utils.vector_utils import *
 
 
 class TestVectorUtils(unittest.TestCase):
@@ -37,10 +37,12 @@ class TestVectorUtils(unittest.TestCase):
         obs = pair_boolean_arrays(arr1, arr2)
         exp = np.empty((0, 2))
         self.assertTrue(np.array_equal(obs, exp))
+        arr2 = np.array([True, False, True])
+        obs = pair_boolean_arrays(arr1, arr2)
+        exp = np.array([[0, 0], [2, 2]])
+        self.assertTrue(np.array_equal(obs, exp))
         self.assertRaises(ValueError, pair_boolean_arrays, [[True, False], [True, False]], [True, False])
         self.assertRaises(ValueError, pair_boolean_arrays, [True, False], [[True, False], [True, False]])
-        self.assertRaises(ValueError, pair_boolean_arrays, [True, False], [True, False, True])
-        self.assertRaises(ValueError, pair_boolean_arrays, [True, False, True], [True, False])
 
     def test_get_chunk_indices(self):
         arr = [1, 1, 1, 2, 2, 3, 3, 3, 3]

@@ -1,9 +1,9 @@
 import unittest
 
-from src.pEYES._utils.event_utils import *
-from src.pEYES._utils.pixel_utils import visual_angle_to_pixels
-from src.pEYES._DataModels.EventLabelEnum import EventLabelEnum
-from src.pEYES._DataModels.Event import BaseEvent
+from pEYES._utils.event_utils import *
+from pEYES._utils.pixel_utils import visual_angle_to_pixels
+from pEYES._DataModels.EventLabelEnum import EventLabelEnum
+from pEYES._DataModels.Event import BaseEvent
 
 
 class TestEventUtils(unittest.TestCase):
