@@ -110,12 +110,10 @@ def feature_over_feature(
         **trendline_options
     )
     stat_results = px.get_trendline_results(fig)
-    if trendline == "overall" and ((marg_x is not None) or (marg_y is not None)):
-        # Remove the trendlines from the marginal subplots
-        # TODO: see https://stackoverflow.com/q/78746094/8543025
-        num_traces_to_remove = (marg_x is not None) + (marg_y is not None)
-        fig.data = fig.data[:-num_traces_to_remove]
-        fig.data[-1].showlegend = True
+
+    # remove trendlines from marginal subplots (see https://stackoverflow.com/q/78746094/8543025):
+    fig.update_traces(visible=False, selector=dict(name='Overall Trendline'))
+    fig.update_traces(visible=True, showlegend=True, selector=dict(name='Overall Trendline', xaxis='x'))
 
     # update titles
     x_feature_title = x_feature.replace("_", " ").title()
