@@ -7,7 +7,7 @@ from pEYES._DataModels.Event import EventSequenceType
 from pEYES._utils.vector_utils import pair_boolean_arrays
 from pEYES._utils.metric_utils import dprime_and_criterion
 
-from src.pEYES import events_to_boolean_channels
+from pEYES import events_to_boolean_channels
 
 
 def channel_timing_differences(
