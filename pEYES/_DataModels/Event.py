@@ -147,6 +147,8 @@ class BaseEvent(ABC):
     @final
     def time_overlap(self, other: "BaseEvent", normalize: bool = True) -> float:
         """  Calculates the time overlap between this event and another event, in milliseconds.  """
+        if self.duration == 0 or other.duration == 0:
+            return 0
         start_time = max(self.start_time, other.start_time)
         end_time = min(self.end_time, other.end_time)
         total_overlap = max([0, end_time - start_time])

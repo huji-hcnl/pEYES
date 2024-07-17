@@ -13,7 +13,7 @@ def match(
         match_by: str,
         ignore_events: Set[EventLabelEnum] = None,
         allow_xmatch: bool = False,
-        **match_kwargs,
+        **kwargs,
 ) -> EventMatchesType:
     """
     Match events based on the given matching criteria, ignoring specified event-labels.
@@ -33,63 +33,67 @@ def match(
         - 'l2' or 'l2 timing': match the predicted event with minimum timing l2 norm
     :param ignore_events: a set of event-labels to ignore during the matching process, default is None.
     :param allow_xmatch: if True, allows cross-matching between detectors/raters, default is False.
-    :param match_kwargs: additional keyword arguments to pass to the matching function.
+
+    :keyword min_overlap: minimum overlap required for 'first', 'last', 'max', and 'longest overlap' matching.
+    :keyword min_iou: minimum intersection-over-union required for 'iou' matching.
+    :keyword max_onset_difference: maximum onset difference allowed for 'onset' or 'window' matching.
+    :keyword max_offset_difference: maximum offset difference allowed for 'offset' or 'window' matching.
+    :keyword max_l2: maximum l2 norm allowed for 'l2' matching.
+
     :return: a dictionary matching each ground-truth event to event(s) from the predictions.
     """
     ignore_events = ignore_events or set()
     match_by = match_by.lower().replace("_", " ").replace("-", " ").strip()
-    allow_xmatch = allow_xmatch or match_kwargs.pop("allow_xmatch", None) or match_kwargs.pop("allow_cross_match", False)
+    allow_xmatch = allow_xmatch or kwargs.pop("allow_xmatch", None) or kwargs.pop("allow_cross_match", False)
     ground_truth = [e for e in ground_truth if e.label not in ignore_events]
     prediction = [e for e in prediction if e.label not in ignore_events]
     if match_by == "first" or match_by == "first overlap":
         return EventMatcher.first_overlap(
-            ground_truth, prediction, min_overlap=match_kwargs.pop("min_overlap", 0), allow_cross_matching=allow_xmatch
+            ground_truth, prediction, min_overlap=kwargs.pop("min_overlap", 0), allow_cross_matching=allow_xmatch
         )
     if match_by == "last" or match_by == "last overlap":
         return EventMatcher.last_overlap(
-            ground_truth, prediction, min_overlap=match_kwargs.pop("min_overlap", 0), allow_cross_matching=allow_xmatch
+            ground_truth, prediction, min_overlap=kwargs.pop("min_overlap", 0), allow_cross_matching=allow_xmatch
         )
-    if match_by == "max" or match_by == "max overlap":
+    if match_by == "max" or match_by == "max overlap" or match_by == "max_overlap":
         return EventMatcher.max_overlap(
-            ground_truth, prediction, min_overlap=match_kwargs.pop("min_overlap", 0), allow_cross_matching=allow_xmatch
+            ground_truth, prediction, min_overlap=kwargs.pop("min_overlap", 0), allow_cross_matching=allow_xmatch
         )
     if "longest" in match_by and "overlap" in match_by:
         return EventMatcher.longest_overlapping_event(
-            ground_truth, prediction, min_overlap=match_kwargs.pop("min_overlap", 0), allow_cross_matching=allow_xmatch
+            ground_truth, prediction, min_overlap=kwargs.pop("min_overlap", 0), allow_cross_matching=allow_xmatch
         )
     if match_by == "iou" or match_by == "intersection over union":
         return EventMatcher.iou(
-            ground_truth, prediction, min_iou=match_kwargs.pop("min_iou", 0), allow_cross_matching=allow_xmatch
+            ground_truth, prediction, min_iou=kwargs.pop("min_iou", 0), allow_cross_matching=allow_xmatch
         )
     if match_by == "onset" or match_by == "onset difference":
         return EventMatcher.onset_difference(
             ground_truth,
             prediction,
-            max_onset_difference=match_kwargs.pop("max_onset_difference", 0),
+            max_onset_difference=kwargs.pop("max_onset_difference", 0),
             allow_cross_matching=allow_xmatch
         )
     if match_by == "offset" or match_by == "offset max_onset_difference":
         return EventMatcher.offset_difference(
             ground_truth,
             prediction,
-            max_offset_difference=match_kwargs.pop("max_offset_difference", 0),
+            max_offset_difference=kwargs.pop("max_offset_difference", 0),
             allow_cross_matching=allow_xmatch
         )
     if match_by == "window" or match_by == "window based":
         return EventMatcher.window_based(
             ground_truth,
             prediction,
-            max_onset_difference=match_kwargs.pop("max_onset_difference", 0),
-            max_offset_difference=match_kwargs.pop("max_offset_difference", 0),
+            max_onset_difference=kwargs.pop("max_onset_difference", 0),
+            max_offset_difference=kwargs.pop("max_offset_difference", 0),
             allow_cross_matching=allow_xmatch
         )
     if "l2" in match_by:
         return EventMatcher.l2_timing(
-            ground_truth, prediction, max_l2=match_kwargs.pop("max_l2", 0), allow_cross_matching=allow_xmatch
+            ground_truth, prediction, max_l2=kwargs.pop("max_l2", 0), allow_cross_matching=allow_xmatch
         )
-    return EventMatcher.generic_matching(
-        ground_truth, prediction, allow_cross_matching=allow_xmatch, **match_kwargs
-    )
+    return EventMatcher.generic_matching(ground_truth, prediction, allow_cross_matching=allow_xmatch, **kwargs)
 
 
 def match_multiple(
@@ -99,7 +103,7 @@ def match_multiple(
         ignore_events: Set[EventLabelEnum] = None,
         allow_xmatch: bool = False,
         verbose: bool = False,
-        **match_kwargs,
+        **kwargs,
 ) -> Dict[str, EventMatchesType]:
     """
     Matched between each of the predicted event sequences and the ground-truth event sequence, using the specified
@@ -111,7 +115,8 @@ def match_multiple(
     """
     matches = {}
     for name, pred in tqdm(predictions.items(), desc="Matching", disable=not verbose):
-        matches[name] = match(ground_truth, pred, match_by, ignore_events=ignore_events, allow_xmatch=allow_xmatch,
-                              **match_kwargs)
+        matches[name] = match(
+            ground_truth, pred, match_by, ignore_events=ignore_events, allow_xmatch=allow_xmatch, **kwargs
+        )
     return matches
 
