@@ -396,7 +396,7 @@ class BaseEvent(ABC):
         return True
 
     def __str__(self) -> str:
-        return f"{self.label.name}({self.duration:.2f}ms)"
+        return f"{self.label.name}({self.duration}ms)"
 
     def __repr__(self) -> str:
         return self.__str__()
