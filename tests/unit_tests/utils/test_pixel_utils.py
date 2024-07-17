@@ -2,8 +2,8 @@ import unittest
 
 import numpy as np
 
-import src.pEYES._utils.constants as cnst
-from src.pEYES._utils.pixel_utils import *
+import pEYES._utils.constants as cnst
+from pEYES._utils.pixel_utils import *
 
 
 class TestPixelUtils(unittest.TestCase):
@@ -24,6 +24,20 @@ class TestPixelUtils(unittest.TestCase):
             np.allclose(np.vstack((xs, ys)).astype(int), np.vstack(cast_to_integers(xs, ys)))
         )
         self.assertWarns(RuntimeWarning, cast_to_integers, xs, ys, filter_warnings=False)
+
+    def test_line_dispersion(self):
+        xs = np.arange(0, 5).astype(float)
+        ys = np.arange(5, 0, -1).astype(float)
+        self.assertEqual(8, line_dispersion(xs, ys))
+        xs[2] = np.nan
+        self.assertEqual(8, line_dispersion(xs, ys))
+
+    def test_ellipse_dispersion(self):
+        xs = np.arange(0, 5).astype(float)
+        ys = np.arange(5, 0, -1).astype(float)
+        self.assertTrue(np.isclose(np.pi * 4, ellipse_dispersion(xs, ys)))
+        xs[2] = np.nan
+        self.assertTrue(np.isclose(np.pi * 4, ellipse_dispersion(xs, ys)))
 
     def test_calculate_pixel_size(self):
         self.assertEqual(1, calculate_pixel_size(width=1, height=1, resolution=(1, 1)))

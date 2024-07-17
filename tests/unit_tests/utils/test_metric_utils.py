@@ -4,8 +4,8 @@ import numpy as np
 import Levenshtein
 from scipy.stats import norm
 
-from src.pEYES._utils.metric_utils import transition_matrix, dprime, _dprime_rates
-from src.pEYES._utils.metric_utils import complement_normalized_levenshtein_distance as comp_nld
+from pEYES._utils.metric_utils import transition_matrix, dprime_and_criterion, _dprime_rates
+from pEYES._utils.metric_utils import complement_normalized_levenshtein_distance as comp_nld
 
 
 class TestMetricUtils(unittest.TestCase):
@@ -25,20 +25,6 @@ class TestMetricUtils(unittest.TestCase):
         gt = "kitten"
         pred = "sitting"
         self.assertEqual(1 - Levenshtein.distance(gt, pred) / max(len(gt), len(pred)), comp_nld(gt, pred))
-
-    def test_dprime(self):
-        p = n = pp = 10
-        tp = 5
-        self.assertEqual(dprime(p, n, pp, tp, None), norm.ppf(tp/p) - norm.ppf((pp-tp)/n))
-        self.assertEqual(dprime(p, n, pp, tp, "macmillan"), norm.ppf(tp/p) - norm.ppf((pp-tp)/n))
-        self.assertEqual(dprime(p, n, pp, tp, "loglinear"), norm.ppf(tp/p) - norm.ppf((pp-tp)/n))
-        self.assertEqual(dprime(p, n, pp, tp, "foo"), norm.ppf(tp/p) - norm.ppf((pp-tp)/n))
-        tp = 10
-        self.assertTrue(np.isinf(dprime(p, n, pp, tp, None)))
-        self.assertEqual(dprime(p, n, pp, tp, "macmillan"), norm.ppf(1-0.5/p) - norm.ppf(0.5/n))
-        hr_ll, far_ll = _dprime_rates(p, n, pp, tp, "loglinear")
-        self.assertEqual(dprime(p, n, pp, tp, "loglinear"), norm.ppf(hr_ll) - norm.ppf(far_ll))
-        self.assertRaises(ValueError, dprime, p, n, pp, tp, "foo")
 
     def test_dprime_rates(self):
         p, n, pp, tp = 10, 20, 15, 5
@@ -61,3 +47,42 @@ class TestMetricUtils(unittest.TestCase):
         self.assertRaises(AssertionError, _dprime_rates, p, n, pp, tp, None)
         p = tp = 0
         self.assertTrue(np.isnan(_dprime_rates(p, n, pp, tp, None)[0]))
+
+    def test_dprime(self):
+        p = n = pp = 10
+        tp = 5
+        exp = norm.ppf(tp / p) - norm.ppf((pp - tp) / n)
+        self.assertEqual(dprime_and_criterion(p, n, pp, tp, None)[0], exp)
+        self.assertEqual(dprime_and_criterion(p, n, pp, tp, "macmillan")[0], exp)
+        self.assertEqual(dprime_and_criterion(p, n, pp, tp, "loglinear")[0], exp)
+        self.assertEqual(dprime_and_criterion(p, n, pp, tp, "foo")[0], exp)
+        tp = 10
+        self.assertTrue(np.isinf(dprime_and_criterion(p, n, pp, tp, None)[0]))
+        self.assertEqual(
+            dprime_and_criterion(p, n, pp, tp, "macmillan")[0], norm.ppf(1 - 0.5 / p) - norm.ppf(0.5 / n)
+        )
+        hr_ll, far_ll = _dprime_rates(p, n, pp, tp, "loglinear")
+        self.assertEqual(
+            dprime_and_criterion(p, n, pp, tp, "loglinear")[0], norm.ppf(hr_ll) - norm.ppf(far_ll)
+        )
+        self.assertRaises(ValueError, dprime_and_criterion, p, n, pp, tp, "foo")
+
+    def test_criterion(self):
+        p = n = pp = 10
+        tp = 5
+        exp = -0.5 * (norm.ppf(tp / p) + norm.ppf((pp - tp) / n))
+        self.assertEqual(dprime_and_criterion(p, n, pp, tp, None)[1], exp)
+        self.assertEqual(dprime_and_criterion(p, n, pp, tp, "macmillan")[1], exp)
+        self.assertEqual(dprime_and_criterion(p, n, pp, tp, "loglinear")[1], exp)
+        self.assertEqual(dprime_and_criterion(p, n, pp, tp, "foo")[1], exp)
+        tp = 10
+        self.assertTrue(np.isnan(dprime_and_criterion(p, n, pp, tp, None)[1]))
+        self.assertEqual(
+            dprime_and_criterion(p, n, pp, tp, "macmillan")[1], -0.5 * (norm.ppf(1 - 0.5 / p) + norm.ppf(0.5 / n))
+        )
+        hr_ll, far_ll = _dprime_rates(p, n, pp, tp, "loglinear")
+        self.assertEqual(
+            dprime_and_criterion(p, n, pp, tp, "loglinear")[1], -0.5 * (norm.ppf(hr_ll) + norm.ppf(far_ll))
+        )
+        self.assertRaises(ValueError, dprime_and_criterion, p, n, pp, tp, "foo")
+

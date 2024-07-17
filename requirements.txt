@@ -9,3 +9,4 @@ overrides~=7.7.0
 tqdm~=4.66.4
 Levenshtein~=0.25.1
 remodnav~=1.1.2
+liac-arff~=2.5.0
