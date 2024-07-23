@@ -46,11 +46,15 @@ def get_filename_for_labels(
         suffix: str = "",
         extension: str = "pkl"
 ) -> str:
+    if prefix and not prefix.endswith("_"):
+        prefix += "_"
+    if suffix and not suffix.startswith("_"):
+        suffix = "_" + suffix
     if labels is None:
-        return f"{prefix}_all_labels_{suffix}.{extension}"
+        return f"{prefix}all_labels{suffix}.{extension}"
     elif isinstance(labels, UnparsedEventLabelType):
-        return f"{prefix}_{peyes.parse_label(labels).name.lower()}_{suffix}.{extension}"
+        return f"{prefix}{peyes.parse_label(labels).name.lower()}{suffix}.{extension}"
     elif isinstance(labels, UnparsedEventLabelSequenceType):
-        return f"{prefix}_{'_'.join([peyes.parse_label(l).name.lower() for l in labels])}_{suffix}.{extension}"
+        return f"{prefix}{'_'.join([peyes.parse_label(l).name.lower() for l in labels])}{suffix}.{extension}"
     else:
         raise TypeError(f"Unknown pos_labels type: {type(labels)}")
