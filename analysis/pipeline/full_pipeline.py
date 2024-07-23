@@ -42,16 +42,13 @@ def run(
     try:
         labels = pd.read_pickle(os.path.join(output_dir, f"{peyes.LABELS_STR}.pkl"))
         metadata = pd.read_pickle(os.path.join(output_dir, f"{u.METADATA_STR}.pkl"))
+        events = pd.read_pickle(os.path.join(output_dir, f"{peyes.EVENTS_STR}.pkl"))
     except FileNotFoundError:
-        labels, metadata = preprocess.detect_labels(
+        labels, metadata, events = preprocess.detect_labels_and_events(
             dataset, detectors, annotators, num_iterations, iterations_overwrite_label, verbose
         )
         labels.to_pickle(os.path.join(output_dir, f"{peyes.LABELS_STR}.pkl"))
         metadata.to_pickle(os.path.join(output_dir, f"{u.METADATA_STR}.pkl"))
-    try:
-        events = pd.read_pickle(os.path.join(output_dir, f"{peyes.EVENTS_STR}.pkl"))
-    except FileNotFoundError:
-        events = preprocess.create_events(dataset, labels, verbose=verbose)
         events.to_pickle(os.path.join(output_dir, f"{peyes.EVENTS_STR}.pkl"))
     try:
         matches = pd.read_pickle(os.path.join(output_dir, f"{u.MATCHES_STR}.pkl"))

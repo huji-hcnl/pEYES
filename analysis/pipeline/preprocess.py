@@ -35,20 +35,15 @@ def run_default(
     try:
         labels = pd.read_pickle(os.path.join(default_output_dir, f"{peyes.LABELS_STR}.pkl"))
         metadata = pd.read_pickle(os.path.join(default_output_dir, f"{u.METADATA_STR}.pkl"))
+        events = pd.read_pickle(os.path.join(default_output_dir, f"{peyes.EVENTS_STR}.pkl"))
     except FileNotFoundError:
-        labels, metadata = detect_labels(
+        labels, metadata, events = detect_labels_and_events(
             dataset, u.DEFAULT_DETECTORS, u.DATASET_ANNOTATORS[dataset_name], verbose=verbose
         )
         if verbose:
-            print(f"Saving labels to {default_output_dir}...")
+            print(f"Saving labels & events to {default_output_dir}...")
         labels.to_pickle(os.path.join(default_output_dir, f"{peyes.LABELS_STR}.pkl"))
         metadata.to_pickle(os.path.join(default_output_dir, f"{u.METADATA_STR}.pkl"))
-    try:
-        events = pd.read_pickle(os.path.join(default_output_dir, f"{peyes.EVENTS_STR}.pkl"))
-    except FileNotFoundError:
-        events = create_events(dataset, labels, verbose=verbose)
-        if verbose:
-            print(f"Saving events to {default_output_dir}...")
         events.to_pickle(os.path.join(default_output_dir, f"{peyes.EVENTS_STR}.pkl"))
     try:
         matches = pd.read_pickle(os.path.join(default_output_dir, f"{u.MATCHES_STR}.pkl"))
@@ -77,14 +72,14 @@ def load_dataset(dataset_name: str, verbose: bool = True) -> pd.DataFrame:
     return dataset
 
 
-def detect_labels(
+def detect_labels_and_events(
         dataset: pd.DataFrame,
         detectors: List[BaseDetector],
         annotators: List[str],
         num_iterations: int = 4,
         overwrite_label: Union[UnparsedEventLabelType, UnparsedEventLabelSequenceType] = 2,
         verbose: bool = True,
-) -> (pd.DataFrame, pd.DataFrame):
+) -> (pd.DataFrame, pd.DataFrame, pd.DataFrame):
     with warnings.catch_warnings():
         warnings.simplefilter("ignore")
         if overwrite_label is None:
@@ -94,67 +89,48 @@ def detect_labels(
         else:
             overwrite_label = {peyes.parse_label(l) for l in overwrite_label}
 
-        labels, metadata = dict(), dict()
+        labels, metadata, events = dict(), dict(), dict()
         trials_prog_bar = tqdm(
-            dataset[peyes.TRIAL_ID_STR].unique(), desc="Detecting Labels", leave=True, disable=False
+            dataset[peyes.TRIAL_ID_STR].unique(), desc="Detecting Labels & Events", leave=True, disable=False
         )
         for tr in trials_prog_bar:
             trial = dataset[dataset[peyes.TRIAL_ID_STR] == tr]
             t = trial[peyes.T].values
             x = trial[peyes.X].values
             y = trial[peyes.Y].values
+            p = trial[peyes.PUPIL].values
             vd = trial[peyes.VIEWER_DISTANCE_STR].iloc[0]
             ps = trial[peyes.PIXEL_SIZE_STR].iloc[0]
             for annot in tqdm(annotators, desc="\tAnnotators", leave=False, disable=not verbose, position=1):
-                labels[(tr, annot, 0)] = np.array(trial[annot].values)
+                annotator_labels = trial[annot].values
+                labels[(tr, annot, 0)] = np.array(annotator_labels)
+                events[(tr, annot, 0)] = peyes.create_events(
+                    labels=annotator_labels, t=t, x=x, y=y, pupil=p, viewer_distance=vd, pixel_size=ps
+                )
             for det in tqdm(detectors, desc="\tDetectors", leave=False, disable=not verbose, position=1):
                 det_name = det.name
-                x_copy, y_copy = copy.deepcopy(x), copy.deepcopy(y)
+                x_copy, y_copy, p_copy = copy.deepcopy(x), copy.deepcopy(y), copy.deepcopy(p)
                 for it in trange(num_iterations, desc="\t\tIterations", leave=False, disable=not verbose, position=2):
                     it_labels, it_metadata = det.detect(t, x_copy, y_copy, viewer_distance_cm=vd, pixel_size_cm=ps)
                     labels[(tr, det_name, it+1)] = np.array(it_labels)
                     metadata[(tr, det_name, it+1)] = it_metadata
+                    events[(tr, det_name, it+1)] = peyes.create_events(
+                        labels=it_labels, t=t, x=x_copy, y=y_copy, pupil=p_copy, viewer_distance=vd, pixel_size=ps
+                    )
                     to_overwrite = np.isin(it_labels, list(overwrite_label))
                     x_copy[to_overwrite] = np.nan
                     y_copy[to_overwrite] = np.nan
+                    p_copy[to_overwrite] = np.nan
         labels = pd.concat([pd.Series(v, name=k) for k, v in labels.items()], axis=1)
         labels.index.name = peyes.SAMPLE_STR
         metadata = pd.concat([pd.Series(v, name=k) for k, v in metadata.items()], axis=1)
         metadata.index.name = u.FIELD_NAME_STR
-        labels.columns.names = metadata.columns.names = [peyes.TRIAL_ID_STR, u.LABELER_STR, peyes.ITERATION_STR]
-        return labels, metadata
-
-
-def create_events(
-        dataset: pd.DataFrame, labels: pd.DataFrame, verbose=False
-) -> pd.DataFrame:
-    trial_ids = labels.columns.get_level_values(peyes.TRIAL_ID_STR).unique()
-    labelers = labels.columns.get_level_values(u.LABELER_STR).unique()
-    iterations = labels.columns.get_level_values(peyes.ITERATION_STR).unique()
-    events = dict()
-    for tr in tqdm(trial_ids, desc="Creating Events", leave=True, position=0, disable=False):
-        trial_data = dataset[dataset[peyes.TRIAL_ID_STR] == tr]
-        t = trial_data[peyes.T].values
-        x = trial_data[peyes.X].values
-        y = trial_data[peyes.Y].values
-        p = trial_data[peyes.PUPIL].values
-        vd = trial_data[peyes.VIEWER_DISTANCE_STR].iloc[0]
-        ps = trial_data[peyes.PIXEL_SIZE_STR].iloc[0]
-        for lblr in tqdm(labelers, desc="\tLabelers", leave=False, position=1, disable=not verbose):
-            for it in tqdm(iterations, desc="\t\tIterations", leave=False, position=2, disable=not verbose):
-                try:
-                    lbls = labels[tr, lblr, it].dropna().values.flatten()
-                    if lbls.size == 0:
-                        continue
-                    events[(tr, lblr, it)] = peyes.create_events(
-                        labels=lbls, t=t, x=x, y=y, pupil=p, viewer_distance=vd, pixel_size=ps
-                    )
-                except KeyError:
-                    continue
-    events = pd.concat([pd.Series(v, name=k) for k, v in events.items()], axis=1)
-    events.index.name = peyes.EVENT_STR
-    events.columns.names = [peyes.TRIAL_ID_STR, u.LABELER_STR, peyes.ITERATION_STR]
-    return events
+        events = pd.concat([pd.Series(v, name=k) for k, v in events.items()], axis=1)
+        events.index.name = peyes.EVENT_STR
+        labels.columns.names = metadata.columns.names = events.columns.names = [
+            peyes.TRIAL_ID_STR, u.LABELER_STR, peyes.ITERATION_STR
+        ]
+        return labels, metadata, events
 
 
 def match_events(
