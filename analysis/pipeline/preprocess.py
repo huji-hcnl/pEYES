@@ -103,8 +103,8 @@ def detect_labels_and_events(
             ps = trial[peyes.PIXEL_SIZE_STR].iloc[0]
             for annot in tqdm(annotators, desc="\tAnnotators", leave=False, disable=not verbose, position=1):
                 annotator_labels = trial[annot].values
-                labels[(tr, annot, 0)] = np.array(annotator_labels)
-                events[(tr, annot, 0)] = peyes.create_events(
+                labels[(tr, annot, 1)] = np.array(annotator_labels)
+                events[(tr, annot, 1)] = peyes.create_events(
                     labels=annotator_labels, t=t, x=x, y=y, pupil=p, viewer_distance=vd, pixel_size=ps
                 )
             for det in tqdm(detectors, desc="\tDetectors", leave=False, disable=not verbose, position=1):
