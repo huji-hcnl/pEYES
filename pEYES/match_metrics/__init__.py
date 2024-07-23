@@ -2,7 +2,6 @@ from pEYES._DataModels.EventMatcher import OneToOneEventMatchesType
 
 from pEYES.match_metrics._get_features import get_features as features
 from pEYES.match_metrics._match_evaluation import match_ratio, precision_recall_f1, d_prime_and_criterion
-from pEYES.match_metrics._channel_evaluation import channel_timing_differences, channel_signal_detection_measures
 
 
 def onset_difference(matches: OneToOneEventMatchesType):
