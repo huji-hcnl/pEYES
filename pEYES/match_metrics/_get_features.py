@@ -3,6 +3,7 @@ from typing import Dict, Union
 import numpy as np
 from tqdm import tqdm
 
+import pEYES._utils.constants as cnst
 from pEYES._DataModels.EventMatcher import OneToOneEventMatchesType
 
 
@@ -41,11 +42,11 @@ def _get_features_impl(matches: OneToOneEventMatchesType, feature: str,) -> np.n
         return np.array([gt.start_time - pred.start_time for gt, pred in matches.items()])
     if feature_name == "offset":
         return np.array([gt.end_time - pred.end_time for gt, pred in matches.items()])
-    if feature_name == "duration":
+    if feature_name == cnst.DURATION_STR:
         return np.array([gt.duration - pred.duration for gt, pred in matches.items()])
-    if feature_name == "amplitude":
+    if feature_name == cnst.AMPLITUDE_STR:
         return np.array([gt.amplitude - pred.amplitude for gt, pred in matches.items()])
-    if feature_name == "azimuth":
+    if feature_name == cnst.AZIMUTH_STR:
         return np.array([gt.azimuth - pred.azimuth for gt, pred in matches.items()])
     if feature_name == "center_pixel_distance":
         return np.array([gt.center_distance(pred) for gt, pred in matches.items()])

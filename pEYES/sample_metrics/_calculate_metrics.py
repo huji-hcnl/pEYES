@@ -8,6 +8,7 @@ import sklearn.metrics as met
 from pEYES._DataModels.EventLabelEnum import EventLabelEnum, EventLabelSequenceType
 from pEYES._DataModels.UnparsedEventLabel import UnparsedEventLabelType, UnparsedEventLabelSequenceType
 
+import pEYES._utils.constants as cnst
 from pEYES._utils.event_utils import parse_label
 from pEYES._utils.metric_utils import complement_normalized_levenshtein_distance as _comp_nld
 from pEYES._utils.metric_utils import dprime_and_criterion as _dprime_and_criterion
@@ -72,31 +73,31 @@ def _calculate_impl(
         pos_labels = list(set([parse_label(label) for label in pos_labels]))
     metric_lower = metric.lower().strip().replace(" ", "_").replace("-", "_").removesuffix("_score")
     average = average.lower().strip()
-    if metric_lower == "accuracy":
+    if metric_lower == cnst.ACCURACY_STR:
         return met.accuracy_score(ground_truth, prediction)
-    if metric_lower == "balanced_accuracy":
+    if metric_lower == cnst.BALANCED_ACCURACY_STR:
         return met.balanced_accuracy_score(ground_truth, prediction)
-    if metric_lower == "mcc" or metric_lower == "mathew's_correlation":
+    if metric_lower == cnst.MCC_STR or metric_lower == "mathew's_correlation":
         return met.matthews_corrcoef(ground_truth, prediction)
-    if metric_lower == "cohen_kappa" or metric_lower == "cohen's_kappa":
+    if metric_lower == cnst.COHENS_KAPPA_STR or metric_lower == "cohen_kappa":
         return met.cohen_kappa_score(ground_truth, prediction)
-    if metric_lower == "1_nld" or metric_lower == "complement_nld":
+    if metric_lower == cnst.COMPLEMENT_NLD_STR or metric_lower == "1_nld":
         return _comp_nld(ground_truth, prediction)
-    if metric_lower == "recall":
+    if metric_lower == cnst.RECALL_STR:
         return met.recall_score(ground_truth, prediction, labels=pos_labels, average=average, zero_division=np.nan)
-    if metric_lower == "precision":
+    if metric_lower == cnst.PRECISION_STR:
         return met.precision_score(ground_truth, prediction, labels=pos_labels, average=average, zero_division=np.nan)
-    if metric_lower == "f1":
+    if metric_lower == cnst.F1_STR:
         return met.f1_score(ground_truth, prediction, labels=pos_labels, average=average, zero_division=np.nan)
-    if metric_lower.replace('_', '') in {"dprime", "d'", "criterion"}:
-        if pos_labels is None or pos_labels == 0 or pos_labels == list(set([parse_label(label) for label in pos_labels])):
+    if metric_lower.replace('_', '') in {"dprime", "d'", cnst.CRITERION_STR}:
+        if pos_labels is None or pos_labels == 0 or set(pos_labels) == set([parse_label(l) for l in EventLabelEnum]):
             raise ValueError("Positive labels must be specified for d-prime and criterion calculations.")
         p = np.sum([1 for label in ground_truth if label in pos_labels])
         n = len(ground_truth) - p
         pp = np.sum([1 for label in prediction if label in pos_labels])
         tp = np.sum([1 for gt, pred in zip(ground_truth, prediction) if pred == gt and gt in pos_labels])
         dprime, crit = _dprime_and_criterion(p, n, pp, tp, correction)
-        if metric == "criterion":
+        if metric == cnst.CRITERION_STR:
             return crit
         return dprime
     raise NotImplementedError(f"Unknown metric:\t{metric}")

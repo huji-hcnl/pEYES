@@ -164,6 +164,8 @@ class BaseEvent(ABC):
         """
         total_overlap = self.time_overlap(other, normalize=False)
         total_union = self.duration + other.duration - total_overlap
+        if total_union == 0:
+            return np.nan
         return total_overlap / total_union
 
     @final
@@ -176,7 +178,7 @@ class BaseEvent(ABC):
 
     @final
     def center_distance(self, other: "BaseEvent") -> float:
-        """  Calculates the Euclidean distance between the center pixel of this event and another event.  """
+        """  Calculates the Euclidean distance between the center pixel of this event and another event (px units).  """
         x1, y1 = self.center_pixel
         x2, y2 = other.center_pixel
         return np.linalg.norm([x1 - x2, y1 - y2])
@@ -396,7 +398,7 @@ class BaseEvent(ABC):
         return True
 
     def __str__(self) -> str:
-        return f"{self.label.name}({self.duration:.2f}ms)"
+        return f"{self.label.name}({self.duration}ms)"
 
     def __repr__(self) -> str:
         return self.__str__()
