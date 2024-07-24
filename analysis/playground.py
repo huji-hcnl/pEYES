@@ -17,5 +17,3 @@ results = run(output_dir=os.path.join(u.OUTPUT_DIR, "default_values"), dataset_n
 del results
 
 ###################
-
-zengbert = events.xs(("EngbertDetector",), level=[u.LABELER_STR], axis=1)
