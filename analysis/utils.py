@@ -1,7 +1,9 @@
 import os
-from typing import Optional, Union
+from typing import Optional, Union, Any, List
 
 import numpy as np
+import pandas as pd
+import plotly.express as px
 
 import pEYES as peyes
 from pEYES._DataModels.UnparsedEventLabel import UnparsedEventLabelType, UnparsedEventLabelSequenceType
@@ -30,6 +32,8 @@ DETECTOR_NAMES = ["ivt", "ivvt", "idt", "engbert", "nh", "remodnav"]
 DEFAULT_DETECTORS = [
     peyes.create_detector(det, missing_value=np.nan, min_event_duration=4, pad_blinks_time=0) for det in DETECTOR_NAMES
 ]
+DEFAULT_DISCRETE_COLORMAP = px.colors.qualitative.Dark24
+DEFAULT_CONTINUOUS_COLORMAP = px.colors.sequential.Viridis
 
 ###########################################
 
@@ -58,3 +62,24 @@ def get_filename_for_labels(
         return f"{prefix}{'_'.join([peyes.parse_label(l).name.lower() for l in labels])}{suffix}.{extension}"
     else:
         raise TypeError(f"Unknown pos_labels type: {type(labels)}")
+
+
+def metric_to_title(metric: str) -> str:
+    metric_lower = metric.lower().replace("_", " ")
+    if metric_lower == "cohen's kappa" or metric_lower == "cohen kappa":
+        return "Cohen's Kappa"
+    if metric_lower == "mcc":
+        return "MCC"
+    if metric_lower == "1 nld":
+        return "1-NLD"
+    if metric_lower == "d prime":
+        return "d prime"
+    return metric_lower.title()
+
+
+def trial_ids_by_condition(dataset: pd.DataFrame, key: str, values: Union[Any, List[Any]]) -> List[int]:
+    if not isinstance(values, list):
+        values = [values]
+    all_trial_ids = dataset[peyes.TRIAL_ID_STR]
+    is_condition = dataset[key].isin(values)
+    return all_trial_ids[is_condition].unique().tolist()
