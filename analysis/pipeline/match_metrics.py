@@ -16,7 +16,8 @@ _MATCHED_FEATURE_NAMES = [
     "center_pixel_distance", "time_overlap", "time_iou", "time_l2",
 ]
 _MATCH_SDT_METRICS = [
-    _PREDICTED_MATCH_RATIO_STR, peyes.PRECISION_STR, peyes.RECALL_STR, peyes.F1_STR, peyes.D_PRIME_STR, peyes.CRITERION_STR
+    _PREDICTED_MATCH_RATIO_STR, peyes.constants.PRECISION_STR, peyes.constants.RECALL_STR, peyes.constants.F1_STR,
+    peyes.constants.D_PRIME_STR, peyes.constants.CRITERION_STR
 ]
 
 

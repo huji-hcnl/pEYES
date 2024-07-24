@@ -23,12 +23,12 @@ def run_default(
 ):
     default_output_dir = u.get_default_output_dir(dataset_name)
     try:
-        events = pd.read_pickle(os.path.join(default_output_dir, f"{peyes.EVENTS_STR}.pkl"))
+        events = pd.read_pickle(os.path.join(default_output_dir, f"{peyes.constants.EVENTS_STR}.pkl"))
     except FileNotFoundError:
         raise FileNotFoundError(
-            f"Couldn't find `{peyes.EVENTS_STR}.pkl` in {default_output_dir}. Please preprocess the dataset first."
+            f"Couldn't find `{peyes.constants.EVENTS_STR}.pkl` in {default_output_dir}. Please preprocess the dataset first."
         )
-    channel_metrics_dir = os.path.join(default_output_dir, f"{u.CHANNEL_STR}_{peyes.METRICS_STR}")
+    channel_metrics_dir = os.path.join(default_output_dir, f"{u.CHANNEL_STR}_{peyes.constants.METRICS_STR}")
     os.makedirs(channel_metrics_dir, exist_ok=True)
     time_diffs_fullpath = os.path.join(
         channel_metrics_dir, u.get_filename_for_labels(pos_labels, suffix="timing_differences", extension="pkl")
@@ -67,7 +67,7 @@ def timing_differences(
         iteration_desc="Channel :: Timing Differences",
     )
     results = pd.DataFrame.from_dict(results, orient="columns")
-    results.columns.names = [peyes.TRIAL_ID_STR, u.GT_STR, u.PRED_STR, peyes.ITERATION_STR]
+    results.columns.names = [peyes.constants.TRIAL_ID_STR, u.GT_STR, u.PRED_STR, peyes.constants.ITERATION_STR]
     results.index.names = [_CHANNEL_TYPE_STR]
     return results
 
@@ -98,8 +98,10 @@ def detection_metrics(
         iteration_desc="Channel :: SDT Metrics",
     )
     results = pd.concat({k: pd.concat(v, axis=0) for k, v in results.items()}, axis=1)
-    results.columns.names = [peyes.TRIAL_ID_STR, u.GT_STR, u.PRED_STR, peyes.ITERATION_STR, peyes.METRIC_STR]
-    results.index.names = [_CHANNEL_TYPE_STR, peyes.THRESHOLD_STR]
+    results.columns.names = [
+        peyes.constants.TRIAL_ID_STR, u.GT_STR, u.PRED_STR, peyes.constants.ITERATION_STR, peyes.constants.METRIC_STR
+    ]
+    results.index.names = [_CHANNEL_TYPE_STR, peyes.constants.THRESHOLD_STR]
     return results
 
 
@@ -127,19 +129,19 @@ def _calculation_wrapper(
         pos_labels = [peyes.parse_label(l) for l in pos_labels]
 
     results = dict()
-    trials = events.columns.get_level_values(level=peyes.TRIAL_ID_STR).unique()
+    trials = events.columns.get_level_values(level=peyes.constants.TRIAL_ID_STR).unique()
     for tr in tqdm(trials, desc=iteration_desc):
-        trial_timestamps = dataset[dataset[peyes.TRIAL_ID_STR] == tr][peyes.T].values
+        trial_timestamps = dataset[dataset[peyes.constants.TRIAL_ID_STR] == tr][peyes.T].values
         trial_num_samples = len(trial_timestamps)
         trial_sampling_rate = calculate_sampling_rate(trial_timestamps)
         for gt_lblr in gt_labelers:
             try:
-                trial_gt_events = events.xs((tr, gt_lblr), axis=1, level=[peyes.TRIAL_ID_STR, u.LABELER_STR])
+                trial_gt_events = events.xs((tr, gt_lblr), axis=1, level=[peyes.constants.TRIAL_ID_STR, u.LABELER_STR])
             except KeyError:
                 continue
             if trial_gt_events.size == 0:
                 continue
-            gt_min_iteration = np.nanmin(trial_gt_events.columns.get_level_values(peyes.ITERATION_STR))
+            gt_min_iteration = np.nanmin(trial_gt_events.columns.get_level_values(peyes.constants.ITERATION_STR))
             gt_events = events[tr, gt_lblr, gt_min_iteration].dropna().values.flatten()
             gt_events = np.array([e for e in gt_events if e.label in pos_labels])
             if gt_events.size == 0:
@@ -147,11 +149,11 @@ def _calculation_wrapper(
             for pred_lblr in pred_labelers:
                 try:
                     pred_events_all_iters = events.xs(
-                        (tr, pred_lblr), axis=1, level=[peyes.TRIAL_ID_STR, u.LABELER_STR]
+                        (tr, pred_lblr), axis=1, level=[peyes.constants.TRIAL_ID_STR, u.LABELER_STR]
                     )
                 except KeyError:
                     continue
-                for pred_it in pred_events_all_iters.columns.get_level_values(peyes.ITERATION_STR).unique():
+                for pred_it in pred_events_all_iters.columns.get_level_values(peyes.constants.ITERATION_STR).unique():
                     if (pred_lblr == gt_lblr) and (pred_it == gt_min_iteration):
                         continue
                     pred_events = pred_events_all_iters[pred_it].dropna().values.flatten()

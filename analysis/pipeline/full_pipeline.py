@@ -40,16 +40,16 @@ def run(
     ## labels, metadata, events, matches ##
     annotators = annotators or u.DATASET_ANNOTATORS[dataset_name]
     try:
-        labels = pd.read_pickle(os.path.join(output_dir, f"{peyes.LABELS_STR}.pkl"))
+        labels = pd.read_pickle(os.path.join(output_dir, f"{peyes.constants.LABELS_STR}.pkl"))
         metadata = pd.read_pickle(os.path.join(output_dir, f"{u.METADATA_STR}.pkl"))
-        events = pd.read_pickle(os.path.join(output_dir, f"{peyes.EVENTS_STR}.pkl"))
+        events = pd.read_pickle(os.path.join(output_dir, f"{peyes.constants.EVENTS_STR}.pkl"))
     except FileNotFoundError:
         labels, metadata, events = preprocess.detect_labels_and_events(
             dataset, detectors, annotators, num_iterations, iterations_overwrite_label, verbose
         )
-        labels.to_pickle(os.path.join(output_dir, f"{peyes.LABELS_STR}.pkl"))
+        labels.to_pickle(os.path.join(output_dir, f"{peyes.constants.LABELS_STR}.pkl"))
         metadata.to_pickle(os.path.join(output_dir, f"{u.METADATA_STR}.pkl"))
-        events.to_pickle(os.path.join(output_dir, f"{peyes.EVENTS_STR}.pkl"))
+        events.to_pickle(os.path.join(output_dir, f"{peyes.constants.EVENTS_STR}.pkl"))
     try:
         matches = pd.read_pickle(os.path.join(output_dir, f"{u.MATCHES_STR}.pkl"))
     except FileNotFoundError:
@@ -59,7 +59,7 @@ def run(
         matches.to_pickle(os.path.join(output_dir, f"{u.MATCHES_STR}.pkl"))
 
     ## Sample metrics ##
-    sample_metrics_dir = os.path.join(output_dir, f"{peyes.SAMPLE_STR}_{peyes.METRICS_STR}")
+    sample_metrics_dir = os.path.join(output_dir, f"{peyes.constants.SAMPLE_STR}_{peyes.constants.METRICS_STR}")
     os.makedirs(sample_metrics_dir, exist_ok=True)
     sample_metrics_fullpath = os.path.join(sample_metrics_dir, u.get_filename_for_labels(pos_labels, extension="pkl"))
     try:
@@ -75,7 +75,7 @@ def run(
         sample_mets.to_pickle(sample_metrics_fullpath)
 
     ## Channel metrics ##
-    channel_metrics_dir = os.path.join(output_dir, f"{u.CHANNEL_STR}_{peyes.METRICS_STR}")
+    channel_metrics_dir = os.path.join(output_dir, f"{u.CHANNEL_STR}_{peyes.constants.METRICS_STR}")
     os.makedirs(channel_metrics_dir, exist_ok=True)
     time_diffs_fullpath = os.path.join(
         channel_metrics_dir, u.get_filename_for_labels(pos_labels, suffix="timing_differences", extension="pkl")
@@ -107,7 +107,7 @@ def run(
         channel_sdt_metrics.to_pickle(channel_sdt_metrics_fullpath)
 
     ## Match metrics ##
-    match_metrics_dir = os.path.join(output_dir, f"{u.MATCHES_STR}_{peyes.METRICS_STR}")
+    match_metrics_dir = os.path.join(output_dir, f"{u.MATCHES_STR}_{peyes.constants.METRICS_STR}")
     os.makedirs(match_metrics_dir, exist_ok=True)
     matched_features_fullpath = os.path.join(
         match_metrics_dir, u.get_filename_for_labels(labels=None, suffix="matched_features", extension="pkl")

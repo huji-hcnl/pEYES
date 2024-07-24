@@ -1,7 +1,4 @@
-from pEYES._utils.constants import *
-
-from pEYES._DataModels.EventLabelEnum import EventLabelEnum as Labels
-import pEYES._DataModels.config as config
+import pEYES._utils.constants as constants
 
 from pEYES._utils.event_utils import parse_label
 from pEYES._base.parse import parse as parse_data

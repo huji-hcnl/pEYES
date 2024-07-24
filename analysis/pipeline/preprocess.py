@@ -33,18 +33,18 @@ def run_default(
     dataset = load_dataset(dataset_name, verbose=True)
     default_output_dir = u.get_default_output_dir(dataset_name)
     try:
-        labels = pd.read_pickle(os.path.join(default_output_dir, f"{peyes.LABELS_STR}.pkl"))
+        labels = pd.read_pickle(os.path.join(default_output_dir, f"{peyes.constants.LABELS_STR}.pkl"))
         metadata = pd.read_pickle(os.path.join(default_output_dir, f"{u.METADATA_STR}.pkl"))
-        events = pd.read_pickle(os.path.join(default_output_dir, f"{peyes.EVENTS_STR}.pkl"))
+        events = pd.read_pickle(os.path.join(default_output_dir, f"{peyes.constants.EVENTS_STR}.pkl"))
     except FileNotFoundError:
         labels, metadata, events = detect_labels_and_events(
             dataset, u.DEFAULT_DETECTORS, u.DATASET_ANNOTATORS[dataset_name], verbose=verbose
         )
         if verbose:
             print(f"Saving labels & events to {default_output_dir}...")
-        labels.to_pickle(os.path.join(default_output_dir, f"{peyes.LABELS_STR}.pkl"))
+        labels.to_pickle(os.path.join(default_output_dir, f"{peyes.constants.LABELS_STR}.pkl"))
         metadata.to_pickle(os.path.join(default_output_dir, f"{u.METADATA_STR}.pkl"))
-        events.to_pickle(os.path.join(default_output_dir, f"{peyes.EVENTS_STR}.pkl"))
+        events.to_pickle(os.path.join(default_output_dir, f"{peyes.constants.EVENTS_STR}.pkl"))
     try:
         matches = pd.read_pickle(os.path.join(default_output_dir, f"{u.MATCHES_STR}.pkl"))
     except FileNotFoundError:
@@ -91,16 +91,16 @@ def detect_labels_and_events(
 
         labels, metadata, events = dict(), dict(), dict()
         trials_prog_bar = tqdm(
-            dataset[peyes.TRIAL_ID_STR].unique(), desc="Detecting Labels & Events", leave=True, disable=False
+            dataset[peyes.constants.TRIAL_ID_STR].unique(), desc="Detecting Labels & Events", leave=True, disable=False
         )
         for tr in trials_prog_bar:
-            trial = dataset[dataset[peyes.TRIAL_ID_STR] == tr]
-            t = trial[peyes.T].values
-            x = trial[peyes.X].values
-            y = trial[peyes.Y].values
-            p = trial[peyes.PUPIL].values
-            vd = trial[peyes.VIEWER_DISTANCE_STR].iloc[0]
-            ps = trial[peyes.PIXEL_SIZE_STR].iloc[0]
+            trial = dataset[dataset[peyes.constants.TRIAL_ID_STR] == tr]
+            t = trial[peyes.constants.T].values
+            x = trial[peyes.constants.X].values
+            y = trial[peyes.constants.Y].values
+            p = trial[peyes.constants.PUPIL].values
+            vd = trial[peyes.constants.VIEWER_DISTANCE_STR].iloc[0]
+            ps = trial[peyes.constants.PIXEL_SIZE_STR].iloc[0]
             for annot in tqdm(annotators, desc="\tAnnotators", leave=False, disable=not verbose, position=1):
                 annotator_labels = trial[annot].values
                 labels[(tr, annot, 1)] = np.array(annotator_labels)
@@ -122,13 +122,13 @@ def detect_labels_and_events(
                     y_copy[to_overwrite] = np.nan
                     p_copy[to_overwrite] = np.nan
         labels = pd.concat([pd.Series(v, name=k) for k, v in labels.items()], axis=1)
-        labels.index.name = peyes.SAMPLE_STR
+        labels.index.name = peyes.constants.SAMPLE_STR
         metadata = pd.concat([pd.Series(v, name=k) for k, v in metadata.items()], axis=1)
         metadata.index.name = u.FIELD_NAME_STR
         events = pd.concat([pd.Series(v, name=k) for k, v in events.items()], axis=1)
-        events.index.name = peyes.EVENT_STR
+        events.index.name = peyes.constants.EVENT_STR
         labels.columns.names = metadata.columns.names = events.columns.names = [
-            peyes.TRIAL_ID_STR, u.LABELER_STR, peyes.ITERATION_STR
+            peyes.constants.TRIAL_ID_STR, u.LABELER_STR, peyes.constants.ITERATION_STR
         ]
         return labels, metadata, events
 
@@ -147,18 +147,20 @@ def match_events(
         raise ValueError(f"Unknown labelers: {unknown_labelers}")
     matching_schemes = matching_schemes or DEFAULT_MATCHING_SCHEMES
     results = dict()
-    for tr in tqdm(events.columns.get_level_values(level=peyes.TRIAL_ID_STR).unique(), desc="Matching Events"):
+    for tr in tqdm(events.columns.get_level_values(level=peyes.constants.TRIAL_ID_STR).unique(), desc="Matching Events"):
         for gt_labeler in gt_labelers:
-            trial_gt_events = events.xs((tr, gt_labeler), axis=1, level=[peyes.TRIAL_ID_STR, u.LABELER_STR])
+            trial_gt_events = events.xs((tr, gt_labeler), axis=1, level=[peyes.constants.TRIAL_ID_STR, u.LABELER_STR])
             if trial_gt_events.size == 0:
                 continue
-            gt_min_iteration = np.nanmin(trial_gt_events.columns.get_level_values(peyes.ITERATION_STR))
+            gt_min_iteration = np.nanmin(trial_gt_events.columns.get_level_values(peyes.constants.ITERATION_STR))
             gt_events = events[tr, gt_labeler, gt_min_iteration].dropna().values.flatten()
             if gt_events.size == 0:
                 continue
             for pred_labeler in pred_labelers:
-                pred_events_all_iters = events.xs((tr, pred_labeler), axis=1, level=[peyes.TRIAL_ID_STR, u.LABELER_STR])
-                for pred_it in pred_events_all_iters.columns.get_level_values(peyes.ITERATION_STR).unique():
+                pred_events_all_iters = events.xs(
+                    (tr, pred_labeler), axis=1, level=[peyes.constants.TRIAL_ID_STR, u.LABELER_STR]
+                )
+                for pred_it in pred_events_all_iters.columns.get_level_values(peyes.constants.ITERATION_STR).unique():
                     if (pred_labeler == gt_labeler) and (pred_it == gt_min_iteration):
                         continue
                     pred_events = pred_events_all_iters[pred_it].dropna().values.flatten()
@@ -172,5 +174,5 @@ def match_events(
                     results[(tr, gt_labeler, pred_labeler, pred_it)] = matches
     results = pd.DataFrame.from_dict(results, orient="columns")
     results.index.names = [u.MATCHING_SCHEME_STR]
-    results.columns.names = [peyes.TRIAL_ID_STR, u.GT_STR, u.PRED_STR, peyes.ITERATION_STR]
+    results.columns.names = [peyes.constants.TRIAL_ID_STR, u.GT_STR, u.PRED_STR, peyes.constants.ITERATION_STR]
     return results

@@ -21,7 +21,7 @@ FIELD_NAME_STR = "field_name"
 GT_STR, PRED_STR = "gt", "pred"
 MATCHING_SCHEME_STR = "matching_scheme"
 CHANNEL_STR = "channel"
-CHANNEL_TYPE_STR = f"{CHANNEL_STR}_{peyes.TYPE_STR}"
+CHANNEL_TYPE_STR = f"{CHANNEL_STR}_{peyes.constants.TYPE_STR}"
 
 DATASET_ANNOTATORS = {
     "lund2013": ["RA", "MN"],
@@ -32,6 +32,14 @@ DETECTOR_NAMES = ["ivt", "ivvt", "idt", "engbert", "nh", "remodnav"]
 DEFAULT_DETECTORS = [
     peyes.create_detector(det, missing_value=np.nan, min_event_duration=4, pad_blinks_time=0) for det in DETECTOR_NAMES
 ]
+
+SAMPLE_METRICS = {"accuracy": ("Accuracy", 1), "balanced_accuracy": ("Balanced Accuracy", 2),
+                  "cohen's_kappa": ("Cohen's Kappa", 3), "mcc": ("MCC", 4), "recall": ("Recall", 5),
+                  "precision": ("Precision", 6), "f1": ("f1", 7), "1_nld": ("1 - NLD", 8), "d_prime": ("d'", 9),
+                  "criterion": ("Criterion", 10),
+}
+
+
 DEFAULT_DISCRETE_COLORMAP = px.colors.qualitative.Dark24
 DEFAULT_CONTINUOUS_COLORMAP = px.colors.sequential.Viridis
 
@@ -64,22 +72,9 @@ def get_filename_for_labels(
         raise TypeError(f"Unknown pos_labels type: {type(labels)}")
 
 
-def metric_to_title(metric: str) -> str:
-    metric_lower = metric.lower().replace("_", " ")
-    if metric_lower == "cohen's kappa" or metric_lower == "cohen kappa":
-        return "Cohen's Kappa"
-    if metric_lower == "mcc":
-        return "MCC"
-    if metric_lower == "1 nld":
-        return "1-NLD"
-    if metric_lower == "d prime":
-        return "d prime"
-    return metric_lower.title()
-
-
 def trial_ids_by_condition(dataset: pd.DataFrame, key: str, values: Union[Any, List[Any]]) -> List[int]:
     if not isinstance(values, list):
         values = [values]
-    all_trial_ids = dataset[peyes.TRIAL_ID_STR]
+    all_trial_ids = dataset[peyes.constants.TRIAL_ID_STR]
     is_condition = dataset[key].isin(values)
     return all_trial_ids[is_condition].unique().tolist()
