@@ -175,7 +175,10 @@ def create_boolean_channel(
     if all(isinstance(l, UnparsedEventLabelType) for l in data):
         # data is of type UnparsedEventLabelSequenceType
         return _labels_to_boolean_channel(channel_type_lower, data)
-    raise ValueError("Argument `data` must be either an array of labels or an array of events.")
+    unknown_types = set([
+        type(datum) for datum in data if not (isinstance(datum, BaseEvent) or isinstance(datum, UnparsedEventLabelType))
+    ])
+    raise TypeError(f"Argument `data` contains unknown types: {unknown_types}")
 
 
 def _labels_to_boolean_channel(
