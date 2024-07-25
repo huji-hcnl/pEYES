@@ -72,7 +72,7 @@ def parse_label(
             if not val.is_integer():
                 raise ValueError(f"Invalid value: {val}")
             return EventLabelEnum(int(val))
-        if np.isscalar(val):
+        if np.isscalar(val) and isinstance(val, np.number):
             return parse_label(float(val), safe)
         raise TypeError(f"Incompatible type: {type(val)}")
     except Exception as err:
