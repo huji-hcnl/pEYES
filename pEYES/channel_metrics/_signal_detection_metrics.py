@@ -106,7 +106,10 @@ def _signal_detection_metrics(
         data=prediction, channel_type=channel_type, sampling_rate=sampling_rate, min_num_samples=min_num_samples
     )
     p, pp = gt_channel.sum(), pred_channel.sum()  # number of positive samples in GT and prediction
-    all_matched_diffs = timing_differences(ground_truth, prediction, sampling_rate, channel_type, min_num_samples)
+    all_matched_diffs = timing_differences(
+        ground_truth, prediction,
+        channel_type=channel_type, sampling_rate=sampling_rate, min_num_samples=min_num_samples
+    )
     if isinstance(threshold, int):
         threshold = [threshold]
     results = {}
@@ -115,7 +118,7 @@ def _signal_detection_metrics(
         tp = np.sum(np.abs(all_matched_diffs) <= thresh)
         thresh_results["TP"] = tp
         double_thresh = 2 * thresh + 1  # threshold can be before or after a particular sample
-        n = (len(gt_channel) - double_thresh * p) / double_thresh  # number of negative "windows" in GT channel
+        n = max(0, (len(gt_channel) - double_thresh * p) / double_thresh)  # number of negative "windows" in GT channel
         thresh_results["N"] = n
 
         recall = tp / p if p > 0 else np.nan    # true positive rate (TPR), sensitivity, hit-rate
