@@ -33,10 +33,12 @@ DEFAULT_DETECTORS = [
     peyes.create_detector(det, missing_value=np.nan, min_event_duration=4, pad_blinks_time=0) for det in DETECTOR_NAMES
 ]
 
-SAMPLE_METRICS = {"accuracy": ("Accuracy", 1), "balanced_accuracy": ("Balanced Accuracy", 2),
-                  "cohen's_kappa": ("Cohen's Kappa", 3), "mcc": ("MCC", 4), "recall": ("Recall", 5),
-                  "precision": ("Precision", 6), "f1": ("f1", 7), "1_nld": ("1 - NLD", 8), "d_prime": ("d'", 9),
-                  "criterion": ("Criterion", 10),
+SAMPLE_METRICS = {
+    # key -> (name, order, value range)
+    "accuracy": ("Accuracy", 1, [0, 1]), "balanced_accuracy": ("Balanced Accuracy", 2, [0, 1]),
+    "cohen's_kappa": ("Cohen's Kappa", 3, [-1, 1]), "mcc": ("MCC", 4, [-1, 1]),
+    "recall": ("Recall", 5, [0, 1]), "precision": ("Precision", 6, [0, 1]), "f1": ("f1", 7, [0, 1]),
+    "1_nld": ("1 - NLD", 8, [0, 1]), "d_prime": ("d'", 9, None), "criterion": ("Criterion", 10, None),
 }
 
 
