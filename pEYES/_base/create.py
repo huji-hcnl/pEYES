@@ -1,10 +1,10 @@
-from typing import Union, Sequence, Optional
+from typing import Union, Sequence
 
 import numpy as np
 
 import pEYES._utils.constants as cnst
 import pEYES._DataModels.config as cnfg
-from pEYES._utils.event_utils import parse_label
+from pEYES._utils.event_utils import parse_label, calculate_num_samples
 from pEYES._DataModels.Event import BaseEvent, EventSequenceType
 from pEYES._DataModels.UnparsedEventLabel import UnparsedEventLabelType, UnparsedEventLabelSequenceType
 from pEYES._DataModels.EventLabelEnum import EventLabelEnum
