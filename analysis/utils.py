@@ -20,6 +20,7 @@ MATCHES_STR = "matches"
 FIELD_NAME_STR = "field_name"
 GT_STR, PRED_STR = "gt", "pred"
 MATCHING_SCHEME_STR = "matching_scheme"
+MATCH_RATIO_STR = "match_ratio"
 CHANNEL_STR = "channel"
 CHANNEL_TYPE_STR = f"{CHANNEL_STR}_{peyes.constants.TYPE_STR}"
 
@@ -35,10 +36,17 @@ DEFAULT_DETECTORS = [
 
 SAMPLE_METRICS = {
     # key -> (name, order, value range)
-    "accuracy": ("Accuracy", 1, [0, 1]), "balanced_accuracy": ("Balanced Accuracy", 2, [0, 1]),
-    "cohen's_kappa": ("Cohen's Kappa", 3, [-1, 1]), "mcc": ("MCC", 4, [-1, 1]),
-    "recall": ("Recall", 5, [0, 1]), "precision": ("Precision", 6, [0, 1]), "f1": ("f1", 7, [0, 1]),
-    "1_nld": ("1 - NLD", 8, [0, 1]), "d_prime": ("d'", 9, None), "criterion": ("Criterion", 10, None),
+    peyes.constants.ACCURACY_STR: ("Accuracy", 1, [0, 1]),
+    MATCH_RATIO_STR: ("Match Ratio", 2, [0, 1]),
+    peyes.constants.BALANCED_ACCURACY_STR: ("Balanced Accuracy", 2, [0, 1]),
+    peyes.constants.COHENS_KAPPA_STR: ("Cohen's Kappa", 3, [-1, 1]),
+    peyes.constants.MCC_STR: ("MCC", 4, [-1, 1]),
+    peyes.constants.RECALL_STR: ("Recall", 5, [0, 1]),
+    peyes.constants.PRECISION_STR: ("Precision", 6, [0, 1]),
+    peyes.constants.F1_STR: ("f1", 7, [0, 1]),
+    peyes.constants.COMPLEMENT_NLD_STR: ("1 - NLD", 8, [0, 1]),
+    peyes.constants.D_PRIME_STR: ("d'", 9, None),
+    peyes.constants.CRITERION_STR: ("Criterion", 10, None),
 }
 
 
