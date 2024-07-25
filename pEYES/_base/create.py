@@ -166,6 +166,9 @@ def create_boolean_channel(
     channel_type_lower = channel_type.lower().strip()
     if channel_type_lower not in {cnst.START_STR, cnst.ONSET_STR, cnst.END_STR, cnst.OFFSET_STR}:
         raise ValueError(f"Invalid channel type: {channel_type}")
+    if len(data) == 0:
+        # no events or labels provided -> return an empty array
+        return np.zeros(np.nanmin(len(data), min_num_samples), dtype=bool)
     if all(isinstance(e, BaseEvent) for e in data):
         # data is of type EventSequenceType
         return _events_to_boolean_channel(channel_type_lower, data, sampling_rate, min_num_samples)
@@ -218,8 +221,6 @@ def _events_to_boolean_channel(
 
     :return: array of boolean values, where `True` indicates the event onset or offset
     """
-    if len(events) == 0:
-        return np.zeros(min_num_samples, dtype=bool)
     global_start_time = min(e.start_time for e in events)
     global_end_time = max(e.end_time for e in events)
     num_samples = calculate_num_samples(global_start_time, global_end_time, sampling_rate, min_num_samples)

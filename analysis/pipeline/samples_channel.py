@@ -142,6 +142,8 @@ def _calculation_wrapper(
                         continue
                     pred_labels = pred_labels_all_iters[pred_it].dropna().values.flatten()
                     pred_labels[~np.isin(pred_labels, pos_labels)] = EventLabelEnum.UNDEFINED
+                    if pred_labels.size == 0:
+                        continue
                     results[(tr, gt_lblr, pred_lblr, pred_it)] = {
                         "onset": onset_func(gt_labels, pred_labels),
                         "offset": offset_func(gt_labels, pred_labels)
