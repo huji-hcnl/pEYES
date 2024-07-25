@@ -131,7 +131,7 @@ def _calculation_wrapper(
     results = dict()
     trials = events.columns.get_level_values(level=peyes.constants.TRIAL_ID_STR).unique()
     for tr in tqdm(trials, desc=iteration_desc):
-        trial_timestamps = dataset[dataset[peyes.constants.TRIAL_ID_STR] == tr][peyes.T].values
+        trial_timestamps = dataset[dataset[peyes.constants.TRIAL_ID_STR] == tr][peyes.constants.T].values
         trial_num_samples = len(trial_timestamps)
         trial_sampling_rate = calculate_sampling_rate(trial_timestamps)
         for gt_lblr in gt_labelers:
