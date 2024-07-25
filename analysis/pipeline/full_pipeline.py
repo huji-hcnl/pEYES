@@ -12,7 +12,7 @@ from pEYES._DataModels.UnparsedEventLabel import UnparsedEventLabelType, Unparse
 import analysis.utils as u
 import analysis.pipeline.preprocess as preprocess
 import analysis.pipeline.sample_metrics as sample_metrics
-import analysis.pipeline.channel_metrics as channel_metrics
+import analysis.pipeline.samples_channel as channel_metrics
 import analysis.pipeline.match_metrics as match_metrics
 
 
@@ -74,8 +74,8 @@ def run(
         )
         sample_mets.to_pickle(sample_metrics_fullpath)
 
-    ## Channel metrics ##
-    channel_metrics_dir = os.path.join(output_dir, f"{u.CHANNEL_STR}_{peyes.constants.METRICS_STR}")
+    ## Sample Channel metrics ##
+    channel_metrics_dir = os.path.join(output_dir, f"{peyes.constants.SAMPLES_STR}_{u.CHANNEL_STR}")
     os.makedirs(channel_metrics_dir, exist_ok=True)
     time_diffs_fullpath = os.path.join(
         channel_metrics_dir, u.get_filename_for_labels(pos_labels, suffix="timing_differences", extension="pkl")
@@ -83,12 +83,7 @@ def run(
     try:
         time_diffs = pd.read_pickle(time_diffs_fullpath)
     except FileNotFoundError:
-        time_diffs = channel_metrics.timing_differences(
-            dataset,
-            events,
-            annotators,
-            pos_labels=pos_labels,
-        )
+        time_diffs = channel_metrics.timing_differences(labels, annotators, pos_labels=pos_labels)
         time_diffs.to_pickle(time_diffs_fullpath)
     channel_sdt_metrics_fullpath = os.path.join(
         channel_metrics_dir, u.get_filename_for_labels(pos_labels, suffix="sdt_metrics", extension="pkl")
@@ -97,8 +92,7 @@ def run(
         channel_sdt_metrics = pd.read_pickle(channel_sdt_metrics_fullpath)
     except FileNotFoundError:
         channel_sdt_metrics = channel_metrics.detection_metrics(
-            dataset,
-            events,
+            labels,
             np.arange(10),
             annotators,
             pos_labels=pos_labels,

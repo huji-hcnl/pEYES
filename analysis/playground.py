@@ -20,8 +20,7 @@ results = run(output_dir=os.path.join(u.OUTPUT_DIR, "default_values"), dataset_n
 # (dataset, labels, metadata, events, matches, sample_mets, time_diffs, channel_sdt_metrics, matched_features, matches_sdt_metrics) = results
 # del results
 
-# TODO: calculate channel-metrics based on labels and not events
-## TODO: statistical tests for: sample metrics, label-channel metrics, matched-events metrics
+## TODO: statistical tests for: sample metrics, sample-channel metrics, matched-events metrics
 
 ################
 ## FIX LABELS ##
