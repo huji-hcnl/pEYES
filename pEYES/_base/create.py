@@ -218,6 +218,8 @@ def _events_to_boolean_channel(
 
     :return: array of boolean values, where `True` indicates the event onset or offset
     """
+    if len(events) == 0:
+        return np.zeros(min_num_samples, dtype=bool)
     global_start_time = min(e.start_time for e in events)
     global_end_time = max(e.end_time for e in events)
     num_samples = calculate_num_samples(global_start_time, global_end_time, sampling_rate, min_num_samples)
