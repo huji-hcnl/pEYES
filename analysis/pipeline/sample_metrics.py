@@ -48,11 +48,7 @@ def calculate_sample_metrics(
         average: str = "weighted",
         correction: str = "loglinear",
 ) -> pd.DataFrame:
-    all_labelers = labels.columns.get_level_values(u.LABELER_STR).unique()
-    pred_labelers = pred_labelers or all_labelers
-    unknown_labelers = (set(pred_labelers) - set(all_labelers)) | (set(gt_labelers) - set(all_labelers))
-    if unknown_labelers:
-        raise ValueError(f"Unknown labelers: {unknown_labelers}")
+    pred_labelers = u.check_labelers(labels, pred_labelers)
     metrics = set(metrics or u.SAMPLE_METRICS.keys())
     if not metrics <= set(u.SAMPLE_METRICS.keys()):
         raise ValueError(f"Unknown metrics: {metrics - set(u.SAMPLE_METRICS.keys())}")

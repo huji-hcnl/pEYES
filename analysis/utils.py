@@ -82,6 +82,15 @@ def get_filename_for_labels(
         raise TypeError(f"Unknown pos_labels type: {type(labels)}")
 
 
+def check_labelers(data: pd.DataFrame, labelers: List[str] = None) -> List[str]:
+    available_labelers = data.columns.get_level_values(LABELER_STR).unique()
+    labelers = set(labelers or available_labelers)
+    unknown_labelers = labelers - set(available_labelers)
+    if unknown_labelers:
+        raise ValueError(f"Unknown labelers: {unknown_labelers}")
+    return list(labelers)
+
+
 def trial_ids_by_condition(dataset: pd.DataFrame, key: str, values: Union[Any, List[Any]]) -> List[int]:
     if not isinstance(values, list):
         values = [values]

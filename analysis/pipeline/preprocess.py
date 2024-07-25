@@ -140,11 +140,7 @@ def match_events(
         matching_schemes: Dict[str, Dict[str, Union[int, float]]] = None,
         allow_xmatch: bool = False,
 ):
-    all_labelers = events.columns.get_level_values(u.LABELER_STR).unique()
-    pred_labelers = pred_labelers or all_labelers
-    unknown_labelers = (set(pred_labelers) - set(all_labelers)) | (set(gt_labelers) - set(all_labelers))
-    if unknown_labelers:
-        raise ValueError(f"Unknown labelers: {unknown_labelers}")
+    pred_labelers = u.check_labelers(events, pred_labelers)
     matching_schemes = matching_schemes or DEFAULT_MATCHING_SCHEMES
     results = dict()
     for tr in tqdm(events.columns.get_level_values(level=peyes.constants.TRIAL_ID_STR).unique(), desc="Matching Events"):
