@@ -5,9 +5,10 @@ import pandas as pd
 
 import pEYES._utils.constants as cnst
 from pEYES._DataModels.Event import EventSequenceType
+from pEYES._DataModels.UnparsedEventLabel import UnparsedEventLabelSequenceType
 
 from pEYES._base.create import create_boolean_channel
-from pEYES.channel_metrics._timing_differences import _timing_differences
+from pEYES.channel_metrics._timing_differences import timing_differences
 from pEYES._utils.metric_utils import dprime_and_criterion
 
 
@@ -70,8 +71,8 @@ def offset_detection_metrics(
 
 
 def _signal_detection_metrics(
-        ground_truth: EventSequenceType,
-        prediction: EventSequenceType,
+        ground_truth: Union[UnparsedEventLabelSequenceType, EventSequenceType],
+        prediction: Union[UnparsedEventLabelSequenceType, EventSequenceType],
         threshold: Union[int, Sequence[int]],
         sampling_rate: float,
         channel_type: str,
@@ -96,13 +97,13 @@ def _signal_detection_metrics(
     :return: DataFrame of contingency measures and SDT metrics
     """
     gt_channel = create_boolean_channel(
-        events=ground_truth, channel_type=channel_type, sampling_rate=sampling_rate, min_num_samples=min_num_samples
+        data=ground_truth, channel_type=channel_type, sampling_rate=sampling_rate, min_num_samples=min_num_samples
     )
     pred_channel = create_boolean_channel(
-        events=prediction, channel_type=channel_type, sampling_rate=sampling_rate, min_num_samples=min_num_samples
+        data=prediction, channel_type=channel_type, sampling_rate=sampling_rate, min_num_samples=min_num_samples
     )
     p, pp = gt_channel.sum(), pred_channel.sum()  # number of positive samples in GT and prediction
-    all_matched_diffs = _timing_differences(ground_truth, prediction, sampling_rate, channel_type, min_num_samples)
+    all_matched_diffs = timing_differences(ground_truth, prediction, sampling_rate, channel_type, min_num_samples)
     if isinstance(threshold, int):
         threshold = [threshold]
     results = {}

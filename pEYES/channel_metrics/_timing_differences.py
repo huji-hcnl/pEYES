@@ -1,6 +1,10 @@
+from typing import Union
+
 import numpy as np
 
 from pEYES._DataModels.Event import EventSequenceType
+from pEYES._DataModels.UnparsedEventLabel import UnparsedEventLabelSequenceType
+
 from pEYES._base.create import create_boolean_channel
 from pEYES._utils.vector_utils import pair_boolean_arrays
 
@@ -21,9 +25,9 @@ def onset_differences(
     :param prediction: array-like of Event objects
     :param sampling_rate: sampling rate of the channels
     :param min_num_samples: if not None, marks the minimal the number of samples in the channels
-    :return: array of timing differences between matched onsets (differences are in samples)
+    :return: array of timing differences between matched onsets (differences are in sample units)
     """
-    return _timing_differences(ground_truth, prediction, sampling_rate, "onset", min_num_samples)
+    return timing_differences(ground_truth, prediction, sampling_rate, "onset", min_num_samples)
 
 
 def offset_differences(
@@ -42,14 +46,14 @@ def offset_differences(
     :param prediction: array-like of Event objects
     :param sampling_rate: sampling rate of the channels
     :param min_num_samples: if not None, marks the minimal the number of samples in the channels
-    :return: array of timing differences between matched offsets (differences are in samples)
+    :return: array of timing differences between matched offsets (differences are in sample units)
     """
-    return _timing_differences(ground_truth, prediction, sampling_rate, "offset", min_num_samples)
+    return timing_differences(ground_truth, prediction, sampling_rate, "offset", min_num_samples)
 
 
-def _timing_differences(
-        ground_truth: EventSequenceType,
-        prediction: EventSequenceType,
+def timing_differences(
+        ground_truth: Union[UnparsedEventLabelSequenceType, EventSequenceType],
+        prediction: Union[UnparsedEventLabelSequenceType, EventSequenceType],
         sampling_rate: float,
         channel_type: str,
         min_num_samples=None,
@@ -68,10 +72,10 @@ def _timing_differences(
     :return: array of timing differences between matched events (differences are in samples)
     """
     gt_channel = create_boolean_channel(
-        events=ground_truth, channel_type=channel_type, sampling_rate=sampling_rate, min_num_samples=min_num_samples
+        data=ground_truth, channel_type=channel_type, sampling_rate=sampling_rate, min_num_samples=min_num_samples
     )
     pred_channel = create_boolean_channel(
-        events=prediction, channel_type=channel_type, sampling_rate=sampling_rate, min_num_samples=min_num_samples
+        data=prediction, channel_type=channel_type, sampling_rate=sampling_rate, min_num_samples=min_num_samples
     )
     matched_idxs = pair_boolean_arrays(gt_channel, pred_channel)
     diffs = np.diff(matched_idxs, axis=1).flatten()

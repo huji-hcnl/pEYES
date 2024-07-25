@@ -146,8 +146,7 @@ def create_events(
 
 def create_boolean_channel(
         channel_type: str,
-        labels: Optional[UnparsedEventLabelSequenceType] = None,
-        events: Optional[EventSequenceType] = None,
+        data: Union[UnparsedEventLabelSequenceType, EventSequenceType],
         sampling_rate: float = None,
         min_num_samples: int = None,
 ) -> np.ndarray:
@@ -157,8 +156,7 @@ def create_boolean_channel(
     Raises a ValueError if neither `labels` and `events` are provided, or if both are provided.
 
     :param channel_type: either 'start'/'onset' or 'end'/'offset'
-    :param labels: array-like of unparsed event labels
-    :param events: array-like of Event objects
+    :param data: array-like of event labels or Event objects
     :param sampling_rate: the sampling rate of the recorded data; required if `events` is provided
     :param min_num_samples: the number of samples in the output sequence. If None, the number of samples is determined
         by the total duration of the provided events.
@@ -168,13 +166,11 @@ def create_boolean_channel(
     channel_type_lower = channel_type.lower().strip()
     if channel_type_lower not in {cnst.START_STR, cnst.ONSET_STR, cnst.END_STR, cnst.OFFSET_STR}:
         raise ValueError(f"Invalid channel type: {channel_type}")
-    if labels is not None and events is not None:
-        raise ValueError("Only one of `labels` or `events` should be provided.")
-    if labels is not None:
-        return _labels_to_boolean_channel(channel_type_lower, labels)
-    if events is not None:
-        return _events_to_boolean_channel(channel_type_lower, events, sampling_rate, min_num_samples)
-    raise ValueError("Either `labels` or `events` must be provided.")
+    if isinstance(data, UnparsedEventLabelSequenceType):
+        return _labels_to_boolean_channel(channel_type_lower, data)
+    if isinstance(data, EventSequenceType):
+        return _events_to_boolean_channel(channel_type_lower, data, sampling_rate, min_num_samples)
+    raise TypeError("Argument `data` must be either an array of labels or an array of events.")
 
 
 def _labels_to_boolean_channel(
