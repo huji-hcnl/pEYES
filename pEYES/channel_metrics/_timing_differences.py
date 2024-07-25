@@ -1,7 +1,7 @@
 import numpy as np
 
 from pEYES._DataModels.Event import EventSequenceType
-from pEYES._base.postprocess_events import events_to_boolean_channel
+from pEYES._base.create import create_boolean_channel
 from pEYES._utils.vector_utils import pair_boolean_arrays
 
 
@@ -67,8 +67,12 @@ def _timing_differences(
 
     :return: array of timing differences between matched events (differences are in samples)
     """
-    gt_channel = events_to_boolean_channel(ground_truth, channel_type, sampling_rate, min_num_samples)
-    pred_channel = events_to_boolean_channel(prediction, channel_type, sampling_rate, min_num_samples)
+    gt_channel = create_boolean_channel(
+        events=ground_truth, channel_type=channel_type, sampling_rate=sampling_rate, min_num_samples=min_num_samples
+    )
+    pred_channel = create_boolean_channel(
+        events=prediction, channel_type=channel_type, sampling_rate=sampling_rate, min_num_samples=min_num_samples
+    )
     matched_idxs = pair_boolean_arrays(gt_channel, pred_channel)
     diffs = np.diff(matched_idxs, axis=1).flatten()
     return diffs
