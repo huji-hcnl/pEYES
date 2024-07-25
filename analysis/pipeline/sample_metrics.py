@@ -29,7 +29,7 @@ def run_default(
     try:
         sample_metrics = pd.read_pickle(fullpath)
     except FileNotFoundError:
-        metrics = set(u.SAMPLE_METRICS.keys())
+        metrics = set(u.METRICS_CONFIG.keys())
         if not pos_labels:
             metrics -= {"d_prime", "criterion"}
         sample_metrics = calculate_sample_metrics(
@@ -49,9 +49,9 @@ def calculate_sample_metrics(
         correction: str = "loglinear",
 ) -> pd.DataFrame:
     pred_labelers = u.check_labelers(labels, pred_labelers)
-    metrics = set(metrics or u.SAMPLE_METRICS.keys())
-    if not metrics <= set(u.SAMPLE_METRICS.keys()):
-        raise ValueError(f"Unknown metrics: {metrics - set(u.SAMPLE_METRICS.keys())}")
+    metrics = set(metrics or u.METRICS_CONFIG.keys())
+    if not metrics <= set(u.METRICS_CONFIG.keys()):
+        raise ValueError(f"Unknown metrics: {metrics - set(u.METRICS_CONFIG.keys())}")
     if pos_labels is None:
         # cannot calculate d-prime and criterion without specifying a subset of positive labels
         metrics = metrics - {"d_prime", "criterion"}

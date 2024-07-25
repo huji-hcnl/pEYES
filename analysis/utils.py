@@ -34,7 +34,7 @@ DEFAULT_DETECTORS = [
     peyes.create_detector(det, missing_value=np.nan, min_event_duration=4, pad_blinks_time=0) for det in DETECTOR_NAMES
 ]
 
-SAMPLE_METRICS = {
+METRICS_CONFIG = {
     # key -> (name, order, value range)
     peyes.constants.ACCURACY_STR: ("Accuracy", 1, [0, 1]),
     MATCH_RATIO_STR: ("Match Ratio", 2, [0, 1]),

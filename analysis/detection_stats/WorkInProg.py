@@ -26,7 +26,7 @@ def kruskal_wallis_with_posthoc_dunn(
 ):
     metrics = sorted(
         sample_metrics.index.unique(),
-        key=lambda met: u.SAMPLE_METRICS[met][1] if met in u.SAMPLE_METRICS else ord(met[0])
+        key=lambda met: u.METRICS_CONFIG[met][1] if met in u.METRICS_CONFIG else ord(met[0])
     )
     statistics, pvalues, dunns, Ns = {}, {}, {}, {}
     for m, metric in enumerate(metrics):
@@ -63,7 +63,7 @@ def sample_metrics_figure(
     assert 0 < len(gt_cols) <= 2
     metrics = sorted(
         sample_metrics.index.unique(),
-        key=lambda met: u.SAMPLE_METRICS[met][1] if met in u.SAMPLE_METRICS else ord(met[0])
+        key=lambda met: u.METRICS_CONFIG[met][1] if met in u.METRICS_CONFIG else ord(met[0])
     )
     if len(metrics) <= 3:
         ncols = 1
@@ -74,7 +74,7 @@ def sample_metrics_figure(
     fig = make_subplots(
         rows=nrows, cols=ncols,
         shared_xaxes=False,
-        subplot_titles=list(map(lambda met: u.SAMPLE_METRICS[met][0] if met in u.SAMPLE_METRICS else met, metrics)),
+        subplot_titles=list(map(lambda met: u.METRICS_CONFIG[met][0] if met in u.METRICS_CONFIG else met, metrics)),
     )
     for m, metric in enumerate(metrics):
         r, c = (m, 0) if ncols == 1 else divmod(m, ncols)
@@ -110,7 +110,7 @@ def sample_metrics_figure(
                             box_visible=True, meanline_visible=True, line_color='black',
                         ),
                     )
-        y_range = u.SAMPLE_METRICS[metric][2] if metric in u.SAMPLE_METRICS else None
+        y_range = u.METRICS_CONFIG[metric][2] if metric in u.METRICS_CONFIG else None
         fig.update_yaxes(row=r + 1, col=c + 1, range=y_range)
     fig.update_layout(
         title=title,
