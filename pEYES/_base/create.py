@@ -113,7 +113,7 @@ def create_detector(
 
 
 def create_events(
-        labels: Union[UnparsedEventLabelType, Sequence[UnparsedEventLabelType]],
+        labels: Union[UnparsedEventLabelType, UnparsedEventLabelSequenceType],
         t: np.ndarray,
         x: np.ndarray,
         y: np.ndarray,
@@ -166,11 +166,13 @@ def create_boolean_channel(
     channel_type_lower = channel_type.lower().strip()
     if channel_type_lower not in {cnst.START_STR, cnst.ONSET_STR, cnst.END_STR, cnst.OFFSET_STR}:
         raise ValueError(f"Invalid channel type: {channel_type}")
-    if isinstance(data, UnparsedEventLabelSequenceType):
-        return _labels_to_boolean_channel(channel_type_lower, data)
-    if isinstance(data, EventSequenceType):
+    if all(isinstance(e, BaseEvent) for e in data):
+        # data is of type EventSequenceType
         return _events_to_boolean_channel(channel_type_lower, data, sampling_rate, min_num_samples)
-    raise TypeError("Argument `data` must be either an array of labels or an array of events.")
+    if all(isinstance(l, UnparsedEventLabelType) for l in data):
+        # data is of type UnparsedEventLabelSequenceType
+        return _labels_to_boolean_channel(channel_type_lower, data)
+    raise ValueError("Argument `data` must be either an array of labels or an array of events.")
 
 
 def _labels_to_boolean_channel(
