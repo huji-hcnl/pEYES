@@ -82,8 +82,8 @@ def detect_labels_and_events(
 ) -> (pd.DataFrame, pd.DataFrame, pd.DataFrame):
     with warnings.catch_warnings():
         warnings.simplefilter("ignore")
-        if overwrite_label is None:
-            overwrite_label = {l for l in EventLabelEnum}
+        if overwrite_label is None and num_iterations > 1:
+            raise ValueError("Cannot have multiple iterations without specifying a label to overwrite.")
         elif isinstance(overwrite_label, UnparsedEventLabelType):
             overwrite_label = {peyes.parse_label(overwrite_label)}
         else:
