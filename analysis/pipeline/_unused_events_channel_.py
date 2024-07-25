@@ -64,7 +64,7 @@ def timing_differences(
         gt_labelers,
         pred_labelers,
         pos_labels,
-        iteration_desc="Channel :: Timing Differences",
+        iteration_desc="Events Channel :: Timing Differences",
     )
     results = pd.DataFrame.from_dict(results, orient="columns")
     results.columns.names = [peyes.constants.TRIAL_ID_STR, u.GT_STR, u.PRED_STR, peyes.constants.ITERATION_STR]
@@ -95,7 +95,7 @@ def detection_metrics(
         gt_labelers,
         pred_labelers,
         pos_labels,
-        iteration_desc="Channel :: SDT Metrics",
+        iteration_desc="Events Channel :: SDT Metrics",
     )
     results = pd.concat({k: pd.concat(v, axis=0) for k, v in results.items()}, axis=1)
     results.columns.names = [
