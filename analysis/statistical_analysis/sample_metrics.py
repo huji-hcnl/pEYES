@@ -1,29 +1,74 @@
 import os
-from typing import List, Optional
+from typing import List, Optional, Union
 
-import numpy as np
 import pandas as pd
 import scipy.stats as stats
 import scikit_posthocs as sp
-from tqdm import tqdm
 import plotly.graph_objects as go
 from plotly.subplots import make_subplots
 import plotly.io as pio
 
 import pEYES as peyes
+from pEYES._DataModels.UnparsedEventLabel import UnparsedEventLabelType, UnparsedEventLabelSequenceType
 
 import analysis.utils as u
+from analysis.pipeline.preprocess import load_dataset
 
 pio.renderers.default = "browser"
 
 ###################
 
 
-def kruskal_wallis_with_posthoc_dunn(
+def get_data(
+        dataset_name: str,
+        output_dir: str,
+        label: Optional[Union[UnparsedEventLabelType, UnparsedEventLabelSequenceType]] = None,
+        iteration: int = 1,
+        stimulus_type: Optional[Union[str, List[str]]] = None,
+        metric: Optional[Union[str, List[str]]] = None,
+) -> pd.DataFrame:
+    sample_metrics_dir = os.path.join(output_dir, dataset_name, f"{peyes.constants.SAMPLE_STR}_{peyes.constants.METRICS_STR}")
+    fullpath = os.path.join(sample_metrics_dir, u.get_filename_for_labels(label, extension="pkl"))
+    try:
+        sample_metrics = pd.read_pickle(fullpath)
+    except FileNotFoundError:
+        raise FileNotFoundError(f"Couldn't find `{fullpath}`. Please preprocess the dataset first.")
+    sample_metrics = sample_metrics.xs(iteration, level=peyes.constants.ITERATION_STR, axis=1)
+    if stimulus_type:
+        dataset = load_dataset(dataset_name, verbose=False)
+        trial_ids = u.trial_ids_by_condition(dataset, key=peyes.constants.STIMULUS_TYPE_STR, values=stimulus_type)
+        is_trial_ids = sample_metrics.columns.get_level_values(peyes.constants.TRIAL_ID_STR).isin(trial_ids)
+        sample_metrics = sample_metrics.loc[:, is_trial_ids]
+    if metric:
+        sample_metrics = sample_metrics.loc[metric]
+    return sample_metrics
+
+
+def statistical_analysis(
         sample_metrics: pd.DataFrame,
         gt_cols: List[str],
         multi_comp: Optional[str] = "fdr_bh",
 ):
+    """
+    For each of the metrics in the input DataFrame and each of the GT labelers, performs Kruskal-Wallis test with
+    post-hoc Dunn's test for multiple comparisons. Returns the KW-statistic, KW-p-value, Dunn's-p-values and number of
+    samples for each (metric, GT labeler) pair.
+
+    :param sample_metrics: DataFrame with sample metrics. Should have the following MultiIndex structure:
+        - Index :: 1st level: metric name
+        - Columns :: 1st level: trial id
+        - Columns :: 2nd level: GT labeler
+        - Columns :: 3rd level: detector
+    :param gt_cols: List of GT labelers to compare.
+    :param multi_comp: Method for multiple comparisons correction when performing Dunn's post-hoc test.
+
+    :return: Four DataFrames containing results for the statistical analysis. All DataFrames are indexed by metric name
+        and columns are GT labelers.
+        - statistics: KW statistic
+        - pvalues: KW p-value
+        - dunns: DataFrame with Dunn's p-values for pair-wise comparisons. Rows and columns are Pred labelers.
+        - Ns: Number of trials for each (metric, GT labeler) pair.
+    """
     metrics = sorted(
         sample_metrics.index.unique(),
         key=lambda met: u.METRICS_CONFIG[met][1] if met in u.METRICS_CONFIG else ord(met[0])
@@ -59,6 +104,21 @@ def sample_metrics_figure(
         title: str = "Sample Metrics",
         only_box: bool = False,
 ) -> go.Figure:
+    """
+    Creates a violin/box plot for each metric in the input DataFrame, comparing the detectors for the GT labeler(s).
+    If two GT labelers are provided, the plot will show GT1 in the positive (right) side and GT2 in the negative (left) side.
+
+    :param sample_metrics: DataFrame with sample metrics. Should have the following MultiIndex structure:
+        - Index :: 1st level: metric name
+        - Columns :: 1st level: trial id
+        - Columns :: 2nd level: GT labeler
+        - Columns :: 3rd level: detector
+    :param gt1: name of the first GT labeler to compare.
+    :param gt2: optional; name of the second GT labeler to compare.
+    :param title: optional; title for the plot.
+    :param only_box: if True, only box plots will be shown.
+    :return:
+    """
     gt_cols = list(filter(None, [gt1, gt2]))
     assert 0 < len(gt_cols) <= 2
     metrics = sorted(
@@ -123,43 +183,12 @@ def sample_metrics_figure(
 
 
 ###################
+## EXAMPLE USAGE ##
 
 GT1, GT2 = "RA", "MN"
-GT_COLS = list(filter(None, [GT1, GT2]))
 
-dataset = pd.read_pickle(os.path.join(u.DATASETS_DIR, "lund2013.pkl"))
-image_trials = u.trial_ids_by_condition(dataset, key=peyes.constants.STIMULUS_TYPE_STR, values="image")
+sample_metrics = get_data("lund2013", os.path.join(u.OUTPUT_DIR, "default_values"), label=None, iteration=1, stimulus_type="image")
 
-## Sample Metrics ; 1st iteration ; image trials
-sample_mets = pd.read_pickle(os.path.join(u.OUTPUT_DIR, "default_values", "lund2013", "sample_metrics", "all_labels.pkl"))
-iter1_sample_mets = sample_mets.xs(1, level=peyes.constants.ITERATION_STR, axis=1)
-image_iter1_sample_mets = iter1_sample_mets.loc[:, iter1_sample_mets.columns.get_level_values(peyes.constants.TRIAL_ID_STR).isin(image_trials)]
-
-statistics, pvalues, dunns, Ns = kruskal_wallis_with_posthoc_dunn(image_iter1_sample_mets, GT_COLS, multi_comp="fdr_bh")
-fig = sample_metrics_figure(image_iter1_sample_mets, GT1, GT2, title=f"Sample Metrics")
-fig.show()
-
-## Matched SDT Metrics ; 1st iteration ; image trials
-matched_sdt_metrics = pd.read_pickle(os.path.join(u.OUTPUT_DIR, "default_values", "lund2013", "matches_metrics", "all_labels_sdt_metrics.pkl"))
-iter1_matched_sdt_metrics = matched_sdt_metrics.xs(1, level=peyes.constants.ITERATION_STR, axis=1)
-image_iter1_matched_sdt_metrics = iter1_matched_sdt_metrics.loc[:, iter1_matched_sdt_metrics.columns.get_level_values(peyes.constants.TRIAL_ID_STR).isin(image_trials)]
-
-mean_match_ratio_across_schemes = image_iter1_matched_sdt_metrics.xs(u.MATCH_RATIO_STR, level=peyes.constants.METRIC_STR, axis=0).mean(axis=0)
-mean_match_ratio_across_schemes.name = u.MATCH_RATIO_STR
-mean_match_ratio_across_schemes = mean_match_ratio_across_schemes.to_frame().T
-
-statistics, pvalues, dunns, Ns = kruskal_wallis_with_posthoc_dunn(mean_match_ratio_across_schemes, GT_COLS, multi_comp="fdr_bh")
-fig = sample_metrics_figure(mean_match_ratio_across_schemes, GT1, GT2, title=f"Sample Metrics")
-fig.show()
-
-## Channel SDT Metrics ; 1st iteration ; image trials
-# TODO: run this for specific thresholds & channel types
-channel_sdt_metrics = pd.read_pickle(os.path.join(u.OUTPUT_DIR, "default_values", "lund2013", "channel_metrics", "all_labels_sdt_metrics.pkl"))
-iter1_channel_sdt_metrics = channel_sdt_metrics.xs(1, level=peyes.constants.ITERATION_STR, axis=1)
-image_iter1_channel_sdt_metrics = iter1_channel_sdt_metrics.loc[:, iter1_channel_sdt_metrics.columns.get_level_values(peyes.constants.TRIAL_ID_STR).isin(image_trials)]
-
-onset_metrics = image_iter1_channel_sdt_metrics.xs("onset", level=u.CHANNEL_TYPE_STR, axis=0)
-statistics, pvalues, dunns, Ns = kruskal_wallis_with_posthoc_dunn(onset_metrics, GT_COLS, multi_comp="fdr_bh")
-fig = sample_metrics_figure(onset_metrics, GT1, GT2, title=f"Sample Metrics")
-fig.show()
-
+sm_statistics, sm_pvalues, sm_dunns, sm_Ns = statistical_analysis(sample_metrics, [GT1, GT2], multi_comp="fdr_bh")
+sample_metrics_fig = sample_metrics_figure(sample_metrics, GT1, GT2, title=f"Sample Metrics")
+sample_metrics_fig.show()
