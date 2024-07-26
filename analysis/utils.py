@@ -1,5 +1,5 @@
 import os
-from typing import Optional, Union, Any, List
+from typing import Optional, Union, Any, List, Sequence
 
 import numpy as np
 import pandas as pd
@@ -76,7 +76,7 @@ def get_filename_for_labels(
         return f"{prefix}all_labels{suffix}.{extension}"
     elif isinstance(labels, UnparsedEventLabelType):
         return f"{prefix}{peyes.parse_label(labels).name.lower()}{suffix}.{extension}"
-    elif isinstance(labels, UnparsedEventLabelSequenceType):
+    elif isinstance(labels, Sequence) and all(isinstance(l, UnparsedEventLabelType) for l in labels):
         return f"{prefix}{'_'.join([peyes.parse_label(l).name.lower() for l in labels])}{suffix}.{extension}"
     else:
         raise TypeError(f"Unknown pos_labels type: {type(labels)}")
