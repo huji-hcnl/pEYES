@@ -77,7 +77,7 @@ def statistical_analysis(
     for m, metric in enumerate(metrics):
         for gt, gt_col in enumerate(gt_cols):
             gt_series = sample_metrics.xs(gt_col, level=u.GT_STR, axis=1).loc[metric]
-            gt_df = gt_series.unstack().drop(columns=GT_COLS, errors='ignore')
+            gt_df = gt_series.unstack().drop(columns=gt_cols, errors='ignore')
             N, _ = gt_df.shape
             detector_values = {col: gt_df[col].values for col in gt_df.columns}
             statistic, pvalue = stats.kruskal(*detector_values.values(), nan_policy='omit')
