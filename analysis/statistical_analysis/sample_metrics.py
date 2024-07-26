@@ -62,12 +62,12 @@ def statistical_analysis(
     :param gt_cols: List of GT labelers to compare.
     :param multi_comp: Method for multiple comparisons correction when performing Dunn's post-hoc test.
 
-    :return: Four DataFrames containing results for the statistical analysis. All DataFrames are indexed by metric name
-        and columns are GT labelers.
-        - statistics: KW statistic
-        - pvalues: KW p-value
-        - dunns: DataFrame with Dunn's p-values for pair-wise comparisons. Rows and columns are Pred labelers.
-        - Ns: Number of trials for each (metric, GT labeler) pair.
+    :return: Four DataFrames containing results for the statistical analysis.
+        - statistics: KW statistic; index is metric name, columns are GT labelers.
+        - pvalues: KW p-value; index is metric name, columns are GT labelers.
+        - dunns: DataFrame with Dunn's p-values for pair-wise comparisons; index and columns are Pred labelers.
+        - Ns: Number of data-points (trials) for each (metric, GT labeler, Pred labeler) pair; index is metric name,
+            columns multiindex with pairs of (GT, Pred) labelers.
     """
     metrics = sorted(
         sample_metrics.index.unique(),
@@ -78,22 +78,26 @@ def statistical_analysis(
         for gt, gt_col in enumerate(gt_cols):
             gt_series = sample_metrics.xs(gt_col, level=u.GT_STR, axis=1).loc[metric]
             gt_df = gt_series.unstack().drop(columns=gt_cols, errors='ignore')
-            N, _ = gt_df.shape
-            detector_values = {col: gt_df[col].values for col in gt_df.columns}
+            detector_values = {col: gt_df[col].explode().dropna().values for col in gt_df.columns}
             statistic, pvalue = stats.kruskal(*detector_values.values(), nan_policy='omit')
             dunn = pd.DataFrame(
                 sp.posthoc_dunn(a=list(detector_values.values()), p_adjust=multi_comp).values,
                 index=gt_df.columns, columns=gt_df.columns
             )
-            dunn.index.name = dunn.columns.name = None
             statistics[(metric, gt_col)] = statistic
             pvalues[(metric, gt_col)] = pvalue
             dunns[(metric, gt_col)] = dunn
-            Ns[(metric, gt_col)] = N
+            Ns.update({(metric, gt_col, det): det_vals.shape[0] for det, det_vals in detector_values.items()})
+    # create outputs
     statistics = pd.Series(statistics).unstack()
     pvalues = pd.Series(pvalues).unstack()
+    statistics.index.names = pvalues.index.names = [peyes.constants.METRIC_STR]
+    statistics.columns.names = pvalues.columns.names = [u.GT_STR]
     dunns = pd.Series(dunns).unstack()
-    Ns = pd.Series(Ns).unstack()
+    dunns.index.names = dunns.columns.names = [u.PRED_STR]
+    Ns = pd.Series(Ns)
+    Ns.index.names = [peyes.constants.METRIC_STR, u.GT_STR, u.PRED_STR]
+    Ns = Ns.unstack([u.GT_STR, u.PRED_STR])
     return statistics, pvalues, dunns, Ns
 
 
