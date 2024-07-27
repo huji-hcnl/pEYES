@@ -9,7 +9,7 @@ import plotly.io as pio
 
 import pEYES as peyes
 import analysis.utils as u
-from analysis.pipeline.full_pipeline import run
+from analysis.process.full_pipeline import run
 
 pio.renderers.default = "browser"
 

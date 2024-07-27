@@ -3,7 +3,7 @@ import os
 import plotly.io as pio
 
 import analysis.utils as u
-from analysis.pipeline.full_pipeline import run
+from analysis.process.full_pipeline import run
 
 pio.renderers.default = "browser"
 

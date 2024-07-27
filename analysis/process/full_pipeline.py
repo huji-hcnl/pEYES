@@ -10,10 +10,10 @@ from pEYES._DataModels.Detector import BaseDetector
 from pEYES._DataModels.UnparsedEventLabel import UnparsedEventLabelType, UnparsedEventLabelSequenceType
 
 import analysis.utils as u
-import analysis.pipeline.preprocess as preprocess
-import analysis.pipeline.sample_metrics as sample_metrics
-import analysis.pipeline.samples_channel as channel_metrics
-import analysis.pipeline.match_metrics as match_metrics
+import analysis.process.preprocess as preprocess
+import analysis.process.sample_metrics as sample_metrics
+import analysis.process.samples_channel as channel_metrics
+import analysis.process.match_metrics as match_metrics
 
 
 def run(
