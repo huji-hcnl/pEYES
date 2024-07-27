@@ -8,10 +8,18 @@ import plotly.express as px
 import pEYES as peyes
 from pEYES._DataModels.UnparsedEventLabel import UnparsedEventLabelType, UnparsedEventLabelSequenceType
 
+###########################
 
 CWD = os.getcwd()
 OUTPUT_DIR = os.path.join(CWD, "output")
 DATASETS_DIR = os.path.join(CWD, "output", "datasets")
+
+###########################
+
+DEFAULT_DISCRETE_COLORMAP = px.colors.qualitative.Dark24
+DEFAULT_CONTINUOUS_COLORMAP = px.colors.sequential.Viridis
+
+###########################
 
 LABELER_STR = "labeler"
 DEFAULT_STR = "default"
@@ -24,15 +32,23 @@ MATCH_RATIO_STR = "match_ratio"
 CHANNEL_STR = "channel"
 CHANNEL_TYPE_STR = f"{CHANNEL_STR}_{peyes.constants.TYPE_STR}"
 
+###########################
+
 DATASET_ANNOTATORS = {
     "lund2013": ["RA", "MN"],
     "irf": ['RZ'],
     "hfc": ['DN', 'IH', 'JB', 'JF', 'JV', 'KH', 'MN', 'MS', 'PZ', 'RA', 'RH', 'TC']
 }
-DETECTOR_NAMES = ["ivt", "ivvt", "idt", "engbert", "nh", "remodnav"]
-DEFAULT_DETECTORS = [
-    peyes.create_detector(det, missing_value=np.nan, min_event_duration=4, pad_blinks_time=0) for det in DETECTOR_NAMES
-]
+
+_default_detector_params = dict(missing_value=np.nan, min_event_duration=4, pad_blinks_time=0)
+DETECTORS_CONFIG = {
+    "ivt": (peyes.create_detector("ivt", **_default_detector_params), 0, DEFAULT_DISCRETE_COLORMAP[0]),
+    "ivvt": (peyes.create_detector("ivvt", **_default_detector_params), 1, DEFAULT_DISCRETE_COLORMAP[1]),
+    "idt": (peyes.create_detector("idt", **_default_detector_params), 2, DEFAULT_DISCRETE_COLORMAP[2]),
+    "engbert": (peyes.create_detector("engbert", **_default_detector_params), 3, DEFAULT_DISCRETE_COLORMAP[3]),
+    "nh": (peyes.create_detector("nh", **_default_detector_params), 4, DEFAULT_DISCRETE_COLORMAP[4]),
+    "remodnav": (peyes.create_detector("remodnav", **_default_detector_params), 5, DEFAULT_DISCRETE_COLORMAP[5]),
+}
 
 METRICS_CONFIG = {
     # key -> (name, order, value range)
@@ -47,13 +63,10 @@ METRICS_CONFIG = {
     peyes.constants.PRECISION_STR: ("Precision", 6, [0, 1]),
     peyes.constants.F1_STR: ("f1", 7, [0, 1]),
     peyes.constants.COMPLEMENT_NLD_STR: ("1 - NLD", 8, [0, 1]),
+    peyes.constants.FALSE_ALARM_RATE_STR: ("F.A. Rate", 8, [0, 1]),
     peyes.constants.D_PRIME_STR: ("d'", 9, None),
     peyes.constants.CRITERION_STR: ("Criterion", 10, None),
 }
-
-
-DEFAULT_DISCRETE_COLORMAP = px.colors.qualitative.Dark24
-DEFAULT_CONTINUOUS_COLORMAP = px.colors.sequential.Viridis
 
 ###########################################
 

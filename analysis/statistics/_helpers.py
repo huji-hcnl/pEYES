@@ -148,8 +148,10 @@ def distributions_figure(
         for j, gt_col in enumerate(gt_cols):
             gt_series = data.xs(gt_col, level=u.GT_STR, axis=1).loc[idx]
             gt_df = gt_series.unstack().drop(columns=gt_cols, errors='ignore')
-            for d, detector in enumerate(gt_df.columns):
-                det_name = detector.removesuffix("Detector")
+            detectors = sorted(gt_df.columns, key=lambda det: u.DETECTORS_CONFIG[det][1])
+            for k, det in enumerate(detectors):
+                det_name = det.removesuffix("Detector")
+                det_color = u.DETECTORS_CONFIG[det_name.lower()][2]
                 if len(gt_cols) == 1:
                     violin_side = None
                     opacity = 0.75
@@ -160,9 +162,9 @@ def distributions_figure(
                     fig.add_trace(
                         row=r + 1, col=c + 1,
                         trace=go.Box(
-                            x0=det_name, y=gt_df[detector].explode().dropna().values,
+                            x0=det_name, y=gt_df[det].explode().dropna().values,
                             name=f"{gt_col}, {det_name}", legendgroup=det_name,
-                            marker_color=u.DEFAULT_DISCRETE_COLORMAP[d], line_color=u.DEFAULT_DISCRETE_COLORMAP[d],
+                            marker_color=det_color, line_color=det_color,
                             opacity=opacity, boxmean='sd', showlegend=i == 0,
                         )
                     )
@@ -170,11 +172,11 @@ def distributions_figure(
                     fig.add_trace(
                         row=r + 1, col=c + 1,
                         trace=go.Violin(
-                            x0=det_name, y=gt_df[detector].explode().dropna().values,
+                            x0=det_name, y=gt_df[det].explode().dropna().values,
                             side=violin_side, opacity=opacity, spanmode='hard',
-                            fillcolor=u.DEFAULT_DISCRETE_COLORMAP[d],
+                            fillcolor=det_color, line_color='black',
                             name=f"{gt_col}, {det_name}", legendgroup=det_name, scalegroup=idx, showlegend=i == 0,
-                            box_visible=True, meanline_visible=True, line_color='black',
+                            box_visible=True, meanline_visible=True,
                         ),
                     )
         y_range = u.METRICS_CONFIG[idx][2] if idx in u.METRICS_CONFIG else None

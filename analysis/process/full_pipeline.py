@@ -19,7 +19,7 @@ import analysis.process.match_metrics as match_metrics
 def run(
         output_dir: str,
         dataset_name: str,
-        detectors: List[BaseDetector] = u.DEFAULT_DETECTORS,
+        detectors: List[BaseDetector] = None,
         annotators: List[str] = None,
         num_iterations: int = 4,
         iterations_overwrite_label: Union[UnparsedEventLabelType, UnparsedEventLabelSequenceType] = 2,
@@ -37,8 +37,11 @@ def run(
     output_dir = os.path.join(output_dir, dataset_name)
     os.makedirs(output_dir, exist_ok=True)
 
-    ## labels, metadata, events, matches ##
+    ## default detectors & annotators ##
+    detectors = detectors or [v[0] for v in u.DETECTORS_CONFIG.values()]
     annotators = annotators or u.DATASET_ANNOTATORS[dataset_name]
+
+    ## labels, metadata, events, matches ##
     try:
         labels = pd.read_pickle(os.path.join(output_dir, f"{peyes.constants.LABELS_STR}.pkl"))
         metadata = pd.read_pickle(os.path.join(output_dir, f"{u.METADATA_STR}.pkl"))
