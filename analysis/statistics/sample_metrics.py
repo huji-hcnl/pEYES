@@ -26,17 +26,10 @@ def get_sample_metrics(
         stimulus_type: Optional[Union[str, List[str]]] = None,
         metric: Optional[Union[str, List[str]]] = None,
 ) -> pd.DataFrame:
-    return h.get_data_impl(
-        dataset_name=dataset_name,
-        output_dir=output_dir,
-        label=label,
-        stimulus_type=stimulus_type,
-        sub_index=metric,
-        data_dir_name=f"{peyes.constants.SAMPLE_STR}_{peyes.constants.METRICS_STR}",
-        filename_suffix="",
-        filename_prefix="",
-        iteration=1,
-    )
+    return h.get_data(dataset_name=dataset_name, output_dir=output_dir,
+                      data_dir_name=f"{peyes.constants.SAMPLE_STR}_{peyes.constants.METRICS_STR}", label=label,
+                      filename_prefix="", filename_suffix="", iteration=1, stimulus_type=stimulus_type,
+                      sub_index=metric)
 
 
 ###################
