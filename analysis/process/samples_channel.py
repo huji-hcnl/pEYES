@@ -44,7 +44,7 @@ def run_default(
     try:
         sdt_metrics = pd.read_pickle(sdt_metrics_fullpath)
     except FileNotFoundError:
-        sdt_metrics = detection_metrics(labels, np.arange(10), u.DATASET_ANNOTATORS[dataset_name], pos_labels=pos_labels)
+        sdt_metrics = detection_metrics(labels, np.arange(20), u.DATASET_ANNOTATORS[dataset_name], pos_labels=pos_labels)
         sdt_metrics.to_pickle(sdt_metrics_fullpath)
     return time_diffs, sdt_metrics
 
