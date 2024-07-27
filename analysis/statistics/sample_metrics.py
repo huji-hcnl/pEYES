@@ -153,7 +153,7 @@ def sample_metrics_figure(
                     fig.add_trace(
                         row=r + 1, col=c + 1,
                         trace=go.Box(
-                            x0=det_name, y=gt_df[detector],
+                            x0=det_name, y=gt_df[detector].explode().dropna().values,
                             name=f"{gt_col}, {det_name}", legendgroup=det_name,
                             marker_color=u.DEFAULT_DISCRETE_COLORMAP[d], line_color='black',
                             opacity=opacity, boxmean='sd', showlegend=m == 0,
@@ -163,7 +163,7 @@ def sample_metrics_figure(
                     fig.add_trace(
                         row=r + 1, col=c + 1,
                         trace=go.Violin(
-                            x0=det_name, y=gt_df[detector],
+                            x0=det_name, y=gt_df[detector].explode().dropna().values,
                             side=violin_side, opacity=opacity, spanmode='hard',
                             fillcolor=u.DEFAULT_DISCRETE_COLORMAP[d],
                             name=f"{gt_col}, {det_name}", legendgroup=det_name, scalegroup=metric, showlegend=m == 0,
@@ -191,5 +191,5 @@ sample_metrics = get_sample_metrics(
     "lund2013", os.path.join(u.OUTPUT_DIR, "default_values"), label=None, stimulus_type="image", metric=None
 )
 sm_statistics, sm_pvalues, sm_dunns, sm_Ns = statistical_analysis(sample_metrics, [GT1, GT2], multi_comp="fdr_bh")
-sample_metrics_fig = sample_metrics_figure(sample_metrics, GT1, GT2, title=f"Sample Metrics")
+sample_metrics_fig = sample_metrics_figure(sample_metrics, GT1, GT2, title=f"Sample Metrics", only_box=False)
 sample_metrics_fig.show()
