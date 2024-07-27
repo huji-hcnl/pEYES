@@ -2,10 +2,6 @@ import os
 from typing import List, Optional, Union
 
 import pandas as pd
-import scipy.stats as stats
-import scikit_posthocs as sp
-import plotly.graph_objects as go
-from plotly.subplots import make_subplots
 import plotly.io as pio
 
 import pEYES as peyes
@@ -29,8 +25,7 @@ def get_sample_metrics(
     return h.get_data(
         dataset_name=dataset_name, output_dir=output_dir,
         data_dir_name=f"{peyes.constants.SAMPLE_STR}_{peyes.constants.METRICS_STR}", label=label,
-        filename_prefix="", filename_suffix="", iteration=1, stimulus_type=stimulus_type,
-        sub_index=metric
+        stimulus_type=stimulus_type, sub_index=metric, iteration=1,
     )
 
 
