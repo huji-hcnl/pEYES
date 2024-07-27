@@ -37,7 +37,9 @@ DEFAULT_DETECTORS = [
 METRICS_CONFIG = {
     # key -> (name, order, value range)
     peyes.constants.ACCURACY_STR: ("Accuracy", 1, [0, 1]),
+    peyes.constants.ONSET_STR: ("Onset", 1, None),
     MATCH_RATIO_STR: ("Match Ratio", 2, [0, 1]),
+    peyes.constants.OFFSET_STR: ("Offset", 2, None),
     peyes.constants.BALANCED_ACCURACY_STR: ("Balanced Accuracy", 2, [0, 1]),
     peyes.constants.COHENS_KAPPA_STR: ("Cohen's Kappa", 3, [-1, 1]),
     peyes.constants.MCC_STR: ("MCC", 4, [-1, 1]),
