@@ -9,11 +9,11 @@ import pandas as pd
 from tqdm import tqdm, trange
 
 import pEYES as peyes
-from pEYES._DataModels.EventLabelEnum import EventLabelEnum
 from pEYES._DataModels.Detector import BaseDetector
 from pEYES._DataModels.UnparsedEventLabel import UnparsedEventLabelType, UnparsedEventLabelSequenceType
 
 import analysis.utils as u
+import analysis.process._helpers as h
 
 
 DEFAULT_MATCHING_SCHEMES = {
@@ -31,7 +31,7 @@ def run_default(
 ) -> (pd.DataFrame, pd.DataFrame, pd.DataFrame, pd.DataFrame, pd.DataFrame):
     start = time.time()
     dataset = u.load_dataset(dataset_name, verbose=True)
-    default_output_dir = u.get_default_output_dir(dataset_name)
+    default_output_dir = h.get_default_output_dir(dataset_name)
     try:
         labels = pd.read_pickle(os.path.join(default_output_dir, f"{peyes.constants.LABELS_STR}.pkl"))
         metadata = pd.read_pickle(os.path.join(default_output_dir, f"{u.METADATA_STR}.pkl"))
@@ -128,7 +128,7 @@ def match_events(
         matching_schemes: Dict[str, Dict[str, Union[int, float]]] = None,
         allow_xmatch: bool = False,
 ):
-    pred_labelers = u.check_labelers(events, pred_labelers)
+    pred_labelers = h.check_labelers(events, pred_labelers)
     matching_schemes = matching_schemes or DEFAULT_MATCHING_SCHEMES
     results = dict()
     for tr in tqdm(events.columns.get_level_values(level=peyes.constants.TRIAL_ID_STR).unique(), desc="Matching Events"):

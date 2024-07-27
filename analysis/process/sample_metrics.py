@@ -8,13 +8,14 @@ import pEYES as peyes
 from pEYES._DataModels.UnparsedEventLabel import UnparsedEventLabelType, UnparsedEventLabelSequenceType
 
 import analysis.utils as u
+import analysis.process._helpers as h
 
 
 def run_default(
         dataset_name: str,
         pos_labels: Optional[Union[UnparsedEventLabelType, UnparsedEventLabelSequenceType]] = None,
 ) -> pd.DataFrame:
-    default_output_dir = u.get_default_output_dir(dataset_name)
+    default_output_dir = h.get_default_output_dir(dataset_name)
     try:
         labels = pd.read_pickle(os.path.join(default_output_dir, f"{peyes.constants.LABELS_STR}.pkl"))
     except FileNotFoundError:
@@ -48,7 +49,7 @@ def calculate_sample_metrics(
         average: str = "weighted",
         correction: str = "loglinear",
 ) -> pd.DataFrame:
-    pred_labelers = u.check_labelers(labels, pred_labelers)
+    pred_labelers = h.check_labelers(labels, pred_labelers)
     metrics = set(metrics or u.METRICS_CONFIG.keys())
     if not metrics <= set(u.METRICS_CONFIG.keys()):
         raise ValueError(f"Unknown metrics: {metrics - set(u.METRICS_CONFIG.keys())}")

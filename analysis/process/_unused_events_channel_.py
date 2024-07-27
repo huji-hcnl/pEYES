@@ -12,6 +12,7 @@ from pEYES._DataModels.Event import EventSequenceType
 from pEYES._utils.event_utils import calculate_sampling_rate
 
 import analysis.utils as u
+import analysis.process._helpers as h
 
 _CHANNEL_TYPE_STR = "channel_type"
 
@@ -21,7 +22,7 @@ def run_default(
         dataset: pd.DataFrame,
         pos_labels: Optional[Union[UnparsedEventLabelType, UnparsedEventLabelSequenceType]] = None,
 ):
-    default_output_dir = u.get_default_output_dir(dataset_name)
+    default_output_dir = h.get_default_output_dir(dataset_name)
     try:
         events = pd.read_pickle(os.path.join(default_output_dir, f"{peyes.constants.EVENTS_STR}.pkl"))
     except FileNotFoundError:
@@ -115,7 +116,7 @@ def _calculation_wrapper(
         pos_labels: Optional[Union[UnparsedEventLabelType, UnparsedEventLabelSequenceType]] = None,
         iteration_desc: str = "Channel Metrics",
 ) -> dict:
-    pred_labelers = u.check_labelers(events, pred_labelers)
+    pred_labelers = h.check_labelers(events, pred_labelers)
     if pos_labels is None:
         pos_labels = [l for l in EventLabelEnum]
     elif isinstance(pos_labels, UnparsedEventLabelType):

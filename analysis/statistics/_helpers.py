@@ -1,13 +1,21 @@
 import os
-from typing import List, Optional, Union
+from typing import List, Optional, Union, Any
 
-import numpy as np
 import pandas as pd
 
 import pEYES as peyes
 from pEYES._DataModels.UnparsedEventLabel import UnparsedEventLabelType, UnparsedEventLabelSequenceType
 
 import analysis.utils as u
+
+
+def trial_ids_by_condition(dataset_name: str, key: str, values: Union[Any, List[Any]]) -> List[int]:
+    dataset = u.load_dataset(dataset_name, verbose=False)
+    if not isinstance(values, list):
+        values = [values]
+    all_trial_ids = dataset[peyes.constants.TRIAL_ID_STR]
+    is_condition = dataset[key].isin(values)
+    return all_trial_ids[is_condition].unique().tolist()
 
 
 def get_data_impl(
@@ -31,7 +39,7 @@ def get_data_impl(
         raise FileNotFoundError(f"Couldn't find `{fullpath}`. Please preprocess the dataset first.")
     data = data.xs(iteration, level=peyes.constants.ITERATION_STR, axis=1)
     if stimulus_type:
-        trial_ids = u.trial_ids_by_condition(dataset_name, key=peyes.constants.STIMULUS_TYPE_STR, values=stimulus_type)
+        trial_ids = trial_ids_by_condition(dataset_name, key=peyes.constants.STIMULUS_TYPE_STR, values=stimulus_type)
         is_trial_ids = data.columns.get_level_values(peyes.constants.TRIAL_ID_STR).isin(trial_ids)
         data = data.loc[:, is_trial_ids]
     if sub_index:

@@ -1,5 +1,5 @@
 import os
-from typing import Optional, Union, Any, List, Sequence
+from typing import Optional, Union, Sequence
 
 import numpy as np
 import pandas as pd
@@ -68,12 +68,6 @@ def load_dataset(dataset_name: str, verbose: bool = True) -> pd.DataFrame:
     return dataset
 
 
-def get_default_output_dir(dataset_name: str) -> str:
-    res = os.path.join(OUTPUT_DIR, dataset_name, DEFAULT_STR)
-    os.makedirs(res, exist_ok=True)
-    return res
-
-
 def get_filename_for_labels(
         labels: Optional[Union[UnparsedEventLabelType, UnparsedEventLabelSequenceType]] = None,
         prefix: str = "",
@@ -92,21 +86,3 @@ def get_filename_for_labels(
         return f"{prefix}{'_'.join([peyes.parse_label(l).name.lower() for l in labels])}{suffix}.{extension}"
     else:
         raise TypeError(f"Unknown pos_labels type: {type(labels)}")
-
-
-def check_labelers(data: pd.DataFrame, labelers: List[str] = None) -> List[str]:
-    available_labelers = data.columns.get_level_values(LABELER_STR).unique()
-    labelers = set(labelers or available_labelers)
-    unknown_labelers = labelers - set(available_labelers)
-    if unknown_labelers:
-        raise ValueError(f"Unknown labelers: {unknown_labelers}")
-    return list(labelers)
-
-
-def trial_ids_by_condition(dataset_name: str, key: str, values: Union[Any, List[Any]]) -> List[int]:
-    dataset = load_dataset(dataset_name, verbose=False)
-    if not isinstance(values, list):
-        values = [values]
-    all_trial_ids = dataset[peyes.constants.TRIAL_ID_STR]
-    is_condition = dataset[key].isin(values)
-    return all_trial_ids[is_condition].unique().tolist()

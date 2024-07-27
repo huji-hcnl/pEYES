@@ -9,6 +9,7 @@ import pEYES as peyes
 from pEYES._DataModels.UnparsedEventLabel import UnparsedEventLabelType, UnparsedEventLabelSequenceType
 
 import analysis.utils as u
+import analysis.process._helpers as h
 
 _MATCHED_FEATURE_NAMES = [
     "onset_difference", "offset_difference", "duration_difference", "amplitude_difference", "azimuth_difference",
@@ -25,7 +26,7 @@ def run_default(
         dataset_name: str,
         pos_labels: Optional[Union[UnparsedEventLabelType, UnparsedEventLabelSequenceType]] = None,
 ) -> (pd.DataFrame, pd.DataFrame):
-    default_output_dir = u.get_default_output_dir(dataset_name)
+    default_output_dir = h.get_default_output_dir(dataset_name)
     try:
         events = pd.read_pickle(os.path.join(default_output_dir, f"{peyes.constants.EVENTS_STR}.pkl"))
     except FileNotFoundError:
