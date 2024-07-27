@@ -12,34 +12,31 @@ import pEYES as peyes
 from pEYES._DataModels.UnparsedEventLabel import UnparsedEventLabelType, UnparsedEventLabelSequenceType
 
 import analysis.utils as u
+import analysis.statistics._helpers as h
 
 pio.renderers.default = "browser"
 
 ###################
 
 
-def get_data(
+def get_sample_metrics(
         dataset_name: str,
         output_dir: str,
         label: Optional[Union[UnparsedEventLabelType, UnparsedEventLabelSequenceType]] = None,
-        iteration: int = 1,
         stimulus_type: Optional[Union[str, List[str]]] = None,
         metric: Optional[Union[str, List[str]]] = None,
 ) -> pd.DataFrame:
-    sample_metrics_dir = os.path.join(output_dir, dataset_name, f"{peyes.constants.SAMPLE_STR}_{peyes.constants.METRICS_STR}")
-    fullpath = os.path.join(sample_metrics_dir, u.get_filename_for_labels(label, extension="pkl"))
-    try:
-        sample_metrics = pd.read_pickle(fullpath)
-    except FileNotFoundError:
-        raise FileNotFoundError(f"Couldn't find `{fullpath}`. Please preprocess the dataset first.")
-    sample_metrics = sample_metrics.xs(iteration, level=peyes.constants.ITERATION_STR, axis=1)
-    if stimulus_type:
-        trial_ids = u.trial_ids_by_condition(dataset_name, key=peyes.constants.STIMULUS_TYPE_STR, values=stimulus_type)
-        is_trial_ids = sample_metrics.columns.get_level_values(peyes.constants.TRIAL_ID_STR).isin(trial_ids)
-        sample_metrics = sample_metrics.loc[:, is_trial_ids]
-    if metric:
-        sample_metrics = sample_metrics.loc[metric]
-    return sample_metrics
+    return h.get_data_impl(
+        dataset_name=dataset_name,
+        output_dir=output_dir,
+        label=label,
+        stimulus_type=stimulus_type,
+        sub_index=metric,
+        data_dir_name=f"{peyes.constants.SAMPLE_STR}_{peyes.constants.METRICS_STR}",
+        filename_suffix="",
+        filename_prefix="",
+        iteration=1,
+    )
 
 
 def statistical_analysis(
@@ -189,8 +186,9 @@ def sample_metrics_figure(
 
 GT1, GT2 = "RA", "MN"
 
-sample_metrics = get_data("lund2013", os.path.join(u.OUTPUT_DIR, "default_values"), label=None, iteration=1, stimulus_type="image")
-
+sample_metrics = get_sample_metrics(
+    "lund2013", os.path.join(u.OUTPUT_DIR, "default_values"), label=None, stimulus_type="image", metric=None
+)
 sm_statistics, sm_pvalues, sm_dunns, sm_Ns = statistical_analysis(sample_metrics, [GT1, GT2], multi_comp="fdr_bh")
 sample_metrics_fig = sample_metrics_figure(sample_metrics, GT1, GT2, title=f"Sample Metrics")
 sample_metrics_fig.show()
