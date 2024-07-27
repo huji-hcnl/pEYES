@@ -116,7 +116,8 @@ def sample_metrics_figure(
     :param gt2: optional; name of the second GT labeler to compare.
     :param title: optional; title for the plot.
     :param only_box: if True, only box plots will be shown.
-    :return:
+
+    :return: Plotly figure with the violin/box plot.
     """
     gt_cols = list(filter(None, [gt1, gt2]))
     assert 0 < len(gt_cols) <= 2
