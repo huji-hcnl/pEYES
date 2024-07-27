@@ -30,7 +30,7 @@ def run_default(
         dataset_name: str, verbose: bool = True
 ) -> (pd.DataFrame, pd.DataFrame, pd.DataFrame, pd.DataFrame, pd.DataFrame):
     start = time.time()
-    dataset = load_dataset(dataset_name, verbose=True)
+    dataset = u.load_dataset(dataset_name, verbose=True)
     default_output_dir = u.get_default_output_dir(dataset_name)
     try:
         labels = pd.read_pickle(os.path.join(default_output_dir, f"{peyes.constants.LABELS_STR}.pkl"))
@@ -58,18 +58,6 @@ def run_default(
     if verbose:
         print(f"### PREPROCESS TIME:\t{elapsed:.2f} seconds ###")
     return dataset, labels, metadata, events, matches
-
-
-def load_dataset(dataset_name: str, verbose: bool = True) -> pd.DataFrame:
-    if dataset_name == "lund2013":
-        dataset = peyes.datasets.lund2013(directory=u.DATASETS_DIR, save=True, verbose=verbose)
-    elif dataset_name == "irf":
-        dataset = peyes.datasets.irf(directory=u.DATASETS_DIR, save=True, verbose=verbose)
-    elif dataset_name == "hfc":
-        dataset = peyes.datasets.hfc(directory=u.DATASETS_DIR, save=True, verbose=verbose)
-    else:
-        raise ValueError(f"Unknown dataset name: {dataset_name}")
-    return dataset
 
 
 def detect_labels_and_events(

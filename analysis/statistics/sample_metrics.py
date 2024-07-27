@@ -12,7 +12,6 @@ import pEYES as peyes
 from pEYES._DataModels.UnparsedEventLabel import UnparsedEventLabelType, UnparsedEventLabelSequenceType
 
 import analysis.utils as u
-from analysis.pipeline.preprocess import load_dataset
 
 pio.renderers.default = "browser"
 
@@ -35,8 +34,7 @@ def get_data(
         raise FileNotFoundError(f"Couldn't find `{fullpath}`. Please preprocess the dataset first.")
     sample_metrics = sample_metrics.xs(iteration, level=peyes.constants.ITERATION_STR, axis=1)
     if stimulus_type:
-        dataset = load_dataset(dataset_name, verbose=False)
-        trial_ids = u.trial_ids_by_condition(dataset, key=peyes.constants.STIMULUS_TYPE_STR, values=stimulus_type)
+        trial_ids = u.trial_ids_by_condition(dataset_name, key=peyes.constants.STIMULUS_TYPE_STR, values=stimulus_type)
         is_trial_ids = sample_metrics.columns.get_level_values(peyes.constants.TRIAL_ID_STR).isin(trial_ids)
         sample_metrics = sample_metrics.loc[:, is_trial_ids]
     if metric:

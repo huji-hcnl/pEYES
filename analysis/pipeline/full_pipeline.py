@@ -33,7 +33,7 @@ def run(
 ):
     start = time.time()
     ## Load dataset ##
-    dataset = preprocess.load_dataset(dataset_name, verbose=verbose)
+    dataset = u.load_dataset(dataset_name, verbose=verbose)
     output_dir = os.path.join(output_dir, dataset_name)
     os.makedirs(output_dir, exist_ok=True)
 

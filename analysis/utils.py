@@ -56,6 +56,18 @@ DEFAULT_CONTINUOUS_COLORMAP = px.colors.sequential.Viridis
 ###########################################
 
 
+def load_dataset(dataset_name: str, verbose: bool = True) -> pd.DataFrame:
+    if dataset_name == "lund2013":
+        dataset = peyes.datasets.lund2013(directory=DATASETS_DIR, save=True, verbose=verbose)
+    elif dataset_name == "irf":
+        dataset = peyes.datasets.irf(directory=DATASETS_DIR, save=True, verbose=verbose)
+    elif dataset_name == "hfc":
+        dataset = peyes.datasets.hfc(directory=DATASETS_DIR, save=True, verbose=verbose)
+    else:
+        raise ValueError(f"Unknown dataset name: {dataset_name}")
+    return dataset
+
+
 def get_default_output_dir(dataset_name: str) -> str:
     res = os.path.join(OUTPUT_DIR, dataset_name, DEFAULT_STR)
     os.makedirs(res, exist_ok=True)
@@ -91,7 +103,8 @@ def check_labelers(data: pd.DataFrame, labelers: List[str] = None) -> List[str]:
     return list(labelers)
 
 
-def trial_ids_by_condition(dataset: pd.DataFrame, key: str, values: Union[Any, List[Any]]) -> List[int]:
+def trial_ids_by_condition(dataset_name: str, key: str, values: Union[Any, List[Any]]) -> List[int]:
+    dataset = load_dataset(dataset_name, verbose=False)
     if not isinstance(values, list):
         values = [values]
     all_trial_ids = dataset[peyes.constants.TRIAL_ID_STR]

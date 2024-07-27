@@ -13,7 +13,6 @@ import pEYES as peyes
 from pEYES._DataModels.UnparsedEventLabel import UnparsedEventLabelType, UnparsedEventLabelSequenceType
 
 import analysis.utils as u
-from analysis.pipeline.preprocess import load_dataset
 
 pio.renderers.default = "browser"
 
