@@ -1,5 +1,5 @@
 import os
-from typing import List, Optional, Union, Any
+from typing import List, Optional, Union, Any, Tuple
 
 import pandas as pd
 import scipy.stats as stats
@@ -33,11 +33,17 @@ def get_data(
     except FileNotFoundError:
         raise FileNotFoundError(f"Couldn't find `{fullpath}`. Please preprocess the dataset first.")
     data = data.xs(iteration, level=peyes.constants.ITERATION_STR, axis=1)
+    if isinstance(stimulus_type, str):
+        stimulus_type = [stimulus_type]
     if stimulus_type:
+        stimulus_type = [stmtp.lower().strip() for stmtp in stimulus_type if isinstance(stmtp, str)]
         trial_ids = _trial_ids_by_condition(dataset_name, key=peyes.constants.STIMULUS_TYPE_STR, values=stimulus_type)
         is_trial_ids = data.columns.get_level_values(peyes.constants.TRIAL_ID_STR).isin(trial_ids)
         data = data.loc[:, is_trial_ids]
+    if isinstance(sub_index, str):
+        sub_index = [sub_index]
     if sub_index:
+        sub_index = [sub_idx.lower().strip() for sub_idx in sub_index if isinstance(sub_idx, str)]
         data = data.loc[sub_index]
     return data
 
@@ -46,7 +52,7 @@ def statistical_analysis(
         data: pd.DataFrame,
         gt_cols: List[str],
         multi_comp: Optional[str] = "fdr_bh",
-):
+) -> Tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame, pd.DataFrame]:
     """
     For each unique value in the input DataFrame's index and each of the GT labelers, performs Kruskal-Wallis test with
     post-hoc Dunn's test for multiple comparisons. Returns the KW-statistic, KW-p-value, Dunn's-p-values and number of
