@@ -14,7 +14,7 @@ import analysis.utils as u
 
 
 def extract_subframe(
-        matched_features: pd.DataFrame,
+        data: pd.DataFrame,
         level: Union[str, int],
         value: Union[str, int, Sequence[str], Sequence[int]],
         axis: int = 0,
@@ -23,15 +23,15 @@ def extract_subframe(
     if isinstance(value, str):
         value = [value]
     if axis == 0:
-        is_values = matched_features.index.get_level_values(level).isin(value)
-        subframe = matched_features.loc[is_values]
+        is_values = data.index.get_level_values(level).isin(value)
+        subframe = data.loc[is_values]
     elif axis == 1:
-        is_values = matched_features.columns.get_level_values(level).isin(value)
-        subframe = matched_features.loc[:, is_values]
+        is_values = data.columns.get_level_values(level).isin(value)
+        subframe = data.loc[:, is_values]
     else:
         raise ValueError("`axis` must be 0 or 1.")
     if drop_single_values and len(value) == 1:
-        subframe = subframe.droplevel(level, axis=1)
+        subframe = subframe.droplevel(level, axis=axis)
     return subframe
 
 
