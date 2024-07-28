@@ -103,7 +103,7 @@ def kruskal_wallis_dunns(
         for j, gt_col in enumerate(gt_cols):
             gt_series = data.xs(gt_col, level=u.GT_STR, axis=1).loc[met]
             gt_df = gt_series.unstack().drop(columns=gt_cols, errors='ignore')
-            detector_values = {col: gt_df[col].explode().dropna().values for col in gt_df.columns}
+            detector_values = {col: gt_df[col].explode().dropna().values.astype(float) for col in gt_df.columns}
             statistic, pvalue = stats.kruskal(*detector_values.values(), nan_policy='omit')
             dunn = pd.DataFrame(
                 sp.posthoc_dunn(a=list(detector_values.values()), p_adjust=multi_comp).values,
