@@ -33,7 +33,7 @@ def load_data(
     except FileNotFoundError:
         raise FileNotFoundError(f"Couldn't find `{fullpath}`. Please preprocess the dataset first.")
     if iteration is not None:
-        data = data.xs(iteration, level=peyes.constants.ITERATION_STR, axis=1)
+        data = data.xs(iteration, level=peyes.constants.ITERATION_STR, axis=1, drop_level=True)
     if isinstance(stimulus_type, str):
         stimulus_type = [stimulus_type]
     if stimulus_type:
@@ -55,12 +55,12 @@ def statistical_analysis(
         multi_comp: Optional[str] = "fdr_bh",
 ) -> Tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame, pd.DataFrame]:
     """
-    For each unique value in the input DataFrame's index and each of the GT labelers, performs Kruskal-Wallis test with
-    post-hoc Dunn's test for multiple comparisons. Returns the KW-statistic, KW-p-value, Dunn's-p-values and number of
-    samples for each (index, GT labeler) pair.
+    For each unique value in the input DataFrame's index (metric names) and each of the GT labelers, performs
+    Kruskal-Wallis test with post-hoc Dunn's test for multiple comparisons.
+    Returns the KW-statistic, KW-p-value, Dunn's-p-values and number of samples for each (index, GT labeler) pair.
 
     :param data: DataFrame; Should have the following MultiIndex structure:
-        - Index :: single level
+        - Index :: single level metric names
         - Columns :: 1st level: trial id
         - Columns :: 2nd level: GT labeler
         - Columns :: 3rd level: Pred labeler (detection algorithm)
@@ -74,14 +74,14 @@ def statistical_analysis(
         - Ns: Number of data-points (trials) for each (metric, GT labeler, Pred labeler) pair; index is metric name,
             columns multiindex with pairs of (GT, Pred) labelers.
     """
-    indices = sorted(
+    metrics = sorted(
         data.index.unique(),
         key=lambda met: u.METRICS_CONFIG[met][1] if met in u.METRICS_CONFIG else ord(met[0])
     )
     statistics, pvalues, dunns, Ns = {}, {}, {}, {}
-    for i, idx in enumerate(indices):
+    for i, met in enumerate(metrics):
         for j, gt_col in enumerate(gt_cols):
-            gt_series = data.xs(gt_col, level=u.GT_STR, axis=1).loc[idx]
+            gt_series = data.xs(gt_col, level=u.GT_STR, axis=1).loc[met]
             gt_df = gt_series.unstack().drop(columns=gt_cols, errors='ignore')
             detector_values = {col: gt_df[col].explode().dropna().values for col in gt_df.columns}
             statistic, pvalue = stats.kruskal(*detector_values.values(), nan_policy='omit')
@@ -89,10 +89,10 @@ def statistical_analysis(
                 sp.posthoc_dunn(a=list(detector_values.values()), p_adjust=multi_comp).values,
                 index=gt_df.columns, columns=gt_df.columns
             )
-            statistics[(idx, gt_col)] = statistic
-            pvalues[(idx, gt_col)] = pvalue
-            dunns[(idx, gt_col)] = dunn
-            Ns.update({(idx, gt_col, det): det_vals.shape[0] for det, det_vals in detector_values.items()})
+            statistics[(met, gt_col)] = statistic
+            pvalues[(met, gt_col)] = pvalue
+            dunns[(met, gt_col)] = dunn
+            Ns.update({(met, gt_col, det): det_vals.shape[0] for det, det_vals in detector_values.items()})
 
     # create outputs
     statistics = pd.Series(statistics).unstack()
