@@ -20,7 +20,7 @@ def load_data(
         label: Optional[Union[UnparsedEventLabelType, UnparsedEventLabelSequenceType]] = None,
         filename_prefix: str = "",
         filename_suffix: str = "",
-        iteration: int = 1,
+        iteration: Optional[int] = 1,
         stimulus_type: Optional[Union[str, List[str]]] = None,
         sub_index: Optional[Union[str, List[str]]] = None,
 ) -> pd.DataFrame:
@@ -32,7 +32,8 @@ def load_data(
         data = pd.read_pickle(fullpath)
     except FileNotFoundError:
         raise FileNotFoundError(f"Couldn't find `{fullpath}`. Please preprocess the dataset first.")
-    data = data.xs(iteration, level=peyes.constants.ITERATION_STR, axis=1)
+    if iteration is not None:
+        data = data.xs(iteration, level=peyes.constants.ITERATION_STR, axis=1)
     if isinstance(stimulus_type, str):
         stimulus_type = [stimulus_type]
     if stimulus_type:
