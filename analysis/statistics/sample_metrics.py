@@ -45,7 +45,7 @@ def distributions_figure(
         title: str = "Samples :: Metric Distributions",
         only_box: bool = False,
 ) -> go.Figure:
-    return h.distributions_figure(data, gt1, gt2, title, only_box)
+    return h.distributions_figure(data, gt1=gt1, gt2=gt2, title=title, only_box=only_box)
 
 
 ###################

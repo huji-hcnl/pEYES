@@ -76,6 +76,11 @@ def single_threshold_figure(
         gt2: Optional[str] = None,
         only_box: bool = False,
 ) -> go.Figure:
+    if metrics is None:
+        metrics = [
+            m for m in sdt_metrics.index.get_level_values(peyes.constants.METRIC_STR).unique()
+            if m in u.METRICS_CONFIG.keys()
+        ]
     sub_frame = _extract_sdt_subframe(sdt_metrics, channel_type, threshold, metrics)
     sub_frame = sub_frame.droplevel(  # remove single-value levels from index
         level=[u.CHANNEL_TYPE_STR, peyes.constants.THRESHOLD_STR], axis=0
@@ -95,6 +100,11 @@ def multi_threshold_figures(
         title: str = "",
         show_err_bands: bool = False
 ) -> Dict[str, go.Figure]:
+    if metrics is None:
+        metrics = [
+            m for m in sdt_metrics.index.get_level_values(peyes.constants.METRIC_STR).unique()
+            if m in u.METRICS_CONFIG.keys()
+        ]
     subframe = _extract_sdt_subframe(sdt_metrics, channel_type, None, metrics)
     subframe = subframe.droplevel(u.CHANNEL_TYPE_STR, axis=0)    # remove single-value levels from index
     gt_cols = subframe.columns.get_level_values(u.GT_STR).unique()
@@ -104,12 +114,12 @@ def multi_threshold_figures(
         gt_subframe = gt_subframe.droplevel(u.GT_STR, axis=1)    # remove single-value levels from columns
 
         # create figure for this GT labeler, with subplots for each metric
-        metrics = sorted(
+        subframe_metrics = sorted(
             [m for m in gt_subframe.index.get_level_values(peyes.constants.METRIC_STR).unique()],
             key=lambda m: u.METRICS_CONFIG[m][1]
         )
-        fig, nrows, ncols = h._make_empty_figure(metrics, sharex=False, sharey=False)
-        for i, met in enumerate(metrics):
+        fig, nrows, ncols = h._make_empty_figure(subframe_metrics, sharex=False, sharey=False)
+        for i, met in enumerate(subframe_metrics):
             r, c = (i, 0) if ncols == 1 else divmod(i, ncols)
             met_frame = gt_subframe.xs(met, level=peyes.constants.METRIC_STR, axis=0, drop_level=True)
             detectors = met_frame.columns.get_level_values(u.PRED_STR).unique()
@@ -173,24 +183,18 @@ def _extract_sdt_subframe(
     """
     sub_frame = sdt_metrics
     if channel_type:
-        channel_type = channel_type.lower().strip()
-        sub_frame = sub_frame.xs(channel_type, level=u.CHANNEL_TYPE_STR, axis=0, drop_level=False)
-    if threshold is None or (isinstance(threshold, Sequence) and len(threshold) == 0):
-        threshold = sub_frame.index.get_level_values(peyes.constants.THRESHOLD_STR).unique().tolist()
-    if isinstance(threshold, int):
-        sub_frame = sub_frame.xs(key=threshold, level=peyes.constants.THRESHOLD_STR, axis=0, drop_level=False)
-    else:
-        assert len(threshold) > 0
-        is_threshold = sub_frame.index.get_level_values(peyes.constants.THRESHOLD_STR).isin(threshold)
-        sub_frame = sub_frame.loc[is_threshold]
-    if metrics is None or len(metrics) == 0:
-        metrics = sdt_metrics.index.get_level_values(peyes.constants.METRIC_STR).unique().tolist()
-    elif isinstance(metrics, str):
-        metrics = [metrics]
-    metrics = [m.lower().strip() for m in metrics if m in u.METRICS_CONFIG.keys()]
-    is_metrics = sub_frame.index.get_level_values(peyes.constants.METRIC_STR).isin(metrics)
-    sub_frame = sub_frame.loc[is_metrics]
-    return sub_frame.sort_index()
+        sub_frame = h.extract_subframe(
+            sub_frame, level=u.CHANNEL_TYPE_STR, value=channel_type, axis=0, drop_single_values=False
+        )
+    if threshold:
+        sub_frame = h.extract_subframe(
+            sub_frame, level=peyes.constants.THRESHOLD_STR, value=threshold, axis=0, drop_single_values=False
+        )
+    if metrics:
+        sub_frame = h.extract_subframe(
+            sub_frame, level=peyes.constants.METRIC_STR, value=metrics, axis=0, drop_single_values=False
+        )
+    return sub_frame
 
 
 ###################
@@ -211,3 +215,4 @@ sdt_metrics = load(
 )
 
 figs = multi_threshold_figures(sdt_metrics, "onset", show_err_bands=True)
+figs["RA"].show()

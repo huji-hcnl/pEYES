@@ -13,6 +13,28 @@ from pEYES._DataModels.UnparsedEventLabel import UnparsedEventLabelType, Unparse
 import analysis.utils as u
 
 
+def extract_subframe(
+        matched_features: pd.DataFrame,
+        level: Union[str, int],
+        value: Union[str, int, Sequence[str], Sequence[int]],
+        axis: int = 0,
+        drop_single_values: bool = True,  # drop level if only one value is selected
+) -> pd.DataFrame:
+    if isinstance(value, str):
+        value = [value]
+    if axis == 0:
+        is_values = matched_features.index.get_level_values(level).isin(value)
+        subframe = matched_features.loc[is_values]
+    elif axis == 1:
+        is_values = matched_features.columns.get_level_values(level).isin(value)
+        subframe = matched_features.loc[:, is_values]
+    else:
+        raise ValueError("`axis` must be 0 or 1.")
+    if drop_single_values and len(value) == 1:
+        subframe = subframe.droplevel(level, axis=1)
+    return subframe
+
+
 def load_data(
         dataset_name: str,
         output_dir: str,
@@ -41,11 +63,8 @@ def load_data(
         trial_ids = _trial_ids_by_condition(dataset_name, key=peyes.constants.STIMULUS_TYPE_STR, values=stimulus_type)
         is_trial_ids = data.columns.get_level_values(peyes.constants.TRIAL_ID_STR).isin(trial_ids)
         data = data.loc[:, is_trial_ids]
-    if isinstance(sub_index, str):
-        sub_index = [sub_index]
     if sub_index:
-        sub_index = [sub_idx.lower().strip() for sub_idx in sub_index if isinstance(sub_idx, str)]
-        data = data.loc[sub_index]
+        data = extract_subframe(data, level=0, value=sub_index, axis=0, drop_single_values=False)
     return data
 
 
@@ -143,7 +162,7 @@ def distributions_figure(
         for j, gt_col in enumerate(gt_cols):
             gt_series = data.xs(gt_col, level=u.GT_STR, axis=1).loc[idx]
             gt_df = gt_series.unstack().drop(columns=gt_cols, errors='ignore')
-            detectors = sorted(gt_df.columns, key=lambda det: u.DETECTORS_CONFIG[det][1])
+            detectors = sorted(gt_df.columns, key=lambda det: u.DETECTORS_CONFIG[det.removesuffix("Detector").lower()][1])
             for k, det in enumerate(detectors):
                 det_name = det.removesuffix("Detector")
                 det_color = u.DETECTORS_CONFIG[det_name.lower()][2]
