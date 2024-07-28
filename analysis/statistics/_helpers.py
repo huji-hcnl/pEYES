@@ -70,7 +70,7 @@ def load_data(
 
 def kruskal_wallis_dunns(
         data: pd.DataFrame,
-        gt_cols: Sequence[str],
+        gt_cols: Union[str, Sequence[str]],
         multi_comp: Optional[str] = "fdr_bh",
 ) -> Tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame, pd.DataFrame]:
     """
@@ -83,7 +83,7 @@ def kruskal_wallis_dunns(
         - Columns :: 1st level: trial id
         - Columns :: 2nd level: GT labeler
         - Columns :: 3rd level: Pred labeler (detection algorithm)
-    :param gt_cols: List of GT labelers to compare.
+    :param gt_cols: GT labeler(s) to compare against predictors (detection algorithms).
     :param multi_comp: Method for multiple comparisons correction when performing Dunn's post-hoc test.
 
     :return: Four DataFrames containing results for the statistical analysis.
@@ -93,6 +93,7 @@ def kruskal_wallis_dunns(
         - Ns: Number of data-points (trials) for each (metric, GT labeler, Pred labeler) pair; index is metric name,
             columns multiindex with pairs of (GT, Pred) labelers.
     """
+    gt_cols = gt_cols if isinstance(gt_cols, list) else [gt_cols]
     metrics = sorted(
         data.index.unique(),
         key=lambda met: u.METRICS_CONFIG[met][1] if met in u.METRICS_CONFIG else ord(met[0])

@@ -54,7 +54,7 @@ def kruskal_wallis_dunns(
         sdt_metrics: pd.DataFrame,
         channel_type: str,
         threshold: int,
-        gt_cols: Sequence[str],
+        gt_cols: Union[str, Sequence[str]],
         metrics: Union[str, Sequence[str]] = None,
         multi_comp: Optional[str] = "fdr_bh",
 ) -> Tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame, pd.DataFrame]:

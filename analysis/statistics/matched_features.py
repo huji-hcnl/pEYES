@@ -46,7 +46,7 @@ def load(
 def kruskal_wallis_dunns(
         matched_features: pd.DataFrame,
         matching_scheme: str,
-        gt_cols: Sequence[str],
+        gt_cols: Union[str, Sequence[str]],
         features: Union[str, Sequence[str]] = None,
         multi_comp: Optional[str] = "fdr_bh",
 ) -> Tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame, pd.DataFrame]:

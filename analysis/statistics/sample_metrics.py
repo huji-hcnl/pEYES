@@ -1,5 +1,5 @@
 import os
-from typing import List, Optional, Union, Tuple
+from typing import List, Optional, Union, Tuple, Sequence
 
 import pandas as pd
 import plotly.io as pio
@@ -32,7 +32,7 @@ def load(
 
 def kruskal_wallis_dunns(
         data: pd.DataFrame,
-        gt_cols: List[str],
+        gt_cols: Union[str, Sequence[str]],
         multi_comp: Optional[str] = "fdr_bh",
 ) -> Tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame, pd.DataFrame]:
     return h.kruskal_wallis_dunns(data, gt_cols, multi_comp)
