@@ -12,8 +12,15 @@ import analysis.utils as u
 import analysis.process._helpers as h
 
 _MATCHED_FEATURE_NAMES = [
-    "onset_difference", "offset_difference", "duration_difference", "amplitude_difference", "azimuth_difference",
-    "center_pixel_distance", "time_overlap", "time_iou", "time_l2",
+    f"{peyes.constants.ONSET_STR}_{peyes.constants.DIFFERENCE_STR}",
+    f"{peyes.constants.OFFSET_STR}_{peyes.constants.DIFFERENCE_STR}",
+    f"{peyes.constants.DURATION_STR}_{peyes.constants.DIFFERENCE_STR}",
+    f"{peyes.constants.AMPLITUDE_STR}_{peyes.constants.DIFFERENCE_STR}",
+    f"{peyes.constants.AZIMUTH_STR}_{peyes.constants.DIFFERENCE_STR}",
+    f"center_{peyes.constants.PIXEL_STR}_{peyes.constants.DISTANCE_STR}",
+    f"{peyes.constants.TIME_STR}_overlap",
+    f"{peyes.constants.TIME_STR}_iou",
+    f"{peyes.constants.TIME_STR}_l2",
 ]
 _MATCH_SDT_METRICS = [
     u.MATCH_RATIO_STR,
