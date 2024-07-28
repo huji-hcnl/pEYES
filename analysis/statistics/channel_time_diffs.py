@@ -31,12 +31,12 @@ def load(
     )
 
 
-def stats(
+def kruskal_wallis_dunns(
         data: pd.DataFrame,
         gt_cols: List[str],
         multi_comp: Optional[str] = "fdr_bh",
 ) -> Tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame, pd.DataFrame]:
-    return h.statistical_analysis(data, gt_cols, multi_comp)
+    return h.kruskal_wallis_dunns(data, gt_cols, multi_comp)
 
 
 def distributions_figure(
@@ -61,6 +61,6 @@ MULTI_COMP = "fdr_bh"
 time_diffs = load(
     DATASET_NAME, os.path.join(u.OUTPUT_DIR, "default_values"), label=None, stimulus_type=peyes.constants.IMAGE_STR
 )
-statistics, pvalues, dunns, Ns = h.statistical_analysis(time_diffs, ["RA", "MN"], multi_comp=MULTI_COMP)
+statistics, pvalues, dunns, Ns = kruskal_wallis_dunns(time_diffs, ["RA", "MN"], multi_comp=MULTI_COMP)
 time_diffs_fig = distributions_figure(time_diffs, GT1, gt2=GT2, only_box=False)
 time_diffs_fig.show()

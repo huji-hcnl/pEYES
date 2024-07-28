@@ -68,7 +68,7 @@ def load_data(
     return data
 
 
-def statistical_analysis(
+def kruskal_wallis_dunns(
         data: pd.DataFrame,
         gt_cols: Sequence[str],
         multi_comp: Optional[str] = "fdr_bh",

@@ -43,7 +43,7 @@ def load(
     return matched_features.loc[is_features]
 
 
-def stats(
+def kruskal_wallis_dunns(
         matched_features: pd.DataFrame,
         matching_scheme: str,
         gt_cols: Sequence[str],
@@ -55,12 +55,14 @@ def stats(
     Kruskal-Wallis test with post-hoc Dunn's test for multiple comparisons.
     Returns the KW-statistic, KW-p-value, Dunn's-p-values and number of samples for each (index, GT labeler) pair.
     """
-    subframe = h.extract_subframe(matched_features, level=u.MATCHING_SCHEME_STR, value=matching_scheme, axis=0,
-                                  drop_single_values=True)
+    subframe = h.extract_subframe(
+        matched_features, level=u.MATCHING_SCHEME_STR, value=matching_scheme, axis=0, drop_single_values=True
+    )
     if features:
-        subframe = h.extract_subframe(subframe, level=peyes.constants.FEATURE_STR, value=features, axis=0,
-                                      drop_single_values=False)
-    statistics, pvalues, dunns, Ns = h.statistical_analysis(subframe, gt_cols, multi_comp)
+        subframe = h.extract_subframe(
+            subframe, level=peyes.constants.FEATURE_STR, value=features, axis=0, drop_single_values=False
+        )
+    statistics, pvalues, dunns, Ns = h.kruskal_wallis_dunns(subframe, gt_cols, multi_comp)
     return statistics, pvalues, dunns, Ns
 
 
@@ -101,7 +103,7 @@ matched_features = load(
     matching_schemes=None,
 )
 
-statistics, pvalues, dunns, Ns = stats(matched_features, "window", [GT1, GT2])
+statistics, pvalues, dunns, Ns = kruskal_wallis_dunns(matched_features, "window", [GT1, GT2])
 fig = distributions_figure(matched_features, "window", GT1, GT2)
 fig.show()
 

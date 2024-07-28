@@ -50,7 +50,7 @@ def load(
     return _extract_sdt_subframe(sdt_metrics, channel_type, threshold, metrics)
 
 
-def single_threshold_stats(
+def kruskal_wallis_dunns(
         sdt_metrics: pd.DataFrame,
         channel_type: str,
         threshold: int,
@@ -62,7 +62,7 @@ def single_threshold_stats(
     sub_frame = sub_frame.droplevel(  # remove single-value levels from index
         level=[u.CHANNEL_TYPE_STR, peyes.constants.THRESHOLD_STR], axis=0
     )
-    statistics, pvalues, dunns, Ns = h.statistical_analysis(sub_frame, gt_cols=gt_cols, multi_comp=multi_comp)
+    statistics, pvalues, dunns, Ns = h.kruskal_wallis_dunns(sub_frame, gt_cols=gt_cols, multi_comp=multi_comp)
     return statistics, pvalues, dunns, Ns
 
 

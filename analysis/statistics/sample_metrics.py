@@ -30,12 +30,12 @@ def load(
     )
 
 
-def stats(
+def kruskal_wallis_dunns(
         data: pd.DataFrame,
         gt_cols: List[str],
         multi_comp: Optional[str] = "fdr_bh",
 ) -> Tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame, pd.DataFrame]:
-    return h.statistical_analysis(data, gt_cols, multi_comp)
+    return h.kruskal_wallis_dunns(data, gt_cols, multi_comp)
 
 
 def distributions_figure(
@@ -57,8 +57,11 @@ MULTI_COMP = "fdr_bh"
 ####################
 ## Sample Metrics ##
 
-sample_metrics = load("lund2013", os.path.join(u.OUTPUT_DIR, "default_values"), label=None, stimulus_type="image",
-                      metric=None)
-sm_statistics, sm_pvalues, sm_dunns, sm_Ns = stats(sample_metrics, [GT1, GT2], multi_comp=MULTI_COMP)
+sample_metrics = load(
+    "lund2013", os.path.join(u.OUTPUT_DIR, "default_values"), label=None, stimulus_type="image", metric=None
+)
+sm_statistics, sm_pvalues, sm_dunns, sm_Ns = kruskal_wallis_dunns(
+    sample_metrics, [GT1, GT2], multi_comp=MULTI_COMP
+)
 sample_metrics_fig = distributions_figure(sample_metrics, GT1, gt2=GT2, only_box=False)
 sample_metrics_fig.show()
