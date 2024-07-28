@@ -35,13 +35,3 @@ statistics, pvalues, dunns, Ns = kruskal_wallis_with_posthoc_dunn(mean_match_rat
 fig = sample_metrics_figure(mean_match_ratio_across_schemes, GT1, GT2, title=f"Sample Metrics")
 fig.show()
 
-## Channel SDT Metrics ; 1st iteration ; image trials
-# TODO: run this for specific thresholds & channel types
-channel_sdt_metrics = pd.read_pickle(os.path.join(u.OUTPUT_DIR, "default_values", "lund2013", "channel_metrics", "all_labels_sdt_metrics.pkl"))
-iter1_channel_sdt_metrics = channel_sdt_metrics.xs(1, level=peyes.constants.ITERATION_STR, axis=1)
-image_iter1_channel_sdt_metrics = iter1_channel_sdt_metrics.loc[:, iter1_channel_sdt_metrics.columns.get_level_values(peyes.constants.TRIAL_ID_STR).isin(image_trials)]
-
-onset_metrics = image_iter1_channel_sdt_metrics.xs("onset", level=u.CHANNEL_TYPE_STR, axis=0)
-statistics, pvalues, dunns, Ns = kruskal_wallis_with_posthoc_dunn(onset_metrics, GT_COLS, multi_comp="fdr_bh")
-fig = sample_metrics_figure(onset_metrics, GT1, GT2, title=f"Sample Metrics")
-fig.show()

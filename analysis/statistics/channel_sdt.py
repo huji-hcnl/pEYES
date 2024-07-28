@@ -1,12 +1,9 @@
 import os
-from typing import Optional, Union, Tuple, Sequence
+from typing import Optional, Union, Tuple, Sequence, Dict
 
 import numpy as np
 import pandas as pd
-import scipy.stats as stats
-import scikit_posthocs as sp
 import plotly.graph_objects as go
-from plotly.subplots import make_subplots
 import plotly.io as pio
 
 import pEYES as peyes
@@ -20,22 +17,7 @@ pio.renderers.default = "browser"
 ###################
 
 
-def get_time_diffs(
-        dataset_name: str,
-        output_dir: str,
-        label: Optional[Union[UnparsedEventLabelType, UnparsedEventLabelSequenceType]] = None,
-        stimulus_type: Optional[Union[str, Sequence[str]]] = None,
-        channel_type: Optional[Union[str, Sequence[str]]] = None,
-) -> pd.DataFrame:
-    return h.get_data(
-        dataset_name=dataset_name, output_dir=output_dir,
-        data_dir_name=f"{peyes.constants.SAMPLES_STR}_{u.CHANNEL_STR}", label=label,
-        filename_suffix="timing_differences", stimulus_type=stimulus_type,
-        iteration=1, sub_index=channel_type
-    )
-
-
-def get_sdt_metrics(
+def load(
         dataset_name: str,
         output_dir: str,
         label: Optional[Union[UnparsedEventLabelType, UnparsedEventLabelSequenceType]] = None,
@@ -56,11 +38,10 @@ def get_sdt_metrics(
         level 1: GT labeler (human annotators, e.g. RA, MN)
         level 2: Pred labeler (detection algorithms, e.g. EngbertDetector, etc.)
     """
-    sdt_metrics = h.get_data(
+    sdt_metrics = h.load_data(
         dataset_name=dataset_name, output_dir=output_dir,
-        data_dir_name=f"{peyes.constants.SAMPLES_STR}_{u.CHANNEL_STR}",
-        filename_suffix="sdt_metrics", label=label,
-        stimulus_type=stimulus_type, sub_index=None, iteration=1,
+        data_dir_name=f"{peyes.constants.SAMPLES_STR}_{u.CHANNEL_STR}", label=label,
+        filename_suffix="sdt_metrics", iteration=1, stimulus_type=stimulus_type, sub_index=None
     )
     sdt_metrics = sdt_metrics.stack(level=peyes.constants.METRIC_STR, future_stack=True)
     sdt_metrics = sdt_metrics.reorder_levels(
@@ -69,7 +50,7 @@ def get_sdt_metrics(
     return _extract_sdt_subframe(sdt_metrics, channel_type, threshold, metrics)
 
 
-def sdt_single_threshold_analysis(
+def single_threshold_stats(
         sdt_metrics: pd.DataFrame,
         channel_type: str,
         threshold: int,
@@ -85,7 +66,7 @@ def sdt_single_threshold_analysis(
     return statistics, pvalues, dunns, Ns
 
 
-def sdt_single_threshold_figure(
+def single_threshold_figure(
         sdt_metrics: pd.DataFrame,
         channel_type: str,
         threshold: int,
@@ -100,10 +81,77 @@ def sdt_single_threshold_figure(
         level=[u.CHANNEL_TYPE_STR, peyes.constants.THRESHOLD_STR], axis=0
     )
     title = title if title else (
-            f"SDT Metrics <br><sup>(Channel:{channel_type}\tMax Difference: {threshold} samples</sup>"
+        "Samples Channel :: SDT Metrics <br>" +
+        f"<sup>(Channel: {channel_type}  Max Difference: {threshold} samples</sup>"
     )
     fig = h.distributions_figure(sub_frame, gt1=gt1, gt2=gt2, title=title, only_box=only_box)
     return fig
+
+
+def multi_threshold_figures(
+        sdt_metrics: pd.DataFrame,
+        channel_type: str,
+        metrics: Union[str, Sequence[str]] = None,
+        title: str = "",
+        show_err_bands: bool = False
+) -> Dict[str, go.Figure]:
+    subframe = _extract_sdt_subframe(sdt_metrics, channel_type, None, metrics)
+    subframe = subframe.droplevel(u.CHANNEL_TYPE_STR, axis=0)    # remove single-value levels from index
+    gt_cols = subframe.columns.get_level_values(u.GT_STR).unique()
+    figures = dict()
+    for gt in gt_cols:
+        gt_subframe = subframe.loc[:, subframe.columns.get_level_values(u.GT_STR) == gt]
+        gt_subframe = gt_subframe.droplevel(u.GT_STR, axis=1)    # remove single-value levels from columns
+
+        # create figure for this GT labeler, with subplots for each metric
+        metrics = sorted(
+            [m for m in gt_subframe.index.get_level_values(peyes.constants.METRIC_STR).unique()],
+            key=lambda m: u.METRICS_CONFIG[m][1]
+        )
+        fig, nrows, ncols = h._make_empty_figure(metrics, sharex=False, sharey=False)
+        for i, met in enumerate(metrics):
+            r, c = (i, 0) if ncols == 1 else divmod(i, ncols)
+            met_frame = gt_subframe.xs(met, level=peyes.constants.METRIC_STR, axis=0, drop_level=True)
+            detectors = met_frame.columns.get_level_values(u.PRED_STR).unique()
+            for j, det in enumerate(detectors):
+                if det in {GT1, GT2}:
+                    continue
+                met_det_frame = met_frame.loc[:, met_frame.columns.get_level_values(u.PRED_STR) == det]
+                met_det_frame = met_det_frame.droplevel(u.PRED_STR, axis=1)    # remove single-value levels from columns
+                thresholds = met_det_frame.index.get_level_values(peyes.constants.THRESHOLD_STR).unique()
+                mean = met_det_frame.mean(axis=1)
+                sem = met_det_frame.std(axis=1) / np.sqrt(met_det_frame.count(axis=1))
+                det_name = det.strip().removesuffix("Detector")
+                det_color = u.DETECTORS_CONFIG[det_name.lower()][2]
+                fig.add_trace(
+                    row=r + 1, col=c + 1, trace=go.Scatter(
+                        x=thresholds, y=mean, error_y=dict(type="data", array=sem),
+                        name=det_name, legendgroup=det_name,
+                        mode="lines+markers",
+                        marker=dict(size=5, color=det_color),
+                        line=dict(color=det_color),
+                        showlegend=i == 0,
+                    )
+                )
+                if show_err_bands:
+                    y_upper, y_lower = mean + sem, mean - sem
+                    fig.add_trace(
+                        row=r + 1, col=c + 1, trace=go.Scatter(
+                            x=np.concatenate((thresholds, thresholds[::-1])),
+                            y=np.concatenate((y_upper, y_lower[::-1])),
+                            fill="toself", fillcolor=det_color, opacity=0.2,
+                            line=dict(color=det_color, width=0),
+                            name=det_name, legendgroup=det_name, showlegend=False, hoverinfo="skip",
+                        )
+                    )
+            y_range = u.METRICS_CONFIG[met][2] if met in u.METRICS_CONFIG else None
+            fig.update_yaxes(row=r + 1, col=c + 1, range=y_range)
+        title = title if title else (
+                "Samples Channel :: SDT Metrics <br>" + f"<sup>(GT: {gt}  Channel: {channel_type})</sup>"
+        )
+        fig.update_layout(title=title)
+        figures[gt] = fig
+    return figures
 
 
 def _extract_sdt_subframe(
@@ -151,21 +199,10 @@ DATASET_NAME = "lund2013"
 GT1, GT2 = "RA", "MN"
 MULTI_COMP = "fdr_bh"
 
-##################
-##  Time Diffs  ##
-
-# time_diffs = get_time_diffs(
-#     DATASET_NAME, os.path.join(u.OUTPUT_DIR, "default_values"), label=None, stimulus_type=peyes.constants.IMAGE_STR
-# )
-#
-# statistics, pvalues, dunns, Ns = h.statistical_analysis(time_diffs, ["RA", "MN"], multi_comp=MULTI_COMP)
-# time_diffs_fig = h.distributions_figure(time_diffs, GT1, gt2=GT2, title=f"Time Differences", only_box=False)
-# time_diffs_fig.show()
-
 ###################
 ##  SDT Metrics  ##
 
-sdt_metrics = get_sdt_metrics(
+sdt_metrics = load(
     dataset_name=DATASET_NAME,
     output_dir=os.path.join(u.OUTPUT_DIR, "default_values"),
     label=None,
@@ -173,40 +210,4 @@ sdt_metrics = get_sdt_metrics(
     channel_type=None
 )
 
-subframe = _extract_sdt_subframe(sdt_metrics, "onset", None, None).droplevel(u.CHANNEL_TYPE_STR, axis=0)
-gt1_subframe = (subframe.loc[:, subframe.columns.get_level_values(u.GT_STR) == GT1]).droplevel(u.GT_STR, axis=1)
-metrics = sorted([
-    m for m in gt1_subframe.index.get_level_values(peyes.constants.METRIC_STR).unique() if m in u.METRICS_CONFIG.keys()
-], key=lambda m: u.METRICS_CONFIG[m][1])
-
-fig = make_subplots(rows=len(metrics), cols=1, subplot_titles=metrics, shared_xaxes=False, shared_yaxes=False)
-
-for i, met in enumerate(metrics):
-    r, c = i+1, 1
-    met_frame = gt1_subframe.xs(met, level=peyes.constants.METRIC_STR, axis=0, drop_level=True)
-    detectors = met_frame.columns.get_level_values(u.PRED_STR).unique()
-    for j, det in enumerate(detectors):
-        if det in {GT1, GT2}:
-            continue
-        met_det_frame = (met_frame.loc[:, met_frame.columns.get_level_values(u.PRED_STR) == det]).droplevel(u.PRED_STR, axis=1)
-        thresholds = met_det_frame.index.get_level_values(peyes.constants.THRESHOLD_STR).unique()
-        mean, std, n = met_det_frame.mean(axis=1), met_det_frame.std(axis=1), met_det_frame.count(axis=1)
-        sem = std / np.sqrt(n)
-        det_name = det.strip().removesuffix("Detector")
-        det_color = u.DETECTORS_CONFIG[det_name.lower()][2]
-        fig.add_trace(
-            row=r, col=c, trace=go.Scatter(
-                x=thresholds, y=met_det_frame.mean(axis=1),
-                error_y=dict(type="data", array=sem),
-                name=det_name, legendgroup=det_name,
-                mode="lines+markers",
-                marker=dict(size=5, color=det_color),
-                line=dict(color=det_color),
-                showlegend=i == 0,
-            )
-        )
-
-fig.show()
-
-del i, met, r, c, met_frame, detectors, j, det, met_det_frame, thresholds, mean, std, n, sem, det_name, det_color
-# TODO: finish the above figure and write it as a function
+figs = multi_threshold_figures(sdt_metrics, "onset", show_err_bands=True)

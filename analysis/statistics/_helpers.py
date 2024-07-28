@@ -1,5 +1,5 @@
 import os
-from typing import List, Optional, Union, Any, Tuple
+from typing import List, Optional, Union, Any, Tuple, Sequence
 
 import pandas as pd
 import scipy.stats as stats
@@ -13,7 +13,7 @@ from pEYES._DataModels.UnparsedEventLabel import UnparsedEventLabelType, Unparse
 import analysis.utils as u
 
 
-def get_data(
+def load_data(
         dataset_name: str,
         output_dir: str,
         data_dir_name: str,
@@ -50,7 +50,7 @@ def get_data(
 
 def statistical_analysis(
         data: pd.DataFrame,
-        gt_cols: List[str],
+        gt_cols: Sequence[str],
         multi_comp: Optional[str] = "fdr_bh",
 ) -> Tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame, pd.DataFrame]:
     """
@@ -136,13 +136,7 @@ def distributions_figure(
         data.index.unique(),
         key=lambda met: u.METRICS_CONFIG[met][1] if met in u.METRICS_CONFIG else ord(met[0])
     )
-    ncols = 1 if len(indices) <= 3 else 2
-    nrows = len(indices) if len(indices) <= 3 else sum(divmod(len(indices), ncols))
-    fig = make_subplots(
-        rows=nrows, cols=ncols,
-        shared_xaxes=False, shared_yaxes=False,
-        subplot_titles=list(map(lambda met: u.METRICS_CONFIG[met][0] if met in u.METRICS_CONFIG else met, indices)),
-    )
+    fig, nrows, ncols = _make_empty_figure(indices, sharex=False, sharey=False)
     for i, idx in enumerate(indices):
         r, c = (i, 0) if ncols == 1 else divmod(i, ncols)
         for j, gt_col in enumerate(gt_cols):
@@ -198,3 +192,14 @@ def _trial_ids_by_condition(dataset_name: str, key: str, values: Union[Any, List
     all_trial_ids = dataset[peyes.constants.TRIAL_ID_STR]
     is_condition = dataset[key].isin(values)
     return all_trial_ids[is_condition].unique().tolist()
+
+
+def _make_empty_figure(metrics: Sequence[str], sharex=False, sharey=False) -> Tuple[go.Figure, int, int]:
+    ncols = 1 if len(metrics) <= 3 else 2
+    nrows = len(metrics) if len(metrics) <= 3 else sum(divmod(len(metrics), ncols))
+    fig = make_subplots(
+        rows=nrows, cols=ncols,
+        shared_xaxes=sharex, shared_yaxes=sharey,
+        subplot_titles=list(map(lambda met: u.METRICS_CONFIG[met][0] if met in u.METRICS_CONFIG else met, metrics)),
+    )
+    return fig, nrows, ncols
