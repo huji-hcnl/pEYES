@@ -140,7 +140,7 @@ def distributions_figure(
     nrows = len(indices) if len(indices) <= 3 else sum(divmod(len(indices), ncols))
     fig = make_subplots(
         rows=nrows, cols=ncols,
-        shared_xaxes=False,
+        shared_xaxes=False, shared_yaxes=False,
         subplot_titles=list(map(lambda met: u.METRICS_CONFIG[met][0] if met in u.METRICS_CONFIG else met, indices)),
     )
     for i, idx in enumerate(indices):
