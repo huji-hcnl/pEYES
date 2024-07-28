@@ -99,8 +99,8 @@ def kruskal_wallis_dunns(
         key=lambda met: u.METRICS_CONFIG[met][1] if met in u.METRICS_CONFIG else ord(met[0])
     )
     statistics, pvalues, dunns, Ns = {}, {}, {}, {}
-    for i, met in enumerate(metrics):
-        for j, gt_col in enumerate(gt_cols):
+    for _i, gt_col in enumerate(gt_cols):
+        for _j, met in enumerate(metrics):
             gt_series = data.xs(gt_col, level=u.GT_STR, axis=1).loc[met]
             gt_df = gt_series.unstack().drop(columns=gt_cols, errors='ignore')
             detector_values = {col: gt_df[col].explode().dropna().values.astype(float) for col in gt_df.columns}
