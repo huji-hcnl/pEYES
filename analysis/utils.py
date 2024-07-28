@@ -52,19 +52,39 @@ DETECTORS_CONFIG = {
 
 METRICS_CONFIG = {
     # key -> (name, order, value range)
+
     peyes.constants.ACCURACY_STR: ("Accuracy", 1, [0, 1]),
     peyes.constants.ONSET_STR: ("Onset", 1, None),
+    f"{peyes.constants.AMPLITUDE_STR}_{peyes.constants.DIFFERENCE_STR}": ("Amplitude Difference", 1, None),
+
     MATCH_RATIO_STR: ("Match Ratio", 2, [0, 1]),
     peyes.constants.OFFSET_STR: ("Offset", 2, None),
     peyes.constants.BALANCED_ACCURACY_STR: ("Balanced Accuracy", 2, [0, 1]),
+    f"{peyes.constants.AZIMUTH_STR}_{peyes.constants.DIFFERENCE_STR}": ("Azimuth Difference", 2, None),
+
     peyes.constants.COHENS_KAPPA_STR: ("Cohen's Kappa", 3, [-1, 1]),
+    f"center_{peyes.constants.PIXEL_STR}_{peyes.constants.DISTANCE_STR}": ("Center Distance", 3, None),
+
     peyes.constants.MCC_STR: ("MCC", 4, [-1, 1]),
+    f"{peyes.constants.ONSET_STR}_{peyes.constants.DIFFERENCE_STR}": ("Onset Difference", 4, [-15, 15]),
+
     peyes.constants.RECALL_STR: ("Recall", 5, [0, 1]),
+    f"{peyes.constants.OFFSET_STR}_{peyes.constants.DIFFERENCE_STR}": ("Offset Difference", 5, [-15, 15]),
+
     peyes.constants.PRECISION_STR: ("Precision", 6, [0, 1]),
+    f"{peyes.constants.DURATION_STR}_{peyes.constants.DIFFERENCE_STR}": ("Duration Difference", 6, [-30, 30]),
+
     peyes.constants.F1_STR: ("f1", 7, [0, 1]),
+    f"{peyes.constants.TIME_STR}_overlap": ("Time Overlap", 7, [0, 1]),
+
     peyes.constants.COMPLEMENT_NLD_STR: ("1 - NLD", 8, [0, 1]),
+    f"{peyes.constants.TIME_STR}_iou": ("Time IoU", 8, [0, 1]),
+
     peyes.constants.FALSE_ALARM_RATE_STR: ("F.A. Rate", 8, [0, 1]),
+    f"{peyes.constants.TIME_STR}_l2": ("Time L2", 8, None),
+
     peyes.constants.D_PRIME_STR: ("d'", 9, None),
+
     peyes.constants.CRITERION_STR: ("Criterion", 10, None),
 }
 
