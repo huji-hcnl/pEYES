@@ -215,7 +215,7 @@ def _trial_ids_by_condition(dataset_name: str, key: str, values: Union[Any, List
 
 
 def _make_empty_figure(metrics: Sequence[str], sharex=False, sharey=False) -> Tuple[go.Figure, int, int]:
-    ncols = 1 if len(metrics) <= 3 else 2
+    ncols = 1 if len(metrics) <= 3 else 2 if len(metrics) <= 6 else 3
     nrows = len(metrics) if len(metrics) <= 3 else sum(divmod(len(metrics), ncols))
     fig = make_subplots(
         rows=nrows, cols=ncols,
