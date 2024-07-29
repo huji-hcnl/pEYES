@@ -3,6 +3,8 @@ from typing import Optional, Union, Tuple, Sequence, Dict
 
 import numpy as np
 import pandas as pd
+import scipy.stats as stats
+import statsmodels.stats.multitest as multi
 import plotly.graph_objects as go
 import plotly.io as pio
 
@@ -66,6 +68,50 @@ def kruskal_wallis_dunns(
     return statistics, pvalues, dunns, Ns
 
 
+def wilcoxon_signed_rank(
+        matched_features: pd.DataFrame,
+        matching_scheme: str,
+        gt_col: str,
+        features: Union[str, Sequence[str]] = None,
+        multi_comp: str = "fdr_bh",
+        alpha: float = 0.05,
+) -> Tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame, pd.DataFrame]:
+    assert 0 < alpha < 1, "Argument `alpha` must be in the open interval (0, 1)"
+    scheme_matched_features = h.extract_subframe(
+        matched_features, level=u.MATCHING_SCHEME_STR, value=matching_scheme, axis=0, drop_single_values=True
+    )
+    if features:
+        scheme_matched_features = h.extract_subframe(
+            scheme_matched_features, level=peyes.constants.FEATURE_STR, value=features, axis=0, drop_single_values=False
+        )
+    features = sorted(
+        scheme_matched_features.index.unique(),
+        key=lambda met: u.METRICS_CONFIG[met][1] if met in u.METRICS_CONFIG else ord(met[0])
+    )
+    statistics, pvalues, Ns = {}, {}, {}
+    for i, feat in enumerate(features):
+        alternative = 'two-sided' if peyes.constants.DIFFERENCE_STR in feat else 'greater'
+        gt_series = scheme_matched_features.xs(gt_col, level=u.GT_STR, axis=1).loc[feat]
+        gt_df = gt_series.unstack().drop(columns=[GT1, GT2], errors='ignore')
+        for j, det in enumerate(gt_df.columns):
+            vals = gt_df[det].explode().dropna().values.astype(float)
+            if feat in [f"{peyes.constants.TIME_STR}_overlap", f"{peyes.constants.TIME_STR}_iou"]:
+                # for IoU & (normalized) Overlap, the best values are 1, and Wilcoxon's needs to compare against 0
+                vals = 1 - vals
+            statistic, pvalue = stats.wilcoxon(x=vals, alternative=alternative, zero_method='zsplit')
+            statistics[(feat, det)] = statistic
+            pvalues[(feat, det)] = pvalue
+            Ns[(feat, det)] = len(vals)
+    statistics = pd.Series(statistics).unstack()
+    pvalues = pd.Series(pvalues).unstack()
+    Ns = pd.Series(Ns).unstack()
+    corrected_pvalues = pd.DataFrame(
+        index=pvalues.index,
+        data={col: multi.multipletests(pvalues[col], method=multi_comp, alpha=alpha)[1] for col in pvalues.columns}
+    )
+    return statistics, pvalues, corrected_pvalues, Ns
+
+
 def distributions_figure(
         matched_features: pd.DataFrame,
         matching_scheme: str,
@@ -74,11 +120,13 @@ def distributions_figure(
         features: Union[str, Sequence[str]] = None,
         title: Optional[str] = None,
 ) -> go.Figure:
-    subframe = h.extract_subframe(matched_features, level=u.MATCHING_SCHEME_STR, value=matching_scheme, axis=0,
-                                  drop_single_values=True)
+    subframe = h.extract_subframe(
+        matched_features, level=u.MATCHING_SCHEME_STR, value=matching_scheme, axis=0, drop_single_values=True
+    )
     if features:
-        subframe = h.extract_subframe(subframe, level=peyes.constants.FEATURE_STR, value=features, axis=0,
-                                      drop_single_values=False)
+        subframe = h.extract_subframe(
+            subframe, level=peyes.constants.FEATURE_STR, value=features, axis=0, drop_single_values=False
+        )
     title = title if title else (
             "Matched Events :: Features <br>" + f"<sup>(Matching Scheme: {matching_scheme})</sup>"
     )
@@ -90,7 +138,9 @@ def distributions_figure(
 
 DATASET_NAME = "lund2013"
 GT1, GT2 = "RA", "MN"
+SCHEME = "window"
 MULTI_COMP = "fdr_bh"
+ALPHA = 0.05
 
 ########################
 ##  Matched Features  ##
@@ -103,14 +153,13 @@ matched_features = load(
     matching_schemes=None,
 )
 
-statistics, pvalues, dunns, Ns = kruskal_wallis_dunns(matched_features, "window", [GT1, GT2])
-fig = distributions_figure(matched_features, "window", GT1, GT2)
+statistics, pvalues, dunns, Ns = kruskal_wallis_dunns(
+    matched_features=matched_features, matching_scheme=SCHEME, gt_cols=[GT1, GT2], features=None, multi_comp=MULTI_COMP
+)
+statistics2, pvalues2, corrected_pvalues2, Ns2 = wilcoxon_signed_rank(
+    matched_features=matched_features, matching_scheme=SCHEME, gt_col=GT1, features=None, multi_comp=MULTI_COMP, alpha=ALPHA
+)
+# TODO: add similar function comparing (GT1, Pred) against (GT1, GT2) for each trial/detector
+
+fig = distributions_figure(matched_features, SCHEME, GT1, GT2)
 fig.show()
-
-
-###################
-##  Matched SDT  ##
-# TODO:
-# matched_sdt_metrics = pd.read_pickle(os.path.join(u.OUTPUT_DIR, "default_values", "lund2013", "matches_metrics", "fixation_sdt_metrics.pkl"))
-# iter1_matched_sdt_metrics = matched_sdt_metrics.xs(1, level=peyes.constants.ITERATION_STR, axis=1)
-# image_iter1_matched_sdt_metrics = iter1_matched_sdt_metrics.loc[:, iter1_matched_sdt_metrics.columns.get_level_values(peyes.constants.TRIAL_ID_STR).isin(image_trials)]
