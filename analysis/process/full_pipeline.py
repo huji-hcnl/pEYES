@@ -23,7 +23,7 @@ def run(
         annotators: List[str] = None,
         num_iterations: int = 4,
         iterations_overwrite_label: Union[UnparsedEventLabelType, UnparsedEventLabelSequenceType] = 2,
-        matching_schemes: Dict[str, Dict[str, Union[int, float]]] = preprocess.DEFAULT_MATCHING_SCHEMES,
+        matching_schemes: Dict[str, Dict[str, Union[str, int, float]]] = preprocess.DEFAULT_MATCHING_SCHEMES,
         allow_xmatch: bool = False,
         pos_labels: Optional[Union[UnparsedEventLabelType, UnparsedEventLabelSequenceType]] = None,
         sample_metrics_average: str = "weighted",

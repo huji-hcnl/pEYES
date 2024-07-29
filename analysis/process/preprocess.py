@@ -15,14 +15,16 @@ from pEYES._DataModels.UnparsedEventLabel import UnparsedEventLabelType, Unparse
 import analysis.utils as u
 import analysis.process._helpers as h
 
+_MATCH_BY_STR = "match_by"
 
 DEFAULT_MATCHING_SCHEMES = {
-    'onset': dict(max_onset_difference=15),
-    'offset': dict(max_offset_difference=15),
-    'window': dict(max_onset_difference=15, max_offset_difference=15),
-    'l2': dict(max_l2=15),
-    'iou': dict(min_iou=1/3),
-    'max_overlap': dict(min_overlap=0.5),
+    'iou': {_MATCH_BY_STR: 'iou', 'min_iou': 1/3},
+    'max_overlap': {_MATCH_BY_STR: 'max_overlap', 'min_overlap': 0.5},
+    'onset': {_MATCH_BY_STR: 'onset', 'max_onset_difference': 15},
+    'offset': {_MATCH_BY_STR: 'offset', 'max_offset_difference': 15},
+    'l2': {_MATCH_BY_STR: 'l2', 'max_l2': 15},
+    # 'window': {_MATCH_BY_STR: 'window', 'max_onset_difference': 15, 'max_offset_difference': 15},
+    **{f"window_{w}": {_MATCH_BY_STR: 'window', 'max_onset_difference': w, 'max_offset_difference': w} for w in np.arange(21)},
 }
 
 
@@ -127,9 +129,23 @@ def match_events(
         events: pd.DataFrame,
         gt_labelers: List[str],
         pred_labelers: List[str] = None,
-        matching_schemes: Dict[str, Dict[str, Union[int, float]]] = None,
+        matching_schemes: Dict[str, Dict[str, Union[str, int, float]]] = None,
         allow_xmatch: bool = False,
 ):
+    """
+    Matches between ground-truth and predicted events for each trial, labeler, and iteration.
+
+    :param events: pd.DataFrame with MultiIndex columns (trial, labeler, iteration)
+    :param gt_labelers: labelers to use as ground-truth
+    :param pred_labelers: labelers to use as predictors
+    :param matching_schemes: dictionary matching different scheme names to scheme parameters. Each set of parameters
+        must include the key `match_by` which specifies the scheme to match by. If not provided, the scheme name is
+        used as the `match_by` value.
+    :param allow_xmatch: if True, allows cross-matching, i.e. matching between GT and Pred events of different types.
+
+    :return: pd.DataFrame where each row is a matching-scheme, and columns are MultiIndex (trial, gt_labeler,
+        pred_labeler, iteration). Cells contain dictionaries matching (a subset of) GT events to (a subset of) Pred events.
+    """
     pred_labelers = h.check_labelers(events, pred_labelers)
     matching_schemes = matching_schemes or DEFAULT_MATCHING_SCHEMES
     results = dict()
@@ -153,9 +169,10 @@ def match_events(
                     if pred_events.size == 0:
                         continue
                     matches = dict()
-                    for match_by, match_params in matching_schemes.items():
-                        matches[match_by] = peyes.match(
-                            gt_events, pred_events, match_by, allow_xmatch=allow_xmatch, **match_params
+                    for scheme_name, match_params in matching_schemes.items():
+                        match_by = match_params.pop(_MATCH_BY_STR, scheme_name)
+                        matches[scheme_name] = peyes.match(
+                            gt_events, pred_events, match_by=match_by, allow_xmatch=allow_xmatch, **match_params
                         )
                     results[(tr, gt_labeler, pred_labeler, pred_it)] = matches
     results = pd.DataFrame.from_dict(results, orient="columns")
