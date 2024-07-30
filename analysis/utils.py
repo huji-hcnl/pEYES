@@ -57,10 +57,10 @@ METRICS_CONFIG = {
     peyes.constants.ONSET_STR: ("Onset", 1, None),
     f"{peyes.constants.AMPLITUDE_STR}_{peyes.constants.DIFFERENCE_STR}": ("Amplitude Difference", 1, None),
 
-    MATCH_RATIO_STR: ("Match Ratio", 2, [0, 1]),
-    peyes.constants.OFFSET_STR: ("Offset", 2, None),
     peyes.constants.BALANCED_ACCURACY_STR: ("Balanced Accuracy", 2, [0, 1]),
+    peyes.constants.OFFSET_STR: ("Offset", 2, None),
     f"{peyes.constants.AZIMUTH_STR}_{peyes.constants.DIFFERENCE_STR}": ("Azimuth Difference", 2, None),
+    MATCH_RATIO_STR: ("Match Ratio", 2, [0, 1]),
 
     peyes.constants.COHENS_KAPPA_STR: ("Cohen's Kappa", 3, [-1, 1]),
     f"center_{peyes.constants.PIXEL_STR}_{peyes.constants.DISTANCE_STR}": ("Center Distance", 3, None),
