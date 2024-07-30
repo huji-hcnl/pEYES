@@ -10,6 +10,12 @@ from pEYES._DataModels.UnparsedEventLabel import UnparsedEventLabelType, Unparse
 import analysis.utils as u
 import analysis.process._helpers as h
 
+_ALL_SAMPLE_METRICS = [
+    peyes.constants.ACCURACY_STR, peyes.constants.BALANCED_ACCURACY_STR, peyes.constants.COHENS_KAPPA_STR,
+    peyes.constants.MCC_STR, peyes.constants.RECALL_STR, peyes.constants.PRECISION_STR, peyes.constants.F1_STR,
+    peyes.constants.COMPLEMENT_NLD_STR, peyes.constants.D_PRIME_STR, peyes.constants.CRITERION_STR,
+]
+
 
 def run_default(
         dataset_name: str,
@@ -30,7 +36,7 @@ def run_default(
     try:
         sample_metrics = pd.read_pickle(fullpath)
     except FileNotFoundError:
-        metrics = set(u.METRICS_CONFIG.keys())
+        metrics = set(_ALL_SAMPLE_METRICS)
         if not pos_labels:
             metrics -= {"d_prime", "criterion"}
         sample_metrics = calculate_sample_metrics(
@@ -50,7 +56,7 @@ def calculate_sample_metrics(
         correction: str = "loglinear",
 ) -> pd.DataFrame:
     pred_labelers = h.check_labelers(labels, pred_labelers)
-    metrics = set(metrics or u.METRICS_CONFIG.keys())
+    metrics = set(metrics or _ALL_SAMPLE_METRICS)
     if not metrics <= set(u.METRICS_CONFIG.keys()):
         raise ValueError(f"Unknown metrics: {metrics - set(u.METRICS_CONFIG.keys())}")
     if pos_labels is None:
