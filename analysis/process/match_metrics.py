@@ -156,12 +156,16 @@ def calculate_event_sdt_measures(
                             prec, rec, f1 = peyes.match_metrics.precision_recall_f1(
                                 gt_events, pred_iter_events, curr_matches, pos_labels
                             )
+                            fa_rate = peyes.match_metrics.false_alarm_rate(
+                                gt_events, pred_iter_events, curr_matches, pos_labels
+                            )
                             d_prime, crit = peyes.match_metrics.d_prime_and_criterion(
                                 gt_events, pred_iter_events, curr_matches, pos_labels
                             )
                             curr_results[(ms, peyes.constants.PRECISION_STR)] = prec
                             curr_results[(ms, peyes.constants.RECALL_STR)] = rec
                             curr_results[(ms, peyes.constants.F1_STR)] = f1
+                            curr_results[(ms, peyes.constants.FALSE_ALARM_RATE_STR)] = fa_rate
                             curr_results[(ms, peyes.constants.D_PRIME_STR)] = d_prime
                             curr_results[(ms, peyes.constants.CRITERION_STR)] = crit
                     if curr_results:

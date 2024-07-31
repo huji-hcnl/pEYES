@@ -60,6 +60,26 @@ def precision_recall_f1(
     return precision, recall, f1
 
 
+def false_alarm_rate(
+        ground_truth: EventSequenceType,
+        prediction: EventSequenceType,
+        matches: OneToOneEventMatchesType,
+        positive_label: Optional[Union[UnparsedEventLabelType, UnparsedEventLabelSequenceType]],
+) -> float:
+    """
+    Calculates the false-alarm rate for the given ground-truth and predicted events, where successfully matched events
+    are considered true positives. The provided labels are considered as "positive" events.
+
+    :param ground_truth: all ground-truth events
+    :param prediction: all predicted events
+    :param matches: the one-to-one matches between (subset of) ground-truth and (subset of) predicted events
+    :param positive_label: event-label(s) to consider as "positive" events
+    :return: the false-alarm rate value
+    """
+    p, n, pp, tp = _extract_contingency_values(ground_truth, prediction, matches, positive_label)
+    return (pp - tp) / n if n > 0 else np.nan
+
+
 def d_prime_and_criterion(
         ground_truth: EventSequenceType,
         prediction: EventSequenceType,
