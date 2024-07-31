@@ -120,10 +120,11 @@ def multi_threshold_figures(
         for i, met in enumerate(subframe_metrics):
             r, c = (i, 0) if ncols == 1 else divmod(i, ncols)
             met_frame = gt_subframe.xs(met, level=peyes.constants.METRIC_STR, axis=0, drop_level=True)
-            detectors = met_frame.columns.get_level_values(u.PRED_STR).unique()
+            detectors = sorted(
+                [d for d in met_frame.columns.get_level_values(u.PRED_STR).unique() if d not in gt_cols],
+                key=lambda d: u.DETECTORS_CONFIG[d.removesuffix("Detector").lower()][1]
+            )
             for j, det in enumerate(detectors):
-                if det in gt_cols:
-                    continue
                 met_det_frame = met_frame.xs(det, level=u.PRED_STR, axis=1, drop_level=True)
                 thresholds = met_det_frame.index.get_level_values(peyes.constants.THRESHOLD_STR).unique()
                 mean = met_det_frame.mean(axis=1)
