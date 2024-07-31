@@ -1,7 +1,9 @@
+import os
 from typing import Union, Tuple, Dict
 
 import cv2
 import numpy as np
+import plotly.graph_objects as go
 
 from pEYES._DataModels.EventLabelEnum import EventLabelEnum as _EventLabelEnum
 from pEYES._DataModels.UnparsedEventLabel import UnparsedEventLabelType as _UnparsedEventLabelType
@@ -17,6 +19,20 @@ _DEFAULT_LABEL_COLORMAP = {
     _EventLabelEnum.SMOOTH_PURSUIT: "#fb9a99",
     _EventLabelEnum.BLINK: "#222222",
 }
+
+
+def save_figure(
+        fig: go.Figure, fig_name: str, output_dir: str,
+        as_json: bool = False, as_html: bool = False, as_png: bool = False
+):
+    os.makedirs(output_dir, exist_ok=True)
+    if as_json:
+        fig.write_json(os.path.join(output_dir, f"{fig_name}.json"))
+    if as_html:
+        fig.write_html(os.path.join(output_dir, f"{fig_name}.html"))
+    if as_png:
+        fig.write_image(os.path.join(output_dir, f"{fig_name}.png"))
+    return None
 
 
 def create_image(
