@@ -110,10 +110,8 @@ def multi_threshold_figures(
     gt_cols = subframe.columns.get_level_values(u.GT_STR).unique()
     figures = dict()
     for gt in gt_cols:
-        gt_subframe = subframe.loc[:, subframe.columns.get_level_values(u.GT_STR) == gt]
-        gt_subframe = gt_subframe.droplevel(u.GT_STR, axis=1)    # remove single-value levels from columns
-
         # create figure for this GT labeler, with subplots for each metric
+        gt_subframe = subframe.xs(gt, level=u.GT_STR, axis=1, drop_level=True)
         subframe_metrics = sorted(
             [m for m in gt_subframe.index.get_level_values(peyes.constants.METRIC_STR).unique()],
             key=lambda m: u.METRICS_CONFIG[m][1]
@@ -126,8 +124,7 @@ def multi_threshold_figures(
             for j, det in enumerate(detectors):
                 if det in gt_cols:
                     continue
-                met_det_frame = met_frame.loc[:, met_frame.columns.get_level_values(u.PRED_STR) == det]
-                met_det_frame = met_det_frame.droplevel(u.PRED_STR, axis=1)    # remove single-value levels from columns
+                met_det_frame = met_frame.xs(det, level=u.PRED_STR, axis=1, drop_level=True)
                 thresholds = met_det_frame.index.get_level_values(peyes.constants.THRESHOLD_STR).unique()
                 mean = met_det_frame.mean(axis=1)
                 sem = met_det_frame.std(axis=1) / np.sqrt(met_det_frame.count(axis=1))
@@ -215,4 +212,4 @@ sdt_metrics = load(
 )
 
 figs = multi_threshold_figures(sdt_metrics, "onset", show_err_bands=True)
-figs["RA"].show()
+figs[GT1].show()
