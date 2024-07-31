@@ -1,18 +1,14 @@
-import os
 from typing import Optional, Union, Tuple, Sequence, Dict
 
 import numpy as np
 import pandas as pd
 import plotly.graph_objects as go
-import plotly.io as pio
 
 import pEYES as peyes
 from pEYES._DataModels.UnparsedEventLabel import UnparsedEventLabelType, UnparsedEventLabelSequenceType
 
 import analysis.utils as u
 import analysis.statistics._helpers as h
-
-pio.renderers.default = "browser"
 
 ###################
 
@@ -193,24 +189,3 @@ def _extract_sdt_subframe(
             sub_frame, level=peyes.constants.METRIC_STR, value=metrics, axis=0, drop_single_values=False
         )
     return sub_frame
-
-
-###################
-
-DATASET_NAME = "lund2013"
-GT1, GT2 = "RA", "MN"
-MULTI_COMP = "fdr_bh"
-
-###################
-##  SDT Metrics  ##
-
-sdt_metrics = load(
-    dataset_name=DATASET_NAME,
-    output_dir=os.path.join(u.OUTPUT_DIR, "default_values"),
-    label=1,
-    stimulus_type=peyes.constants.IMAGE_STR,
-    channel_type=None
-)
-
-figs = multi_threshold_figures(sdt_metrics, "onset", show_err_bands=True)
-figs[GT1].show()

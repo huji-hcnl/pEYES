@@ -1,18 +1,14 @@
-import os
 from typing import Optional, Union, Sequence, Tuple, Dict
 
 import numpy as np
 import pandas as pd
 import plotly.graph_objects as go
-import plotly.io as pio
 
 import pEYES as peyes
 from pEYES._DataModels.UnparsedEventLabel import UnparsedEventLabelType, UnparsedEventLabelSequenceType
 
 import analysis.utils as u
 import analysis.statistics._helpers as h
-
-pio.renderers.default = "browser"
 
 ###################
 
@@ -185,27 +181,3 @@ def _extract_sdt_subframe(
             sub_frame, level=peyes.constants.METRIC_STR, value=metrics, axis=0, drop_single_values=False
         )
     return sub_frame
-
-
-###################
-
-DATASET_NAME = "lund2013"
-GT1, GT2 = "RA", "MN"
-MULTI_COMP = "fdr_bh"
-
-matched_sdt = load(
-    dataset_name=DATASET_NAME, output_dir=os.path.join(u.OUTPUT_DIR, "default_values"),
-    label=1, stimulus_type=peyes.constants.IMAGE_STR, matching_schemes=None, metrics=None
-)
-
-statistics, pvalues, dunns, Ns = kruskal_wallis_dunns(
-    matched_sdt, "window_10", [GT1, GT2], metrics=None, multi_comp=MULTI_COMP
-)
-
-single_fig = single_scheme_figure(
-    matched_sdt, "window_10", GT1, metrics=None, title="", gt2=GT2, only_box=False
-)
-single_fig.show()
-
-figs = multi_threshold_figures(matched_sdt, "window", metrics=None, title="", show_err_bands=True)
-figs[GT1].show()

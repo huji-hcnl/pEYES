@@ -1,17 +1,12 @@
-import os
 from typing import List, Optional, Union, Tuple, Sequence
 
 import pandas as pd
-import plotly.io as pio
 import plotly.graph_objects as go
 
 import pEYES as peyes
 from pEYES._DataModels.UnparsedEventLabel import UnparsedEventLabelType, UnparsedEventLabelSequenceType
 
-import analysis.utils as u
 import analysis.statistics._helpers as h
-
-pio.renderers.default = "browser"
 
 ###################
 
@@ -46,22 +41,3 @@ def distributions_figure(
         only_box: bool = False,
 ) -> go.Figure:
     return h.distributions_figure(data, gt1=gt1, gt2=gt2, title=title, only_box=only_box)
-
-
-###################
-
-DATASET_NAME = "lund2013"
-GT1, GT2 = "RA", "MN"
-MULTI_COMP = "fdr_bh"
-
-####################
-## Sample Metrics ##
-
-sample_metrics = load(
-    "lund2013", os.path.join(u.OUTPUT_DIR, "default_values"), label=None, stimulus_type="image", metric=None
-)
-sm_statistics, sm_pvalues, sm_dunns, sm_Ns = kruskal_wallis_dunns(
-    sample_metrics, [GT1, GT2], multi_comp=MULTI_COMP
-)
-sample_metrics_fig = distributions_figure(sample_metrics, GT1, gt2=GT2, only_box=False)
-sample_metrics_fig.show()

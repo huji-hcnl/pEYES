@@ -1,19 +1,15 @@
-import os
 from typing import Optional, Union, Tuple, Sequence
 
 import pandas as pd
 import scipy.stats as stats
 import statsmodels.stats.multitest as multi
 import plotly.graph_objects as go
-import plotly.io as pio
 
 import pEYES as peyes
 from pEYES._DataModels.UnparsedEventLabel import UnparsedEventLabelType, UnparsedEventLabelSequenceType
 
 import analysis.utils as u
 import analysis.statistics._helpers as h
-
-pio.renderers.default = "browser"
 
 ########################
 
@@ -109,6 +105,7 @@ def wilcoxon_signed_rank(
         data={col: multi.multipletests(pvalues[col], method=multi_comp, alpha=alpha)[1] for col in pvalues.columns}
     )
     return statistics, pvalues, corrected_pvalues, Ns
+# TODO: add similar function comparing (GT1, Pred) against (GT1, GT2) for each trial/detector
 
 
 def distributions_figure(
@@ -131,34 +128,3 @@ def distributions_figure(
     )
     fig = h.distributions_figure(subframe, gt1=gt1, gt2=gt2, title=title)
     return fig
-
-
-########################
-
-DATASET_NAME = "lund2013"
-GT1, GT2 = "RA", "MN"
-SCHEME = "window"
-MULTI_COMP = "fdr_bh"
-ALPHA = 0.05
-
-########################
-##  Matched Features  ##
-
-matched_features = load(
-    dataset_name=DATASET_NAME,
-    output_dir=os.path.join(u.OUTPUT_DIR, "default_values"),
-    label=None,
-    stimulus_type=peyes.constants.IMAGE_STR,
-    matching_schemes=None,
-)
-
-statistics, pvalues, dunns, Ns = kruskal_wallis_dunns(
-    matched_features=matched_features, matching_scheme=SCHEME, gt_cols=[GT1, GT2], features=None, multi_comp=MULTI_COMP
-)
-statistics2, pvalues2, corrected_pvalues2, Ns2 = wilcoxon_signed_rank(
-    matched_features=matched_features, matching_scheme=SCHEME, gt_col=GT1, features=None, multi_comp=MULTI_COMP, alpha=ALPHA
-)
-# TODO: add similar function comparing (GT1, Pred) against (GT1, GT2) for each trial/detector
-
-fig = distributions_figure(matched_features, SCHEME, GT1, GT2)
-fig.show()
