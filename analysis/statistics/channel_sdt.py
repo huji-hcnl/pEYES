@@ -124,7 +124,7 @@ def multi_threshold_figures(
             met_frame = gt_subframe.xs(met, level=peyes.constants.METRIC_STR, axis=0, drop_level=True)
             detectors = met_frame.columns.get_level_values(u.PRED_STR).unique()
             for j, det in enumerate(detectors):
-                if det in {GT1, GT2}:
+                if det in gt_cols:
                     continue
                 met_det_frame = met_frame.loc[:, met_frame.columns.get_level_values(u.PRED_STR) == det]
                 met_det_frame = met_det_frame.droplevel(u.PRED_STR, axis=1)    # remove single-value levels from columns
