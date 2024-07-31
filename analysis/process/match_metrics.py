@@ -147,6 +147,8 @@ def calculate_event_sdt_measures(
                             curr_matches = matches.loc[ms, (tr, gt_labeler, pred_labeler, pred_it)]
                         except KeyError:
                             continue
+                        if len(curr_matches) == 0:
+                            continue
                         curr_results[(ms, u.MATCH_RATIO_STR)] = peyes.match_metrics.match_ratio(
                             pred_iter_events, curr_matches, labels=pos_labels
                         )
