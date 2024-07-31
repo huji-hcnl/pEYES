@@ -34,7 +34,9 @@ def match_ratio(
         labels = {parse_label(labels)}
     else:
         labels = set(parse_label(l) for l in labels)
-    return sum(1 for e in matches.values() if e.label in labels) / len(prediction)
+    num_matched = sum(1 for e in matches.values() if e.label in labels)
+    num_predicted = sum(1 for e in prediction if e.label in labels)
+    return num_matched / num_predicted if num_predicted > 0 else np.nan
 
 
 def precision_recall_f1(
