@@ -25,6 +25,10 @@ DEFAULT_MATCHING_SCHEMES = {
     'l2': {_MATCH_BY_STR: 'l2', 'max_l2': 15},
     # 'window': {_MATCH_BY_STR: 'window', 'max_onset_difference': 15, 'max_offset_difference': 15},
     **{f"window_{w}": {_MATCH_BY_STR: 'window', 'max_onset_difference': w, 'max_offset_difference': w} for w in np.arange(21)},
+    # TODO: consider re-writing this to have `threshold` another argument
+    # **{f"onset_{o}": {_MATCH_BY_STR: 'onset', 'max_onset_difference': o} for o in np.arange(21)},
+    # **{f"iou_{iou:.1f}": {_MATCH_BY_STR: 'iou', 'min_iou': iou} for iou in np.arange(0.1, 1.01, 0.1)},
+    # **{f"overlap_{ov:.1f}": {_MATCH_BY_STR: 'max_overlap', 'min_overlap': ov} for ov in np.arange(0.1, 1.01, 0.1)},
 }
 
 # peyes.match(gt_events, pred_events, match_by=match_by, allow_xmatch=allow_xmatch, **match_params)
