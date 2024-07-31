@@ -27,6 +27,8 @@ DEFAULT_MATCHING_SCHEMES = {
     **{f"window_{w}": {_MATCH_BY_STR: 'window', 'max_onset_difference': w, 'max_offset_difference': w} for w in np.arange(21)},
 }
 
+# peyes.match(gt_events, pred_events, match_by=match_by, allow_xmatch=allow_xmatch, **match_params)
+
 
 def run_default(
         dataset_name: str, verbose: bool = True
@@ -170,9 +172,9 @@ def match_events(
                         continue
                     matches = dict()
                     for scheme_name, match_params in matching_schemes.items():
-                        match_by = match_params.pop(_MATCH_BY_STR, scheme_name)
+                        match_params[_MATCH_BY_STR] = match_params.get(_MATCH_BY_STR, scheme_name)
                         matches[scheme_name] = peyes.match(
-                            gt_events, pred_events, match_by=match_by, allow_xmatch=allow_xmatch, **match_params
+                            gt_events, pred_events, allow_xmatch=allow_xmatch, **match_params
                         )
                     results[(tr, gt_labeler, pred_labeler, pred_it)] = matches
     results = pd.DataFrame.from_dict(results, orient="columns")
