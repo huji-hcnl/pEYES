@@ -88,6 +88,12 @@ def _signal_detection_metrics(
     rate, d-prime, criterion).
     Returns a DataFrame where the rows are the threshold values and the columns are the metrics.
 
+    Note: False-Alarm rate could exceed 1.0 for large window-sizes, because PP events that "share" a window are
+    counted separately, but null-windows (N) are counted once. This results in ((PP-TP)/N) exceeding the range [0, 1].
+    This mostly happens when considering multiple positive labels, because their inter-event-interval may be smaller
+    than the window-size.
+    # TODO: Consider adding a "correction" parameter to handle this case.
+
     :param ground_truth: array-like of ground-truth labels or Event objects
     :param prediction: array-like of predicted labels or Event objects
     :param threshold: int or array-like of int; threshold values to determine if a pairing is valid
@@ -138,11 +144,9 @@ def _signal_detection_metrics(
             f1_score = np.nan
         # FPR, type I error, 1 - specificity
         if n > 0 and 0 <= (pp - tp) / n <= 1:
-            # TODO: FA rate ((pp - tp) / n) is sometimes higher than 1, because for higher windw-sizes events within
-            #  the same "window" are considered separate events, but the number of windows is calculated as if they are
-            #  the same event. consider this impl: https://github.com/JonNir1/SaccadeRelatedPotentials/blob/main/TAV/window_sizes.py#L53
             false_alarm_rate = (pp - tp) / n
         else:
+            # FA rate exceed 1.0 due to over-counting false-alarm windows
             false_alarm_rate = np.nan
         d_prime, criterion = dprime_and_criterion(p, n, pp, tp, correction=dprime_correction)
 

@@ -71,6 +71,8 @@ def false_alarm_rate(
     """
     Calculates the false-alarm rate for the given ground-truth and predicted events, where successfully matched events
     are considered true positives. The provided labels are considered as "positive" events.
+    Note: False-Alarm rate could exceed 1.0 if there are many false alarms (pp - tp) and few negative GT events (n).
+    # TODO: Consider adding a "correction" parameter to handle this case.
 
     :param ground_truth: all ground-truth events
     :param prediction: all predicted events
@@ -79,7 +81,12 @@ def false_alarm_rate(
     :return: the false-alarm rate value
     """
     p, n, pp, tp = _extract_contingency_values(ground_truth, prediction, matches, positive_label)
-    return (pp - tp) / n if n > 0 else np.nan
+    if n <= 0:
+        return np.nan
+    if 0 <= pp - tp <= n:
+        return (pp - tp) / n
+    # FA rate exceed 1.0 due to over-predicted false-alarm events
+    return np.nan
 
 
 def d_prime_and_criterion(
