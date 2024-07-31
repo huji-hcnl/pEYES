@@ -94,12 +94,8 @@ def run(
     try:
         channel_sdt_metrics = pd.read_pickle(channel_sdt_metrics_fullpath)
     except FileNotFoundError:
-        channel_sdt_metrics = channel_metrics.detection_metrics(
-            labels,
-            np.arange(21),
-            annotators,
-            pos_labels=pos_labels,
-            dprime_correction=channel_dprime_correction,
+        channel_sdt_metrics = channel_metrics.signal_detection_metrics(
+            labels, np.arange(21), annotators, pos_labels=pos_labels, dprime_correction=channel_dprime_correction
         )
         channel_sdt_metrics.to_pickle(channel_sdt_metrics_fullpath)
 

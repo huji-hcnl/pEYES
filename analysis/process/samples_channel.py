@@ -44,7 +44,9 @@ def run_default(
     try:
         sdt_metrics = pd.read_pickle(sdt_metrics_fullpath)
     except FileNotFoundError:
-        sdt_metrics = detection_metrics(labels, np.arange(21), u.DATASET_ANNOTATORS[dataset_name], pos_labels=pos_labels)
+        sdt_metrics = signal_detection_metrics(
+            labels, np.arange(21), u.DATASET_ANNOTATORS[dataset_name], pos_labels=pos_labels
+        )
         sdt_metrics.to_pickle(sdt_metrics_fullpath)
     return time_diffs, sdt_metrics
 
@@ -70,7 +72,7 @@ def timing_differences(
     return results
 
 
-def detection_metrics(
+def signal_detection_metrics(
         labels: pd.DataFrame,
         threshold: Union[int, Sequence[int]],
         gt_labelers: List[str],
@@ -130,6 +132,8 @@ def _calculation_wrapper(
                 continue
             gt_min_iteration = np.nanmin(trial_gt_labels.columns.get_level_values(peyes.constants.ITERATION_STR))
             gt_labels = labels[tr, gt_lblr, gt_min_iteration].dropna().values.flatten()
+            if gt_labels.size == 0:
+                continue
             gt_labels[~np.isin(gt_labels, pos_labels)] = EventLabelEnum.UNDEFINED
             for pred_lblr in pred_labelers:
                 try:
@@ -142,9 +146,9 @@ def _calculation_wrapper(
                     if (pred_lblr == gt_lblr) and (pred_it == gt_min_iteration):
                         continue
                     pred_labels = pred_labels_all_iters[pred_it].dropna().values.flatten()
-                    pred_labels[~np.isin(pred_labels, pos_labels)] = EventLabelEnum.UNDEFINED
                     if pred_labels.size == 0:
                         continue
+                    pred_labels[~np.isin(pred_labels, pos_labels)] = EventLabelEnum.UNDEFINED
                     results[(tr, gt_lblr, pred_lblr, pred_it)] = {
                         "onset": onset_func(gt_labels, pred_labels),
                         "offset": offset_func(gt_labels, pred_labels)
