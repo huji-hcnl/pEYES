@@ -20,7 +20,7 @@ def extract_subframe(
         axis: int = 0,
         drop_single_values: bool = True,  # drop level if only one value is selected
 ) -> pd.DataFrame:
-    if isinstance(value, str):
+    if isinstance(value, str) or isinstance(value, int):
         value = [value]
     if axis == 0:
         is_values = data.index.get_level_values(level).isin(value)
