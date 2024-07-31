@@ -12,6 +12,7 @@ from pEYES._utils.vector_utils import pair_boolean_arrays
 def onset_differences(
         ground_truth: Union[UnparsedEventLabelSequenceType, EventSequenceType],
         prediction: Union[UnparsedEventLabelSequenceType, EventSequenceType],
+        max_diff: int = 25,
         sampling_rate: float = None,
         min_num_samples=None,
 ) -> np.ndarray:
@@ -23,17 +24,19 @@ def onset_differences(
 
     :param ground_truth: array-like of ground-truth labels or Event objects
     :param prediction: array-like of predicted labels or Event objects
+    :param max_diff: maximal difference between matched onsets/offsets (in samples); default is 25 samples
     :param sampling_rate: sampling rate of the channels; only used if `ground_truth` or `prediction` are Event objects
     :param min_num_samples: if not None, marks the minimal the number of samples in the channels; only used if
         `ground_truth` or `prediction` are Event objects
     :return: array of timing differences between matched onsets (differences are in sample units)
     """
-    return timing_differences(ground_truth, prediction, "onset", sampling_rate, min_num_samples)
+    return timing_differences(ground_truth, prediction, "onset", max_diff, sampling_rate, min_num_samples)
 
 
 def offset_differences(
         ground_truth: Union[UnparsedEventLabelSequenceType, EventSequenceType],
         prediction: Union[UnparsedEventLabelSequenceType, EventSequenceType],
+        max_diff: int = 25,
         sampling_rate: float = None,
         min_num_samples=None,
 ) -> np.ndarray:
@@ -45,18 +48,20 @@ def offset_differences(
 
     :param ground_truth: array-like of ground-truth labels or Event objects
     :param prediction: array-like of predicted labels or Event objects
+    :param max_diff: maximal difference between matched onsets/offsets (in samples); default is 25 samples
     :param sampling_rate: sampling rate of the channels; only used if `ground_truth` or `prediction` are Event objects
     :param min_num_samples: if not None, marks the minimal the number of samples in the channels; only used if
         `ground_truth` or `prediction` are Event objects
     :return: array of timing differences between matched offsets (differences are in sample units)
     """
-    return timing_differences(ground_truth, prediction, "offset", sampling_rate, min_num_samples)
+    return timing_differences(ground_truth, prediction, "offset", max_diff, sampling_rate, min_num_samples)
 
 
 def timing_differences(
         ground_truth: Union[UnparsedEventLabelSequenceType, EventSequenceType],
         prediction: Union[UnparsedEventLabelSequenceType, EventSequenceType],
         channel_type: str,
+        max_diff: int = 25,
         sampling_rate: float = None,
         min_num_samples=None,
 ) -> np.ndarray:
@@ -68,6 +73,7 @@ def timing_differences(
     :param ground_truth: array-like of ground-truth labels or Event objects
     :param prediction: array-like of predicted labels or Event objects
     :param channel_type: either 'onset' or 'offset'
+    :param max_diff: maximal difference between matched onsets/offsets (in samples); default is 25 samples
     :param sampling_rate: sampling rate of the channels; only used if `ground_truth` or `prediction` are Event objects
     :param min_num_samples: if not None, marks the minimal the number of samples in the channels; only used if
         `ground_truth` or `prediction` are Event objects
@@ -82,4 +88,5 @@ def timing_differences(
     )
     matched_idxs = pair_boolean_arrays(gt_channel, pred_channel)
     diffs = np.diff(matched_idxs, axis=1).flatten()
+    diffs = diffs[np.abs(diffs) <= max_diff]
     return diffs

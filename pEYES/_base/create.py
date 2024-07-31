@@ -1,10 +1,10 @@
-from typing import Union, Sequence, Optional
+from typing import Union
 
 import numpy as np
 
 import pEYES._utils.constants as cnst
 import pEYES._DataModels.config as cnfg
-from pEYES._utils.event_utils import parse_label
+from pEYES._utils.event_utils import parse_label, calculate_num_samples
 from pEYES._DataModels.Event import BaseEvent, EventSequenceType
 from pEYES._DataModels.UnparsedEventLabel import UnparsedEventLabelType, UnparsedEventLabelSequenceType
 from pEYES._DataModels.EventLabelEnum import EventLabelEnum
@@ -113,7 +113,7 @@ def create_detector(
 
 
 def create_events(
-        labels: Union[UnparsedEventLabelType, Sequence[UnparsedEventLabelType]],
+        labels: Union[UnparsedEventLabelType, UnparsedEventLabelSequenceType],
         t: np.ndarray,
         x: np.ndarray,
         y: np.ndarray,
@@ -166,11 +166,19 @@ def create_boolean_channel(
     channel_type_lower = channel_type.lower().strip()
     if channel_type_lower not in {cnst.START_STR, cnst.ONSET_STR, cnst.END_STR, cnst.OFFSET_STR}:
         raise ValueError(f"Invalid channel type: {channel_type}")
-    if isinstance(data, UnparsedEventLabelSequenceType):
-        return _labels_to_boolean_channel(channel_type_lower, data)
-    if isinstance(data, EventSequenceType):
+    if len(data) == 0:
+        # no events or labels provided -> return an empty array
+        return np.zeros(np.nanmin(len(data), min_num_samples), dtype=bool)
+    if all(isinstance(e, BaseEvent) for e in data):
+        # data is of type EventSequenceType
         return _events_to_boolean_channel(channel_type_lower, data, sampling_rate, min_num_samples)
-    raise TypeError("Argument `data` must be either an array of labels or an array of events.")
+    if all(isinstance(l, UnparsedEventLabelType) for l in data):
+        # data is of type UnparsedEventLabelSequenceType
+        return _labels_to_boolean_channel(channel_type_lower, data)
+    unknown_types = set([
+        type(datum) for datum in data if not (isinstance(datum, BaseEvent) or isinstance(datum, UnparsedEventLabelType))
+    ])
+    raise TypeError(f"Argument `data` contains unknown types: {unknown_types}")
 
 
 def _labels_to_boolean_channel(

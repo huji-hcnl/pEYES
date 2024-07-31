@@ -88,6 +88,12 @@ def _signal_detection_metrics(
     rate, d-prime, criterion).
     Returns a DataFrame where the rows are the threshold values and the columns are the metrics.
 
+    Note: False-Alarm rate could exceed 1.0 for large window-sizes, because PP events that "share" a window are
+    counted separately, but null-windows (N) are counted once. This results in ((PP-TP)/N) exceeding the range [0, 1].
+    This mostly happens when considering multiple positive labels, because their inter-event-interval may be smaller
+    than the window-size.
+    # TODO: Consider adding a "correction" parameter to handle this case.
+
     :param ground_truth: array-like of ground-truth labels or Event objects
     :param prediction: array-like of predicted labels or Event objects
     :param threshold: int or array-like of int; threshold values to determine if a pairing is valid
@@ -106,7 +112,10 @@ def _signal_detection_metrics(
         data=prediction, channel_type=channel_type, sampling_rate=sampling_rate, min_num_samples=min_num_samples
     )
     p, pp = gt_channel.sum(), pred_channel.sum()  # number of positive samples in GT and prediction
-    all_matched_diffs = timing_differences(ground_truth, prediction, sampling_rate, channel_type, min_num_samples)
+    all_matched_diffs = timing_differences(
+        ground_truth, prediction,
+        max_diff=max(threshold), channel_type=channel_type, sampling_rate=sampling_rate, min_num_samples=min_num_samples
+    )
     if isinstance(threshold, int):
         threshold = [threshold]
     results = {}
@@ -115,16 +124,30 @@ def _signal_detection_metrics(
         tp = np.sum(np.abs(all_matched_diffs) <= thresh)
         thresh_results["TP"] = tp
         double_thresh = 2 * thresh + 1  # threshold can be before or after a particular sample
-        n = (len(gt_channel) - double_thresh * p) / double_thresh  # number of negative "windows" in GT channel
+        n = max(0, (len(gt_channel) - double_thresh * p) / double_thresh)  # number of negative "windows" in GT channel
         thresh_results["N"] = n
 
-        recall = tp / p if p > 0 else np.nan    # true positive rate (TPR), sensitivity, hit-rate
-        precision = tp / pp if pp > 0 else np.nan     # positive predictive value (PPV)
+        # true positive rate (TPR), sensitivity, hit-rate
+        if p > 0 and 0 <= tp / p <= 1:
+            recall = tp / p
+        else:
+            recall = np.nan
+        # positive predictive value (PPV)
+        if pp > 0 and 0 <= tp / pp <= 1:
+            precision = tp / pp
+        else:
+            precision = np.nan
+        # F1-score
         if np.isfinite(precision + recall) and ((precision + recall) > 0):
             f1_score = 2 * (precision * recall) / (precision + recall)
         else:
             f1_score = np.nan
-        false_alarm_rate = (pp - tp) / n if n > 0 else np.nan  # FPR, type I error, 1 - specificity
+        # FPR, type I error, 1 - specificity
+        if n > 0 and 0 <= (pp - tp) / n <= 1:
+            false_alarm_rate = (pp - tp) / n
+        else:
+            # FA rate exceed 1.0 due to over-counting false-alarm windows
+            false_alarm_rate = np.nan
         d_prime, criterion = dprime_and_criterion(p, n, pp, tp, correction=dprime_correction)
 
         # update values:
