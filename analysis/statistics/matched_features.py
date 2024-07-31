@@ -1,7 +1,6 @@
 import os
-from typing import Optional, Union, Tuple, Sequence, Dict
+from typing import Optional, Union, Tuple, Sequence
 
-import numpy as np
 import pandas as pd
 import scipy.stats as stats
 import statsmodels.stats.multitest as multi
