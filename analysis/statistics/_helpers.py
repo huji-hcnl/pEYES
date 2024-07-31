@@ -102,6 +102,8 @@ def kruskal_wallis_dunns(
     for _i, gt_col in enumerate(gt_cols):
         for _j, met in enumerate(metrics):
             gt_series = data.xs(gt_col, level=u.GT_STR, axis=1).loc[met]
+            if pd.isna(gt_series).all():
+                continue
             gt_df = gt_series.unstack().drop(columns=gt_cols, errors='ignore')
             detector_values = {col: gt_df[col].explode().dropna().values.astype(float) for col in gt_df.columns}
             statistic, pvalue = stats.kruskal(*detector_values.values(), nan_policy='omit')
