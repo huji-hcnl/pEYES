@@ -163,7 +163,9 @@ def distributions_figure(
         for j, gt_col in enumerate(gt_cols):
             gt_series = data.xs(gt_col, level=u.GT_STR, axis=1).loc[idx]
             gt_df = gt_series.unstack().drop(columns=gt_cols, errors='ignore')
-            detectors = sorted(gt_df.columns, key=lambda det: u.DETECTORS_CONFIG[det.removesuffix("Detector").lower()][1])
+            detectors = sorted(
+                gt_df.columns, key=lambda det: u.DETECTORS_CONFIG[det.removesuffix("Detector").lower()][1]
+            )
             for k, det in enumerate(detectors):
                 det_name = det.removesuffix("Detector")
                 det_color = u.DETECTORS_CONFIG[det_name.lower()][2]
