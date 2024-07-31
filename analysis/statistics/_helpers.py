@@ -105,16 +105,24 @@ def kruskal_wallis_dunns(
             if pd.isna(gt_series).all():
                 continue
             gt_df = gt_series.unstack().drop(columns=gt_cols, errors='ignore')
-            detector_values = {col: gt_df[col].explode().dropna().values.astype(float) for col in gt_df.columns}
+            detectors = sorted(
+                gt_df.columns, key=lambda det: u.DETECTORS_CONFIG[det.removesuffix("Detector").lower()][1]
+            )
+            detector_values = {}
+            for det in detectors:
+                vals = gt_df[det].explode().dropna().values.astype(float)
+                n = vals.shape[0]
+                Ns[(met, gt_col, det)] = n
+                if n > 0:
+                    detector_values[det] = vals
             statistic, pvalue = stats.kruskal(*detector_values.values(), nan_policy='omit')
             dunn = pd.DataFrame(
                 sp.posthoc_dunn(a=list(detector_values.values()), p_adjust=multi_comp).values,
-                index=gt_df.columns, columns=gt_df.columns
+                index=list(detector_values.keys()), columns=list(detector_values.keys())
             )
             statistics[(met, gt_col)] = statistic
             pvalues[(met, gt_col)] = pvalue
             dunns[(met, gt_col)] = dunn
-            Ns.update({(met, gt_col, det): det_vals.shape[0] for det, det_vals in detector_values.items()})
 
     # create outputs
     statistics = pd.Series(statistics).unstack()
