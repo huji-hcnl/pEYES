@@ -41,7 +41,7 @@ def precision_recall_f1(
         ground_truth: EventSequenceType,
         prediction: EventSequenceType,
         matches: OneToOneEventMatchesType,
-        positive_label: UnparsedEventLabelType,
+        positive_label: Optional[Union[UnparsedEventLabelType, UnparsedEventLabelSequenceType]],
 ) -> (float, float, float):
     """
     Calculates the precision, recall, and F1-score for the given ground-truth and predicted events, where successfully
@@ -50,7 +50,7 @@ def precision_recall_f1(
     :param ground_truth: all ground-truth events
     :param prediction: all predicted events
     :param matches: the one-to-one matches between (subset of) ground-truth and (subset of) predicted events
-    :param positive_label: event-label to consider as "positive" events
+    :param positive_label: event-label(s) to consider as "positive" events
     :return: the precision, recall, and F1-score values
     """
     p, n, pp, tp = _extract_contingency_values(ground_truth, prediction, matches, positive_label)
@@ -64,7 +64,7 @@ def d_prime_and_criterion(
         ground_truth: EventSequenceType,
         prediction: EventSequenceType,
         matches: OneToOneEventMatchesType,
-        positive_label: UnparsedEventLabelType,
+        positive_label: Optional[Union[UnparsedEventLabelType, UnparsedEventLabelSequenceType]],
         correction: Optional[str] = "loglinear",
 ) -> float:
     """
@@ -89,7 +89,7 @@ def _extract_contingency_values(
         ground_truth: EventSequenceType,
         prediction: EventSequenceType,
         matches: OneToOneEventMatchesType,
-        positive_label: UnparsedEventLabelType,
+        positive_label: Optional[Union[UnparsedEventLabelType, UnparsedEventLabelSequenceType]],
 ) -> (int, int, int, int):
     """
     Extracts contingency values, used to fill in the confusion matrix for the provided matches between ground-truth and
@@ -101,9 +101,13 @@ def _extract_contingency_values(
         pp: int; number of positive predicted events
         tp: int; number of true positive predictions
     """
-    positive_label = parse_label(positive_label)
-    p = len([e for e in ground_truth if e.label == positive_label])
+    if isinstance(positive_label, UnparsedEventLabelType):
+        positive_label = {positive_label}
+    positive_label = set(parse_label(l) for l in positive_label)
+    if positive_label == set(EventLabelEnum):
+        raise ValueError("Cannot consider all event labels as `positive` events.")
+    p = len([e for e in ground_truth if e.label in positive_label])
     n = len(ground_truth) - p
-    pp = len([e for e in prediction if e.label == positive_label])
-    tp = len([e for e in matches.values() if e.label == positive_label])
+    pp = len([e for e in prediction if e.label in positive_label])
+    tp = len([e for e in matches.values() if e.label in positive_label])
     return p, n, pp, tp
