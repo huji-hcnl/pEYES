@@ -207,7 +207,7 @@ MULTI_COMP = "fdr_bh"
 sdt_metrics = load(
     dataset_name=DATASET_NAME,
     output_dir=os.path.join(u.OUTPUT_DIR, "default_values"),
-    label=None,
+    label=1,
     stimulus_type=peyes.constants.IMAGE_STR,
     channel_type=None
 )
