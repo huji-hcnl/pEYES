@@ -121,13 +121,26 @@ def _signal_detection_metrics(
         n = max(0, (len(gt_channel) - double_thresh * p) / double_thresh)  # number of negative "windows" in GT channel
         thresh_results["N"] = n
 
-        recall = tp / p if p > 0 else np.nan    # true positive rate (TPR), sensitivity, hit-rate
-        precision = tp / pp if pp > 0 else np.nan     # positive predictive value (PPV)
+        # true positive rate (TPR), sensitivity, hit-rate
+        if p > 0 and 0 <= tp / p <= 1:
+            recall = tp / p
+        else:
+            recall = np.nan
+        # positive predictive value (PPV)
+        if pp > 0 and 0 <= tp / pp <= 1:
+            precision = tp / pp
+        else:
+            precision = np.nan
+        # F1-score
         if np.isfinite(precision + recall) and ((precision + recall) > 0):
             f1_score = 2 * (precision * recall) / (precision + recall)
         else:
             f1_score = np.nan
-        false_alarm_rate = (pp - tp) / n if n > 0 else np.nan  # FPR, type I error, 1 - specificity
+        # FPR, type I error, 1 - specificity
+        if n > 0 and 0 <= (pp - tp) / n <= 1:
+            false_alarm_rate = (pp - tp) / n
+        else:
+            false_alarm_rate = np.nan
         d_prime, criterion = dprime_and_criterion(p, n, pp, tp, correction=dprime_correction)
 
         # update values:
