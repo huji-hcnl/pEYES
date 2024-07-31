@@ -198,14 +198,14 @@ matched_sdt = load(
     label=1, stimulus_type=peyes.constants.IMAGE_STR, matching_schemes=None, metrics=None
 )
 
-# statistics, pvalues, dunns, Ns = kruskal_wallis_dunns(
-#     matched_sdt, "window_10", [GT1, GT2], metrics=None, multi_comp=MULTI_COMP
-# )
-#
-# single_fig = single_scheme_figure(
-#     matched_sdt, "window_10", GT1, metrics=None, title="", gt2=GT2, only_box=False
-# )
-# single_fig.show()
+statistics, pvalues, dunns, Ns = kruskal_wallis_dunns(
+    matched_sdt, "window_10", [GT1, GT2], metrics=None, multi_comp=MULTI_COMP
+)
+
+single_fig = single_scheme_figure(
+    matched_sdt, "window_10", GT1, metrics=None, title="", gt2=GT2, only_box=False
+)
+single_fig.show()
 
 figs = multi_threshold_figures(matched_sdt, "window", metrics=None, title="", show_err_bands=True)
 figs[GT1].show()

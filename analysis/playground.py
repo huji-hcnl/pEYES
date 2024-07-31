@@ -9,16 +9,28 @@ import plotly.io as pio
 
 import pEYES as peyes
 import analysis.utils as u
+
 from analysis.process.full_pipeline import run
+import analysis.statistics.channel_sdt as csdt
 
 pio.renderers.default = "browser"
 
 ################
-## ALL LABELS ##
 
-results = run(output_dir=os.path.join(u.OUTPUT_DIR, "default_values"), dataset_name="lund2013", verbose=False)
-# (dataset, labels, metadata, events, matches, sample_mets, time_diffs, channel_sdt_metrics, matched_features, matches_sdt_metrics) = results
-# del results
+DATASET_NAME = "lund2013"
+GT1, GT2 = "RA", "MN"
+MULTI_COMP = "fdr_bh"
 
-## TODO: statistical tests for: sample metrics, sample-channel metrics, matched-events metrics
+sdt_metrics = csdt.load(
+    dataset_name=DATASET_NAME,
+    output_dir=os.path.join(u.OUTPUT_DIR, "default_values"),
+    label=[1, 2],
+    stimulus_type=peyes.constants.IMAGE_STR,
+    channel_type=None
+)
+
+figs = csdt.multi_threshold_figures(sdt_metrics, "onset", show_err_bands=True)
+figs[GT1].show()
+
+onset_fa = sdt_metrics.xs(("onset", "false_alarm_rate"), level=(u.CHANNEL_TYPE_STR, peyes.constants.METRIC_STR), axis=0)
 
