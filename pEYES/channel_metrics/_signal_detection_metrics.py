@@ -138,6 +138,7 @@ def _signal_detection_metrics(
             f1_score = np.nan
         # FPR, type I error, 1 - specificity
         if n > 0 and 0 <= (pp - tp) / n <= 1:
+            # TODO: figure out why FA rate ((pp - tp) / n) is sometimes higher than 1
             false_alarm_rate = (pp - tp) / n
         else:
             false_alarm_rate = np.nan
