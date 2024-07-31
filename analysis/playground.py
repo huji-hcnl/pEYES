@@ -16,6 +16,7 @@ pio.renderers.default = "browser"
 
 DATASET_NAME = "lund2013"
 LABEL = 1
+STIMULUS_TYPE = peyes.constants.IMAGE_STR
 GT1, GT2 = "RA", "MN"
 MULTI_COMP = "fdr_bh"
 
@@ -26,7 +27,7 @@ MULTI_COMP = "fdr_bh"
 import analysis.statistics.sample_metrics as sm
 
 sample_metrics = sm.load(
-    "lund2013", os.path.join(u.OUTPUT_DIR, "default_values"), label=LABEL, stimulus_type="image", metric=None
+    DATASET_NAME, os.path.join(u.OUTPUT_DIR, "default_values"), label=LABEL, stimulus_type=STIMULUS_TYPE, metric=None
 )
 sm_statistics, sm_pvalues, sm_dunns, sm_Ns = sm.kruskal_wallis_dunns(
     sample_metrics, [GT1, GT2], multi_comp=MULTI_COMP
@@ -41,7 +42,7 @@ sample_metrics_fig.show()
 import analysis.statistics.channel_time_diffs as ctd
 
 time_diffs = ctd.load(
-    DATASET_NAME, os.path.join(u.OUTPUT_DIR, "default_values"), label=LABEL, stimulus_type=peyes.constants.IMAGE_STR
+    DATASET_NAME, os.path.join(u.OUTPUT_DIR, "default_values"), label=LABEL, stimulus_type=STIMULUS_TYPE
 )
 ctd_statistics, ctd_pvalues, ctd_dunns, ctd_Ns = ctd.kruskal_wallis_dunns(
     time_diffs, [GT1, GT2], multi_comp=MULTI_COMP
@@ -62,7 +63,7 @@ sdt_metrics = csdt.load(
     dataset_name=DATASET_NAME,
     output_dir=os.path.join(u.OUTPUT_DIR, "default_values"),
     label=LABEL,
-    stimulus_type=peyes.constants.IMAGE_STR,
+    stimulus_type=STIMULUS_TYPE,
     channel_type=None
 )
 
@@ -89,7 +90,7 @@ matched_features = mf.load(
     dataset_name=DATASET_NAME,
     output_dir=os.path.join(u.OUTPUT_DIR, "default_values"),
     label=None,
-    stimulus_type=peyes.constants.IMAGE_STR,
+    stimulus_type=STIMULUS_TYPE,
     matching_schemes=None,
 )
 
@@ -114,7 +115,7 @@ SCHEME = "window_10"
 
 matched_sdt = msdt.load(
     dataset_name=DATASET_NAME, output_dir=os.path.join(u.OUTPUT_DIR, "default_values"),
-    label=1, stimulus_type=peyes.constants.IMAGE_STR, matching_schemes=None, metrics=None
+    label=LABEL, stimulus_type=STIMULUS_TYPE, matching_schemes=None, metrics=None
 )
 
 msdt_statistics, msdt_pvalues, msdt_dunns, msdt_Ns = msdt.kruskal_wallis_dunns(
@@ -122,9 +123,9 @@ msdt_statistics, msdt_pvalues, msdt_dunns, msdt_Ns = msdt.kruskal_wallis_dunns(
 )
 
 msdt_single_fig = msdt.single_scheme_figure(
-    matched_sdt, SCHEME, GT1, metrics=None, title="", gt2=GT2, only_box=False
+    matched_sdt, SCHEME, GT1, gt2=GT2, metrics=None, only_box=False
 )
 msdt_single_fig.show()
 
-msdt_figs = msdt.multi_threshold_figures(matched_sdt, SCHEME, metrics=None, title="", show_err_bands=True)
+msdt_figs = msdt.multi_threshold_figures(matched_sdt, SCHEME, metrics=None, show_err_bands=True)
 msdt_figs[GT1].show()
