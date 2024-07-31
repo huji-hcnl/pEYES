@@ -92,6 +92,8 @@ def calculate_matched_features(
                             curr_matches = matches.loc[ms, (tr, gt_labeler, pred_labeler, pred_it)]
                         except KeyError:
                             continue
+                        if len(curr_matches) == 0:
+                            continue
                         for feat in features:
                             curr_results[(ms, feat)] = peyes.match_metrics.features(
                                 curr_matches, feat, verbose=False
