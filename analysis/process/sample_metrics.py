@@ -61,7 +61,7 @@ def calculate_sample_metrics(
         raise ValueError(f"Unknown metrics: {metrics - set(u.METRICS_CONFIG.keys())}")
     if pos_labels is None:
         # cannot calculate d-prime and criterion without specifying a subset of positive labels
-        metrics = metrics - {"d_prime", "criterion"}
+        metrics = metrics - {peyes.constants.D_PRIME_STR, peyes.constants.CRITERION_STR}
     results = dict()
     for tr in tqdm(labels.columns.get_level_values(peyes.constants.TRIAL_ID_STR).unique(), desc="Sample Metrics"):
         for gt_labeler in gt_labelers:
