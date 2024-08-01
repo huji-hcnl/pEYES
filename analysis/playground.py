@@ -26,14 +26,33 @@ MULTI_COMP = "fdr_bh"
 
 import analysis.statistics.sample_metrics as sm
 
-sample_metrics = sm.load(
+sample_global_metrics = sm.load_global_metrics(
+    DATASET_NAME, os.path.join(u.OUTPUT_DIR, "default_values"), stimulus_type=STIMULUS_TYPE, metric=None
+)
+sm_global_statistics, sm_global_pvalues, sm_global_dunns, sm_global_Ns = sm.kruskal_wallis_dunns(
+    sample_global_metrics, [GT1, GT2], multi_comp=MULTI_COMP
+)
+sm_global_metrics_fig = sm.global_metrics_distributions_figure(sample_global_metrics, GT1, gt2=GT2, only_box=False)
+sm_global_metrics_fig.show()
+
+
+sample_sdt_metrics = sm.load_sdt(
     DATASET_NAME, os.path.join(u.OUTPUT_DIR, "default_values"), label=LABEL, stimulus_type=STIMULUS_TYPE, metric=None
 )
-sm_statistics, sm_pvalues, sm_dunns, sm_Ns = sm.kruskal_wallis_dunns(
-    sample_metrics, [GT1, GT2], multi_comp=MULTI_COMP
+sm_sdt_statistics, sm_sdt_pvalues, sm_sdt_dunns, sm_sdt_Ns = sm.kruskal_wallis_dunns(
+    sample_sdt_metrics, [GT1, GT2], multi_comp=MULTI_COMP
 )
-sample_metrics_fig = sm.distributions_figure(sample_metrics, GT1, gt2=GT2, only_box=False)
-sample_metrics_fig.show()
+sample_sdt_metrics_fig = sm.sdt_distributions_figure(sample_sdt_metrics, GT1, gt2=GT2, only_box=False)
+sample_sdt_metrics_fig.show()
+
+# sample_metrics = sm.load(
+#     DATASET_NAME, os.path.join(u.OUTPUT_DIR, "default_values"), label=LABEL, stimulus_type=STIMULUS_TYPE, metric=None
+# )
+# sm_statistics, sm_pvalues, sm_dunns, sm_Ns = sm.kruskal_wallis_dunns(
+#     sample_metrics, [GT1, GT2], multi_comp=MULTI_COMP
+# )
+# sample_metrics_fig = sm.distributions_figure(sample_metrics, GT1, gt2=GT2, only_box=False)
+# sample_metrics_fig.show()
 
 # %%
 ##########################

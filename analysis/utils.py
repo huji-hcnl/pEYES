@@ -16,6 +16,8 @@ DATASETS_DIR = os.path.join(CWD, peyes.constants.OUTPUT_STR, "datasets")
 
 ###########################
 
+GLOBAL_STR = "global"
+SDT_STR = "sdt"
 GT_STR, PRED_STR = "gt", "pred"
 MATCHING_SCHEME_STR = "matching_scheme"
 

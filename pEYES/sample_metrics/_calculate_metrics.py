@@ -5,7 +5,7 @@ import numpy as np
 from tqdm import tqdm
 import sklearn.metrics as met
 
-from pEYES._DataModels.EventLabelEnum import EventLabelSequenceType
+from pEYES._DataModels.EventLabelEnum import EventLabelEnum, EventLabelSequenceType
 from pEYES._DataModels.UnparsedEventLabel import UnparsedEventLabelType, UnparsedEventLabelSequenceType
 
 import pEYES._utils.constants as cnst
@@ -100,6 +100,7 @@ def _calculate_sdt_metrics(
         correction: str = "loglinear",
 ) -> float:
     average = average.lower().strip()
+    pos_labels = pos_labels or [l for l in EventLabelEnum]
     pos_labels = [parse_label(pos_labels)] if isinstance(pos_labels, UnparsedEventLabelType) else [parse_label(l) for l in pos_labels]
     if metric == cnst.RECALL_STR:
         return met.recall_score(ground_truth, prediction, labels=pos_labels, average=average, zero_division=np.nan)
