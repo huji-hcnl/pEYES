@@ -19,15 +19,15 @@ def get_metadata(dataset_name: str, show: bool = True) -> dict:
         raise NotImplementedError(f"Unknown dataset: {dataset_name}")
 
     try:
-        name = loader_class.name
+        name = loader_class.name()
     except AttributeError:
         name = ""
     try:
-        url = loader_class.url
+        url = loader_class.url()
     except AttributeError:
         url = ""
     try:
-        articles = loader_class.articles
+        articles = loader_class.articles()
     except AttributeError:
         articles = []
     metadata = {cnst.NAME_STR: name, cnst.URL_STR: url, cnst.ARTICLES_STR: articles}
