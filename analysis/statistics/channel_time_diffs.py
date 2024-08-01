@@ -21,7 +21,7 @@ def load(
 ) -> pd.DataFrame:
     return h.load_data(
         dataset_name=dataset_name, output_dir=output_dir,
-        data_dir_name=f"{peyes.constants.SAMPLES_STR}_{u.CHANNEL_STR}", label=label,
+        data_dir_name=peyes.constants.SAMPLES_CHANNEL_STR, label=label,
         filename_suffix="timing_differences", iteration=1, stimulus_type=stimulus_type,
         sub_index=channel_type
     )

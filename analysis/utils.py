@@ -11,26 +11,18 @@ from pEYES._DataModels.UnparsedEventLabel import UnparsedEventLabelType, Unparse
 ###########################
 
 CWD = os.getcwd()
-OUTPUT_DIR = os.path.join(CWD, "output")
-DATASETS_DIR = os.path.join(CWD, "output", "datasets")
+OUTPUT_DIR = os.path.join(CWD, peyes.constants.OUTPUT_STR)
+DATASETS_DIR = os.path.join(CWD, peyes.constants.OUTPUT_STR, "datasets")
+
+###########################
+
+GT_STR, PRED_STR = "gt", "pred"
+MATCHING_SCHEME_STR = "matching_scheme"
 
 ###########################
 
 DEFAULT_DISCRETE_COLORMAP = px.colors.qualitative.Dark24
 DEFAULT_CONTINUOUS_COLORMAP = px.colors.sequential.Viridis
-
-###########################
-
-LABELER_STR = "labeler"
-DEFAULT_STR = "default"
-METADATA_STR = "metadata"
-MATCHES_STR = "matches"
-FIELD_NAME_STR = "field_name"
-GT_STR, PRED_STR = "gt", "pred"
-MATCHING_SCHEME_STR = "matching_scheme"
-MATCH_RATIO_STR = "match_ratio"
-CHANNEL_STR = "channel"
-CHANNEL_TYPE_STR = f"{CHANNEL_STR}_{peyes.constants.TYPE_STR}"
 
 ###########################
 
@@ -41,7 +33,8 @@ DATASET_ANNOTATORS = {
 }
 
 _default_detector_params = dict(missing_value=np.nan, min_event_duration=4, pad_blinks_time=0)
-DETECTORS_CONFIG = {
+DEFAULT_DETECTORS_CONFIG = {
+    # detector name -> (detector object, order, color)
     "ivt": (peyes.create_detector("ivt", **_default_detector_params), 0, DEFAULT_DISCRETE_COLORMAP[0]),
     "ivvt": (peyes.create_detector("ivvt", **_default_detector_params), 1, DEFAULT_DISCRETE_COLORMAP[1]),
     "idt": (peyes.create_detector("idt", **_default_detector_params), 2, DEFAULT_DISCRETE_COLORMAP[2]),
@@ -51,7 +44,7 @@ DETECTORS_CONFIG = {
 }
 
 METRICS_CONFIG = {
-    # key -> (name, order, value range)
+    # metric -> (name, order, value range)
 
     peyes.constants.ACCURACY_STR: ("Accuracy", 1, [0, 1]),
     peyes.constants.ONSET_STR: ("Onset", 1, None),
@@ -60,7 +53,7 @@ METRICS_CONFIG = {
     peyes.constants.BALANCED_ACCURACY_STR: ("Balanced Accuracy", 2, [0, 1]),
     peyes.constants.OFFSET_STR: ("Offset", 2, None),
     f"{peyes.constants.AZIMUTH_STR}_{peyes.constants.DIFFERENCE_STR}": ("Azimuth Difference", 2, None),
-    MATCH_RATIO_STR: ("Match Ratio", 2, [0, 1]),
+    peyes.constants.MATCH_RATIO_STR: ("Match Ratio", 2, [0, 1]),
 
     peyes.constants.COHENS_KAPPA_STR: ("Cohen's Kappa", 3, [-1, 1]),
     f"center_{peyes.constants.PIXEL_STR}_{peyes.constants.DISTANCE_STR}": ("Center Distance", 3, None),

@@ -27,7 +27,7 @@ def run_default(
             f"Couldn't find `{peyes.constants.EVENTS_STR}.pkl` in {default_output_dir}. Please preprocess the dataset first."
         )
 
-    channel_metrics_dir = os.path.join(default_output_dir, f"{peyes.constants.SAMPLES_STR}_{u.CHANNEL_STR}")
+    channel_metrics_dir = os.path.join(default_output_dir, peyes.constants.SAMPLES_CHANNEL_STR)
     os.makedirs(channel_metrics_dir, exist_ok=True)
     time_diffs_fullpath = os.path.join(
         channel_metrics_dir, u.get_filename_for_labels(pos_labels, suffix="timing_differences", extension="pkl")
@@ -125,7 +125,7 @@ def _calculation_wrapper(
     for tr in tqdm(trials, desc=iteration_desc):
         for gt_lblr in gt_labelers:
             try:
-                trial_gt_labels = labels.xs((tr, gt_lblr), axis=1, level=[peyes.constants.TRIAL_ID_STR, u.LABELER_STR])
+                trial_gt_labels = labels.xs((tr, gt_lblr), axis=1, level=[peyes.constants.TRIAL_ID_STR, peyes.constants.LABELER_STR])
             except KeyError:
                 continue
             if trial_gt_labels.size == 0:
@@ -138,7 +138,7 @@ def _calculation_wrapper(
             for pred_lblr in pred_labelers:
                 try:
                     pred_labels_all_iters = labels.xs(
-                        (tr, pred_lblr), axis=1, level=[peyes.constants.TRIAL_ID_STR, u.LABELER_STR]
+                        (tr, pred_lblr), axis=1, level=[peyes.constants.TRIAL_ID_STR, peyes.constants.LABELER_STR]
                     )
                 except KeyError:
                     continue

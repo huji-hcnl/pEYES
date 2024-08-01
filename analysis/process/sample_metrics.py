@@ -66,13 +66,13 @@ def calculate_sample_metrics(
     for tr in tqdm(labels.columns.get_level_values(peyes.constants.TRIAL_ID_STR).unique(), desc="Sample Metrics"):
         for gt_labeler in gt_labelers:
             gt_min_iteration = labels.xs(
-                (tr, gt_labeler), axis=1, level=[peyes.constants.TRIAL_ID_STR, u.LABELER_STR]
+                (tr, gt_labeler), axis=1, level=[peyes.constants.TRIAL_ID_STR, peyes.constants.LABELER_STR]
             ).columns.min()
             gt_labels = labels[tr, gt_labeler, gt_min_iteration].dropna().values.flatten()
             if gt_labels.size == 0:
                 continue
             for pred_labeler in pred_labelers:
-                pred_labels_all_iters = labels.xs((tr, pred_labeler), axis=1, level=[peyes.constants.TRIAL_ID_STR, u.LABELER_STR])
+                pred_labels_all_iters = labels.xs((tr, pred_labeler), axis=1, level=[peyes.constants.TRIAL_ID_STR, peyes.constants.LABELER_STR])
                 for pred_it in pred_labels_all_iters.columns.get_level_values(peyes.constants.ITERATION_STR).unique():
                     if (pred_labeler == gt_labeler) and (pred_it == gt_min_iteration):
                         continue

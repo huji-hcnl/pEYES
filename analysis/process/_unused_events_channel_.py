@@ -29,7 +29,7 @@ def run_default(
         raise FileNotFoundError(
             f"Couldn't find `{peyes.constants.EVENTS_STR}.pkl` in {default_output_dir}. Please preprocess the dataset first."
         )
-    channel_metrics_dir = os.path.join(default_output_dir, f"{peyes.constants.EVENTS_STR}_{u.CHANNEL_STR}")
+    channel_metrics_dir = os.path.join(default_output_dir, peyes.constants.EVENTS_CHANNEL_STR)
     os.makedirs(channel_metrics_dir, exist_ok=True)
     time_diffs_fullpath = os.path.join(
         channel_metrics_dir, u.get_filename_for_labels(pos_labels, suffix="timing_differences", extension="pkl")
@@ -132,7 +132,7 @@ def _calculation_wrapper(
         trial_sampling_rate = calculate_sampling_rate(trial_timestamps)
         for gt_lblr in gt_labelers:
             try:
-                trial_gt_events = events.xs((tr, gt_lblr), axis=1, level=[peyes.constants.TRIAL_ID_STR, u.LABELER_STR])
+                trial_gt_events = events.xs((tr, gt_lblr), axis=1, level=[peyes.constants.TRIAL_ID_STR, peyes.constants.LABELER_STR])
             except KeyError:
                 continue
             if trial_gt_events.size == 0:
@@ -145,7 +145,7 @@ def _calculation_wrapper(
             for pred_lblr in pred_labelers:
                 try:
                     pred_events_all_iters = events.xs(
-                        (tr, pred_lblr), axis=1, level=[peyes.constants.TRIAL_ID_STR, u.LABELER_STR]
+                        (tr, pred_lblr), axis=1, level=[peyes.constants.TRIAL_ID_STR, peyes.constants.LABELER_STR]
                     )
                 except KeyError:
                     continue

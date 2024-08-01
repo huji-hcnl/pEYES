@@ -23,7 +23,7 @@ _MATCHED_FEATURE_NAMES = [
     f"{peyes.constants.TIME_STR}_l2",
 ]
 _MATCH_SDT_METRICS = [
-    u.MATCH_RATIO_STR,
+    peyes.constants.MATCH_RATIO_STR,
     peyes.constants.PRECISION_STR, peyes.constants.RECALL_STR, peyes.constants.F1_STR,
     peyes.constants.D_PRIME_STR, peyes.constants.CRITERION_STR
 ]
@@ -41,12 +41,12 @@ def run_default(
             f"Couldn't find `{peyes.constants.EVENTS_STR}.pkl` in {default_output_dir}. Please preprocess the dataset first."
         )
     try:
-        matches = pd.read_pickle(os.path.join(default_output_dir, f"{u.MATCHES_STR}.pkl"))
+        matches = pd.read_pickle(os.path.join(default_output_dir, f"{peyes.constants.MATCHES_STR}.pkl"))
     except FileNotFoundError:
         raise FileNotFoundError(
-            f"Couldn't find `{u.MATCHES_STR}.pkl` in {default_output_dir}. Please preprocess the dataset first."
+            f"Couldn't find `{peyes.constants.MATCHES_STR}.pkl` in {default_output_dir}. Please preprocess the dataset first."
         )
-    matches_metrics_dir = os.path.join(default_output_dir, f"{u.MATCHES_STR}_{peyes.constants.METRICS_STR}")
+    matches_metrics_dir = os.path.join(default_output_dir, f"{peyes.constants.MATCHES_STR}_{peyes.constants.METRICS_STR}")
     os.makedirs(matches_metrics_dir, exist_ok=True)
     features_fullpath = os.path.join(
         matches_metrics_dir, u.get_filename_for_labels(labels=None, suffix="matched_features", extension="pkl")
@@ -120,7 +120,7 @@ def calculate_event_sdt_measures(
     for tr in tqdm(trials, desc="Matched Events :: SDT Metrics"):
         for gt_labeler in gt_labelers:
             try:
-                trial_gt_events = events.xs((tr, gt_labeler), axis=1, level=[peyes.constants.TRIAL_ID_STR, u.LABELER_STR])
+                trial_gt_events = events.xs((tr, gt_labeler), axis=1, level=[peyes.constants.TRIAL_ID_STR, peyes.constants.LABELER_STR])
             except KeyError:
                 continue
             if trial_gt_events.size == 0:
@@ -131,7 +131,7 @@ def calculate_event_sdt_measures(
                 continue
             for pred_labeler in pred_labelers:
                 try:
-                    pred_events_all_iters = events.xs((tr, pred_labeler), axis=1, level=[peyes.constants.TRIAL_ID_STR, u.LABELER_STR])
+                    pred_events_all_iters = events.xs((tr, pred_labeler), axis=1, level=[peyes.constants.TRIAL_ID_STR, peyes.constants.LABELER_STR])
                 except KeyError:
                     continue
                 for pred_it in iterations:
@@ -149,7 +149,7 @@ def calculate_event_sdt_measures(
                             continue
                         if len(curr_matches) == 0:
                             continue
-                        curr_results[(ms, u.MATCH_RATIO_STR)] = peyes.match_metrics.match_ratio(
+                        curr_results[(ms, peyes.constants.MATCH_RATIO_STR)] = peyes.match_metrics.match_ratio(
                             pred_iter_events, curr_matches, labels=pos_labels
                         )
                         if pos_labels is not None:

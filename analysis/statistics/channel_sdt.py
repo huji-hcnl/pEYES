@@ -36,12 +36,12 @@ def load(
     """
     sdt_metrics = h.load_data(
         dataset_name=dataset_name, output_dir=output_dir,
-        data_dir_name=f"{peyes.constants.SAMPLES_STR}_{u.CHANNEL_STR}", label=label,
+        data_dir_name=peyes.constants.SAMPLES_CHANNEL_STR, label=label,
         filename_suffix="sdt_metrics", iteration=1, stimulus_type=stimulus_type, sub_index=None
     )
     sdt_metrics = sdt_metrics.stack(level=peyes.constants.METRIC_STR, future_stack=True)
     sdt_metrics = sdt_metrics.reorder_levels(
-        [u.CHANNEL_TYPE_STR, peyes.constants.METRIC_STR, peyes.constants.THRESHOLD_STR], axis=0
+        [peyes.constants.CHANNEL_TYPE_STR, peyes.constants.METRIC_STR, peyes.constants.THRESHOLD_STR], axis=0
     )
     return _extract_sdt_subframe(sdt_metrics, channel_type, threshold, metrics)
 
@@ -56,7 +56,7 @@ def kruskal_wallis_dunns(
 ) -> Tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame, pd.DataFrame]:
     sub_frame = _extract_sdt_subframe(sdt_metrics, channel_type, threshold, metrics)
     sub_frame = sub_frame.droplevel(  # remove single-value levels from index
-        level=[u.CHANNEL_TYPE_STR, peyes.constants.THRESHOLD_STR], axis=0
+        level=[peyes.constants.CHANNEL_TYPE_STR, peyes.constants.THRESHOLD_STR], axis=0
     )
     statistics, pvalues, dunns, Ns = h.kruskal_wallis_dunns(sub_frame, gt_cols=gt_cols, multi_comp=multi_comp)
     return statistics, pvalues, dunns, Ns
@@ -79,7 +79,7 @@ def single_threshold_figure(
         ]
     sub_frame = _extract_sdt_subframe(sdt_metrics, channel_type, threshold, metrics)
     sub_frame = sub_frame.droplevel(  # remove single-value levels from index
-        level=[u.CHANNEL_TYPE_STR, peyes.constants.THRESHOLD_STR], axis=0
+        level=[peyes.constants.CHANNEL_TYPE_STR, peyes.constants.THRESHOLD_STR], axis=0
     )
     title = title if title else (
         "Samples Channel :: SDT Metrics <br>" +
@@ -102,7 +102,7 @@ def multi_threshold_figures(
             if m in u.METRICS_CONFIG.keys()
         ]
     subframe = _extract_sdt_subframe(sdt_metrics, channel_type, None, metrics)
-    subframe = subframe.droplevel(u.CHANNEL_TYPE_STR, axis=0)    # remove single-value levels from index
+    subframe = subframe.droplevel(peyes.constants.CHANNEL_TYPE_STR, axis=0)    # remove single-value levels from index
     gt_cols = subframe.columns.get_level_values(u.GT_STR).unique()
     figures = dict()
     for gt in gt_cols:
@@ -118,7 +118,7 @@ def multi_threshold_figures(
             met_frame = gt_subframe.xs(met, level=peyes.constants.METRIC_STR, axis=0, drop_level=True)
             detectors = sorted(
                 [d for d in met_frame.columns.get_level_values(u.PRED_STR).unique() if d not in gt_cols],
-                key=lambda d: u.DETECTORS_CONFIG[d.removesuffix("Detector").lower()][1]
+                key=lambda d: u.DEFAULT_DETECTORS_CONFIG[d.removesuffix("Detector").lower()][1]
             )
             for j, det in enumerate(detectors):
                 met_det_frame = met_frame.xs(det, level=u.PRED_STR, axis=1, drop_level=True)
@@ -126,7 +126,7 @@ def multi_threshold_figures(
                 mean = met_det_frame.mean(axis=1)
                 sem = met_det_frame.std(axis=1) / np.sqrt(met_det_frame.count(axis=1))
                 det_name = det.strip().removesuffix("Detector")
-                det_color = u.DETECTORS_CONFIG[det_name.lower()][2]
+                det_color = u.DEFAULT_DETECTORS_CONFIG[det_name.lower()][2]
                 fig.add_trace(
                     row=r + 1, col=c + 1, trace=go.Scatter(
                         x=thresholds, y=mean, error_y=dict(type="data", array=sem),
@@ -178,7 +178,7 @@ def _extract_sdt_subframe(
     sub_frame = sdt_metrics
     if channel_type:
         sub_frame = h.extract_subframe(
-            sub_frame, level=u.CHANNEL_TYPE_STR, value=channel_type, axis=0, drop_single_values=False
+            sub_frame, level=peyes.constants.CHANNEL_TYPE_STR, value=channel_type, axis=0, drop_single_values=False
         )
     if threshold:
         sub_frame = h.extract_subframe(

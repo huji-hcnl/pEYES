@@ -42,10 +42,10 @@ def run_default(
     default_output_dir = h.get_default_output_dir(dataset_name)
     try:
         labels = pd.read_pickle(os.path.join(default_output_dir, f"{peyes.constants.LABELS_STR}.pkl"))
-        metadata = pd.read_pickle(os.path.join(default_output_dir, f"{u.METADATA_STR}.pkl"))
+        metadata = pd.read_pickle(os.path.join(default_output_dir, f"{peyes.constants.METADATA_STR}.pkl"))
         events = pd.read_pickle(os.path.join(default_output_dir, f"{peyes.constants.EVENTS_STR}.pkl"))
     except FileNotFoundError:
-        default_detectors = [v[0] for v in u.DETECTORS_CONFIG.values()]
+        default_detectors = [v[0] for v in u.DEFAULT_DETECTORS_CONFIG.values()]
         default_annotators = u.DATASET_ANNOTATORS[dataset_name]
         labels, metadata, events = detect_labels_and_events(
             dataset, default_detectors, default_annotators, verbose=verbose
@@ -53,17 +53,17 @@ def run_default(
         if verbose:
             print(f"Saving labels & events to {default_output_dir}...")
         labels.to_pickle(os.path.join(default_output_dir, f"{peyes.constants.LABELS_STR}.pkl"))
-        metadata.to_pickle(os.path.join(default_output_dir, f"{u.METADATA_STR}.pkl"))
+        metadata.to_pickle(os.path.join(default_output_dir, f"{peyes.constants.METADATA_STR}.pkl"))
         events.to_pickle(os.path.join(default_output_dir, f"{peyes.constants.EVENTS_STR}.pkl"))
     try:
-        matches = pd.read_pickle(os.path.join(default_output_dir, f"{u.MATCHES_STR}.pkl"))
+        matches = pd.read_pickle(os.path.join(default_output_dir, f"{peyes.constants.MATCHES_STR}.pkl"))
     except FileNotFoundError:
         matches = match_events(
             events, u.DATASET_ANNOTATORS[dataset_name], matching_schemes=None, allow_xmatch=False
         )
         if verbose:
             print(f"Saving matches to {default_output_dir}...")
-        matches.to_pickle(os.path.join(default_output_dir, f"{u.MATCHES_STR}.pkl"))
+        matches.to_pickle(os.path.join(default_output_dir, f"{peyes.constants.MATCHES_STR}.pkl"))
     elapsed = time.time() - start
     if verbose:
         print(f"### PREPROCESS TIME:\t{elapsed:.2f} seconds ###")
@@ -122,11 +122,11 @@ def detect_labels_and_events(
         labels = pd.concat([pd.Series(v, name=k) for k, v in labels.items()], axis=1)
         labels.index.name = peyes.constants.SAMPLE_STR
         metadata = pd.concat([pd.Series(v, name=k) for k, v in metadata.items()], axis=1)
-        metadata.index.name = u.FIELD_NAME_STR
+        metadata.index.name = peyes.constants.FIELD_NAME_STR
         events = pd.concat([pd.Series(v, name=k) for k, v in events.items()], axis=1)
         events.index.name = peyes.constants.EVENT_STR
         labels.columns.names = metadata.columns.names = events.columns.names = [
-            peyes.constants.TRIAL_ID_STR, u.LABELER_STR, peyes.constants.ITERATION_STR
+            peyes.constants.TRIAL_ID_STR, peyes.constants.LABELER_STR, peyes.constants.ITERATION_STR
         ]
         return labels, metadata, events
 
@@ -157,7 +157,7 @@ def match_events(
     results = dict()
     for tr in tqdm(events.columns.get_level_values(level=peyes.constants.TRIAL_ID_STR).unique(), desc="Matching Events"):
         for gt_labeler in gt_labelers:
-            trial_gt_events = events.xs((tr, gt_labeler), axis=1, level=[peyes.constants.TRIAL_ID_STR, u.LABELER_STR])
+            trial_gt_events = events.xs((tr, gt_labeler), axis=1, level=[peyes.constants.TRIAL_ID_STR, peyes.constants.LABELER_STR])
             if trial_gt_events.size == 0:
                 continue
             gt_min_iteration = np.nanmin(trial_gt_events.columns.get_level_values(peyes.constants.ITERATION_STR))
@@ -166,7 +166,7 @@ def match_events(
                 continue
             for pred_labeler in pred_labelers:
                 pred_events_all_iters = events.xs(
-                    (tr, pred_labeler), axis=1, level=[peyes.constants.TRIAL_ID_STR, u.LABELER_STR]
+                    (tr, pred_labeler), axis=1, level=[peyes.constants.TRIAL_ID_STR, peyes.constants.LABELER_STR]
                 )
                 for pred_it in pred_events_all_iters.columns.get_level_values(peyes.constants.ITERATION_STR).unique():
                     if (pred_labeler == gt_labeler) and (pred_it == gt_min_iteration):

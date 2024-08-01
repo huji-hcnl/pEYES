@@ -28,7 +28,7 @@ def load(
         matching_schemes = [matching_schemes]
     matched_features = h.load_data(
         dataset_name=dataset_name, output_dir=output_dir,
-        data_dir_name=f"{u.MATCHES_STR}_{peyes.constants.METRICS_STR}",
+        data_dir_name=f"{peyes.constants.MATCHES_STR}_{peyes.constants.METRICS_STR}",
         label=label, stimulus_type=stimulus_type, sub_index=matching_schemes,
         filename_suffix=f"matched_{peyes.constants.FEATURES_STR}", iteration=1,
     )
@@ -83,11 +83,12 @@ def wilcoxon_signed_rank(
         scheme_matched_features.index.unique(),
         key=lambda met: u.METRICS_CONFIG[met][1] if met in u.METRICS_CONFIG else ord(met[0])
     )
+    gt_columns = scheme_matched_features.columns.get_level_values(u.GT_STR).unique()
     statistics, pvalues, Ns = {}, {}, {}
     for i, feat in enumerate(features):
         alternative = 'two-sided' if peyes.constants.DIFFERENCE_STR in feat else 'greater'
         gt_series = scheme_matched_features.xs(gt_col, level=u.GT_STR, axis=1).loc[feat]
-        gt_df = gt_series.unstack().drop(columns=[GT1, GT2], errors='ignore')
+        gt_df = gt_series.unstack().drop(columns=gt_columns, errors='ignore')
         for j, det in enumerate(gt_df.columns):
             vals = gt_df[det].explode().dropna().values.astype(float)
             if feat in [f"{peyes.constants.TIME_STR}_overlap", f"{peyes.constants.TIME_STR}_iou"]:

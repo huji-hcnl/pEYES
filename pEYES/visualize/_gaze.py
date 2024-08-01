@@ -194,7 +194,7 @@ def gaze_over_time(
 
     fig.update_layout(
         title=title,
-        xaxis_title=f"{cnst.TIME_STR} ({cnst.SAMPLES_STR})",
+        xaxis_title=f"{cnst.TIME_STR} ({cnst.SAMPLE_STR})",
         yaxis_title=f"{cnst.PIXEL_STR} coordinates",
         yaxis2_title=y_axis2_title,
     )

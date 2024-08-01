@@ -72,6 +72,7 @@ csdt_statistics, csdt_pvalues, csdt_dunns, csdt_Ns = csdt.kruskal_wallis_dunns(
 )
 
 threshold_fig = csdt.single_threshold_figure(sdt_metrics, CHANNEL_TYPE, THRESHOLD, GT1, gt2=GT2)
+threshold_fig.show()
 
 csdt_figs = csdt.multi_threshold_figures(sdt_metrics, CHANNEL_TYPE, show_err_bands=True)
 csdt_figs[GT1].show()
@@ -83,7 +84,7 @@ csdt_figs[GT1].show()
 
 import analysis.statistics.matched_features as mf
 
-SCHEME = "window"
+SCHEME = "window_15"
 ALPHA = 0.05
 
 matched_features = mf.load(
@@ -109,9 +110,7 @@ mf_fig.show()
 ########################
 ## Matched-Events SDT ##
 
-import analysis.statistics.matches_sdt as msdt
-
-SCHEME = "window_10"
+import analysis.statistics.matched_sdt as msdt
 
 matched_sdt = msdt.load(
     dataset_name=DATASET_NAME, output_dir=os.path.join(u.OUTPUT_DIR, "default_values"),
@@ -127,5 +126,5 @@ msdt_single_fig = msdt.single_scheme_figure(
 )
 msdt_single_fig.show()
 
-msdt_figs = msdt.multi_threshold_figures(matched_sdt, SCHEME, metrics=None, show_err_bands=True)
+msdt_figs = msdt.multi_threshold_figures(matched_sdt, "window", metrics=None, show_err_bands=True)
 msdt_figs[GT1].show()
