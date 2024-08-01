@@ -25,6 +25,7 @@ class BaseDatasetLoader(ABC):
     _NAME: str
     _URL: str
     _ARTICLES: List[str]
+    _LICENSE: str
     _INDEXERS: List[str] = [
         cnst.TRIAL_ID_STR, cnst.SUBJECT_ID_STR, cnst.STIMULUS_TYPE_STR, cnst.STIMULUS_NAME_STR
     ]
@@ -91,19 +92,27 @@ class BaseDatasetLoader(ABC):
 
     @classmethod
     @final
-    def articles(cls) -> List[str]:
-        """ List of articles that where this dataset was created """
-        if not cls._ARTICLES:
-            raise AttributeError(f"Class {cls.__name__} must implement class attribute `_ARTICLES`")
-        return cls._ARTICLES
-
-    @classmethod
-    @final
     def url(cls) -> str:
         """ URL of the dataset """
         if not cls._URL:
             raise AttributeError(f"Class {cls.__name__} must implement class attribute `_URL`")
         return cls._URL
+
+    @classmethod
+    @final
+    def articles(cls) -> List[str]:
+        """ List of articles to cite when using this dataset """
+        if not cls._ARTICLES:
+            raise AttributeError(f"Class {cls.__name__} must implement class attribute `_{cnst.ARTICLES_STR}`")
+        return cls._ARTICLES
+
+    @classmethod
+    @final
+    def license(cls) -> str:
+        """ License of the dataset """
+        if not cls._LICENSE:
+            raise AttributeError(f"Class {cls.__name__} must implement class attribute `_LICENSE`")
+        return cls._LICENSE
 
     @staticmethod
     def column_order() -> Dict[str, float]:
@@ -127,6 +136,7 @@ class BaseDatasetLoader(ABC):
 class Lund2013DatasetLoader(BaseDatasetLoader):
     _NAME = "Lund2013"
     _URL = 'https://github.com/richardandersson/EyeMovementDetectorEvaluation/archive/refs/heads/master.zip'
+    _LICENSE = "GNU GPL-3.0"
     _ARTICLES = [
         "Andersson, R., Larsson, L., Holmqvist, K., Stridh, M., & Nyström, M. (2017): One algorithm to rule them " +
         "all? An evaluation and discussion of ten eye movement event-detection algorithms. Behavior Research " +
@@ -240,6 +250,7 @@ class IRFDatasetLoader(BaseDatasetLoader):
 
     _NAME = "IRF"
     _URL = r'https://github.com/r-zemblys/irf/archive/refs/heads/master.zip'
+    _LICENSE = "MIT"
     _ARTICLES = [
         "Zemblys, Raimondas and Niehorster, Diederick C and Komogortsev, Oleg and Holmqvist, Kenneth. Using machine " +
         "learning to detect events in eye-tracking data. Behavior Research Methods, 50(1), 160–181 (2018)."
@@ -328,6 +339,7 @@ class HFCDatasetLoader(BaseDatasetLoader):
 
     _NAME: str = "HFC"
     _URL = r'https://github.com/dcnieho/humanFixationClassification/archive/refs/heads/master.zip'
+    _LICENSE = "CC NC-BY-SA 4.0"
     _ARTICLES = [
         "Hooge, I.T.C., Niehorster, D.C., Nyström, M., Andersson, R. & Hessels, R.S. (2018). Is human classification " +
         "by experienced untrained observers a gold standard in fixation detection?",
@@ -437,6 +449,7 @@ class GazeComDatasetLoader(BaseDatasetLoader):
 
     _NAME: str = "GazeCom"
     _URL = r'https://gin.g-node.org/ioannis.agtzidis/gazecom_annotations/archive/master.zip'
+    _LICENSE = "GNU GPL-3.0"
     _ARTICLES = [
         "Agtzidis, I., Startsev, M., & Dorr, M. (2016a). In the pursuit of (ground) truth: A hand-labelling tool for " +
         "eye movements recorded during dynamic scene viewing. In 2016 IEEE second workshop on eye tracking and" +

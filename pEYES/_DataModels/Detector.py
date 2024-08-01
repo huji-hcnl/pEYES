@@ -29,6 +29,7 @@ class BaseDetector(ABC):
     :param min_event_duration: the minimum duration of a gaze event, in milliseconds.
     :param pad_blinks_ms: the duration to pad around detected blinks, in milliseconds.
     """
+    _ARTICLES: List[str]
 
     _MINIMUM_SAMPLES_IN_EVENT = 2   # minimum number of samples in an event
 
@@ -141,6 +142,14 @@ class BaseDetector(ABC):
     def pad_blinks_samples(self) -> int:
         return self._calc_num_samples(self.pad_blinks_ms, self.sr)
 
+    @classmethod
+    @final
+    def articles(cls) -> List[str]:
+        """ List of articles to cite when using this detector """
+        if not cls._ARTICLES:
+            raise AttributeError(f"Class {cls.__name__} must implement class attribute `_{cnst.ARTICLES_STR}`")
+        return cls._ARTICLES
+
     def _detect_blinks(
             self,
             x: np.ndarray,
@@ -240,6 +249,11 @@ class IVTDetector(BaseDetector, IThresholdDetector):
         movement event-detection algorithms" (2016), Andersson et al.
     """
 
+    _ARTICLES = [
+        "Salvucci, D. D., & Goldberg, J. H. (2000). Identifying fixations and saccades in eye-tracking protocols. " +
+        "In Proceedings of the Symposium on Eye Tracking Research & Applications (pp. 71-78)",
+    ]
+
     _DEFAULT_SACCADE_VELOCITY_THRESHOLD = 45  # deg/s
     _SACCADE_VELOCITY_THRESHOLD_STR = "saccade_velocity_threshold"
 
@@ -316,6 +330,11 @@ class IVVTDetector(IVTDetector):
         smooth pursuit from fixations. Default is 5 degrees per-second.
     """
 
+    _ARTICLES = [
+        "Salvucci, D. D., & Goldberg, J. H. (2000). Identifying fixations and saccades in eye-tracking protocols. " +
+        "In Proceedings of the Symposium on Eye Tracking Research & Applications (pp. 71-78)",
+    ]
+
     _DEFAULT_SMOOTH_PURSUIT_VELOCITY_THRESHOLD = 5  # deg/s
     _SMOOTH_PURSUIT_VELOCITY_THRESHOLD_STR = "smooth_pursuit_velocity_threshold"
 
@@ -390,6 +409,11 @@ class IDTDetector(BaseDetector, IThresholdDetector):
         "One algorithm to rule them all? An evaluation and discussion of ten eye movement event-detection algorithms"
         (2016), Andersson et al.
     """
+
+    _ARTICLES = [
+        "Salvucci, D. D., & Goldberg, J. H. (2000). Identifying fixations and saccades in eye-tracking protocols. " +
+        "In Proceedings of the Symposium on Eye Tracking Research & Applications (pp. 71-78)",
+    ]
 
     _DEFAULT_DISPERSION_THRESHOLD = 0.5  # visual degrees
     _DEFAULT_WINDOW_DURATION = 100  # ms
@@ -503,6 +527,12 @@ class EngbertDetector(BaseDetector):
         the window size. Default is 5, as suggested in the original paper
     """
 
+    _ARTICLES = [
+        "Engbert, R. & Kliegl, R. (2003). Microsaccades uncover the orientation of covert attention. Vision Research",
+        "Engbert, R., Mergenthaler, K., & Purves, D. (Ed.). (2006). Microsaccades are triggered by low retinal " +
+        "image slip. PNAS Proceedings of the National Academy of Sciences of the United States of America",
+    ]
+
     _DEFAULT_LAMBDA_PARAM = 5               # standard deviation multiplier
     _DEFAULT_DERIVATION_WINDOW_SIZE = 5     # number of samples used to calculate axial velocity
     __THRESHOLD_VELOCITY_STR = "threshold_velocity"
@@ -610,6 +640,7 @@ class NHDetector(BaseDetector):
     was developed for the following article:
         Niehorster, D. C., Siu, W. W., & Li, L. (2015). Manual tracking enhances smooth pursuit eye movements. Journal
         of vision, 15(15), 11-11.
+    License: Unspecified
 
     General algorithm:
         1. Calculate angular velocity & acceleration
@@ -641,6 +672,13 @@ class NHDetector(BaseDetector):
     :param allow_high_psos: if True, includes PSOs with maximum velocity exceeding saccades' peak threshold (PT),
         given that the PSO's max velocity is still lower than the preceding saccade's max velocity
     """
+
+    _ARTICLES = [
+        "Nyström, M., Holmqvist, K. An adaptive algorithm for fixation, saccade, and glissade detection in " +
+        "eyetracking data. Behavior Research Methods 42, 188–204 (2010)",
+        "Niehorster, D. C., Siu, W. W., & Li, L. (2015). Manual tracking enhances smooth pursuit eye movements. " +
+        "Journal of vision, 15(15), 11-11",
+    ]
 
     _DEFAULT_FILTER_DURATION_MS = 2 * cnfg.EVENT_MAPPING[EventLabelEnum.SACCADE][cnst.MIN_DURATION_STR]     # 20ms
     _DEFAULT_FILTER_POLYORDER = 2                                                                           # unitless
@@ -1112,6 +1150,7 @@ class REMoDNaVDetector(BaseDetector):
 
     See the REMoDNaV algorithm documentation & implementation:
         https://github.com/psychoinformatics-de/remodnav/tree/master
+    License: MIT
 
     :param missing_value: the value that indicates missing data in the gaze data.
     :param min_event_duration: the minimum duration of a gaze event, in milliseconds.
@@ -1132,6 +1171,11 @@ class REMoDNaVDetector(BaseDetector):
     :param median_filter_duration_ms: the duration of the median filter (ms), default is 50 ms
     :param max_velocity: the maximum velocity of the gaze data (deg/s), default is 1500
     """
+
+    _ARTICLES = [
+        "Dar AH, Wagner AS, Hanke M. REMoDNaV: robust eye-movement classification for dynamic stimulation. Behav " +
+        "Res Methods. 2021 Feb;53(1):399-414. doi: 10.3758/s13428-020-01428-x",
+    ]
 
     _DEFAULT_MIN_SACCADE_DURATION_MS = cnfg.EVENT_MAPPING[EventLabelEnum.SACCADE][cnst.MIN_DURATION_STR]
     _DEFAULT_MIN_SMOOTH_PURSUIT_DURATION_MS = cnfg.EVENT_MAPPING[EventLabelEnum.SMOOTH_PURSUIT][cnst.MIN_DURATION_STR]
