@@ -124,8 +124,12 @@ def distributions_figure(
         subframe = h.extract_subframe(
             subframe, level=peyes.constants.FEATURE_STR, value=features, axis=0, drop_single_values=False
         )
-    title = title if title else (
-            "Matched Events :: Features <br>" + f"<sup>(Matching Scheme: {matching_scheme})</sup>"
-    )
+    if not title:
+        split_scheme = matching_scheme.split("_")
+        scheme_name, scheme_threshold = "_".join(split_scheme[:-1]), int(split_scheme[-1])
+        threshold_str = f"{scheme_threshold:.2f}(a.u.)" if isinstance(scheme_threshold, float) else f"{scheme_threshold} (samples)"
+        title = ("Matched Events :: Features <br>" +
+                 f"<sup>({u.MATCHING_SCHEME_STR.replace("_", " ").title()}: {scheme_name.replace("_", " ").title()}  " +
+                 f"Threshold: {threshold_str}</sup>")
     fig = h.distributions_figure(subframe, gt1=gt1, gt2=gt2, title=title)
     return fig
