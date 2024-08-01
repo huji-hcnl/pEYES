@@ -106,7 +106,7 @@ def kruskal_wallis_dunns(
                 continue
             gt_df = gt_series.unstack().drop(columns=gt_cols, errors='ignore')
             detectors = sorted(
-                gt_df.columns, key=lambda det: u.DETECTORS_CONFIG[det.removesuffix("Detector").lower()][1]
+                gt_df.columns, key=lambda det: u.DEFAULT_DETECTORS_CONFIG[det.removesuffix("Detector").lower()][1]
             )
             detector_values = {}
             for det in detectors:
@@ -174,11 +174,11 @@ def distributions_figure(
             gt_series = data.xs(gt_col, level=u.GT_STR, axis=1).loc[idx]
             gt_df = gt_series.unstack().drop(columns=gt_cols, errors='ignore')
             detectors = sorted(
-                gt_df.columns, key=lambda det: u.DETECTORS_CONFIG[det.removesuffix("Detector").lower()][1]
+                gt_df.columns, key=lambda det: u.DEFAULT_DETECTORS_CONFIG[det.removesuffix("Detector").lower()][1]
             )
             for k, det in enumerate(detectors):
                 det_name = det.removesuffix("Detector")
-                det_color = u.DETECTORS_CONFIG[det_name.lower()][2]
+                det_color = u.DEFAULT_DETECTORS_CONFIG[det_name.lower()][2]
                 if len(gt_cols) == 1:
                     violin_side = None
                     opacity = 0.75

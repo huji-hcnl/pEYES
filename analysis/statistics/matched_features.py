@@ -28,7 +28,7 @@ def load(
         matching_schemes = [matching_schemes]
     matched_features = h.load_data(
         dataset_name=dataset_name, output_dir=output_dir,
-        data_dir_name=f"{u.MATCHES_STR}_{peyes.constants.METRICS_STR}",
+        data_dir_name=f"{peyes.constants.MATCHES_STR}_{peyes.constants.METRICS_STR}",
         label=label, stimulus_type=stimulus_type, sub_index=matching_schemes,
         filename_suffix=f"matched_{peyes.constants.FEATURES_STR}", iteration=1,
     )

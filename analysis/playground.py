@@ -110,7 +110,7 @@ mf_fig.show()
 ########################
 ## Matched-Events SDT ##
 
-import analysis.statistics.matches_sdt as msdt
+import analysis.statistics.matched_sdt as msdt
 
 matched_sdt = msdt.load(
     dataset_name=DATASET_NAME, output_dir=os.path.join(u.OUTPUT_DIR, "default_values"),
