@@ -133,7 +133,7 @@ def _calculate_impl(
         correction: str = "loglinear",
 ) -> pd.DataFrame:
     results = dict()
-    for tr in tqdm(labels.columns.get_level_values(peyes.constants.TRIAL_ID_STR).unique(), desc="Sample Metrics"):
+    for tr in tqdm(labels.columns.get_level_values(peyes.constants.TRIAL_ID_STR).unique(), desc=description):
         for gt_labeler in gt_labelers:
             gt_min_iteration = labels.xs(
                 (tr, gt_labeler), axis=1, level=[peyes.constants.TRIAL_ID_STR, peyes.constants.LABELER_STR]
