@@ -45,18 +45,17 @@ def feature_comparison(
     )
     with warnings.catch_warnings():
         warnings.simplefilter("ignore")
-        for i, feat in enumerate(features):
-            # TODO: handle "counts" feature as a special case with a bar plot
-            r, c = (i, 0) if ncols == 1 else divmod(i, ncols)
-            for j, (ev_name, ev_seq) in enumerate(zip(labels, event_sequences)):
-                summary_df = summarize_events(ev_seq)
-                if not include_outliers:
-                    summary_df = summary_df[~summary_df["is_outlier"]]
+        for i, (ev_name, ev_seq) in enumerate(zip(labels, event_sequences)):
+            summary_df = summarize_events(ev_seq)
+            if not include_outliers:
+                summary_df = summary_df[~summary_df["is_outlier"]]
+            for j, feat in enumerate(features):
                 color = (
                         colors.get(ev_name, None) or colors.get(ev_name.strip().lower(), None) or
-                        colors.get(ev_name.strip().upper(), None) or colors[j]
+                        colors.get(ev_name.strip().upper(), None) or colors[i]
                 )
                 color = f"rgb{color}"
+                r, c = (j, 0) if ncols == 1 else divmod(j, ncols)
                 fig.add_trace(
                     row=r+1, col=c+1, trace=go.Violin(
                         x=summary_df[feat].dropna().values,
