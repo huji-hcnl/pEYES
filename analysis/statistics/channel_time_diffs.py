@@ -42,4 +42,8 @@ def distributions_figure(
         title: str = "Samples Channel :: Difference Distributions",
         only_box: bool = False,
 ) -> go.Figure:
-    return h.distributions_figure(data, gt1=gt1, gt2=gt2, title=title, only_box=only_box)
+    fig = h.distributions_figure(data, gt1=gt1, gt2=gt2, title=title, only_box=only_box)
+    fig.update_yaxes(
+        title=f"{peyes.constants.TIME_STR} {peyes.constants.DIFFERENCE_STR} ({peyes.constants.SAMPLES_STR})"
+    )
+    return fig
