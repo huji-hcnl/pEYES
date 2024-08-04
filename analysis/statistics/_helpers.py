@@ -56,12 +56,9 @@ def load_data(
         raise FileNotFoundError(f"Couldn't find `{fullpath}`. Please preprocess the dataset first.")
     if iteration is not None:
         data = data.xs(iteration, level=peyes.constants.ITERATION_STR, axis=1, drop_level=True)
-    if isinstance(stimulus_type, str):
-        stimulus_type = [stimulus_type]
     if stimulus_type:
-        stimulus_type = [stmtp.lower().strip() for stmtp in stimulus_type if isinstance(stmtp, str)]
-        trial_ids = _trial_ids_by_condition(dataset_name, key=peyes.constants.STIMULUS_TYPE_STR, values=stimulus_type)
-        is_trial_ids = data.columns.get_level_values(peyes.constants.TRIAL_ID_STR).isin(trial_ids)
+        stim_trial_ids = u.get_trials_for_stimulus_type(dataset_name, stimulus_type)
+        is_trial_ids = data.columns.get_level_values(peyes.constants.TRIAL_ID_STR).isin(stim_trial_ids)
         data = data.loc[:, is_trial_ids]
     if sub_index:
         data = extract_subframe(data, level=0, value=sub_index, axis=0, drop_single_values=False)
@@ -216,15 +213,6 @@ def distributions_figure(
         boxgap=0,
     )
     return fig
-
-
-def _trial_ids_by_condition(dataset_name: str, key: str, values: Union[Any, List[Any]]) -> List[int]:
-    dataset = u.load_dataset(dataset_name, verbose=False)
-    if not isinstance(values, list):
-        values = [values]
-    all_trial_ids = dataset[peyes.constants.TRIAL_ID_STR]
-    is_condition = dataset[key].isin(values)
-    return all_trial_ids[is_condition].unique().tolist()
 
 
 def _make_empty_figure(metrics: Sequence[str], sharex=False, sharey=False) -> Tuple[go.Figure, int, int]:

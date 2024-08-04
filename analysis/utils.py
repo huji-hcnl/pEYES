@@ -1,5 +1,5 @@
 import os
-from typing import Optional, Union, Sequence
+from typing import Optional, Union, Sequence, List
 
 import numpy as np
 import pandas as pd
@@ -116,3 +116,18 @@ def get_filename_for_labels(
         return f"{prefix}{'_'.join([peyes.parse_label(l).name.lower() for l in labels])}{suffix}.{extension}"
     else:
         raise TypeError(f"Unknown pos_labels type: {type(labels)}")
+
+
+def get_trials_for_stimulus_type(
+        dataset_name: str,
+        stimulus_type: Union[str, List[str]],
+) -> List[int]:
+    if not stimulus_type:
+        raise ValueError("Stimulus type is not specified")
+    if isinstance(stimulus_type, str):
+        stimulus_type = [stimulus_type]
+    stimulus_type = list(set([stmtp.lower().strip() for stmtp in stimulus_type if isinstance(stmtp, str)]))
+    dataset = load_dataset(dataset_name, verbose=False)
+    is_stimulus_type = dataset[peyes.constants.STIMULUS_TYPE_STR].str.lower().isin(stimulus_type)
+    trials = dataset.loc[is_stimulus_type, peyes.constants.TRIAL_ID_STR].unique()
+    return trials
