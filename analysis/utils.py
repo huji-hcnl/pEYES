@@ -37,12 +37,12 @@ DATASET_ANNOTATORS = {
 _default_detector_params = dict(missing_value=np.nan, min_event_duration=4, pad_blinks_time=0)
 DEFAULT_DETECTORS_CONFIG = {
     # detector name -> (detector object, order, color)
-    "ivt": (peyes.create_detector("ivt", **_default_detector_params), 0, DEFAULT_DISCRETE_COLORMAP[0]),
-    "ivvt": (peyes.create_detector("ivvt", **_default_detector_params), 1, DEFAULT_DISCRETE_COLORMAP[1]),
-    "idt": (peyes.create_detector("idt", **_default_detector_params), 2, DEFAULT_DISCRETE_COLORMAP[2]),
-    "engbert": (peyes.create_detector("engbert", **_default_detector_params), 3, DEFAULT_DISCRETE_COLORMAP[3]),
-    "nh": (peyes.create_detector("nh", **_default_detector_params), 4, DEFAULT_DISCRETE_COLORMAP[4]),
-    "remodnav": (peyes.create_detector("remodnav", **_default_detector_params), 5, DEFAULT_DISCRETE_COLORMAP[5]),
+    "ivt": (peyes.create_detector("ivt", **_default_detector_params), 1, DEFAULT_DISCRETE_COLORMAP[0]),
+    "ivvt": (peyes.create_detector("ivvt", **_default_detector_params), 2, DEFAULT_DISCRETE_COLORMAP[1]),
+    "idt": (peyes.create_detector("idt", **_default_detector_params), 3, DEFAULT_DISCRETE_COLORMAP[2]),
+    "engbert": (peyes.create_detector("engbert", **_default_detector_params), 4, DEFAULT_DISCRETE_COLORMAP[3]),
+    "nh": (peyes.create_detector("nh", **_default_detector_params), 5, DEFAULT_DISCRETE_COLORMAP[4]),
+    "remodnav": (peyes.create_detector("remodnav", **_default_detector_params), 6, DEFAULT_DISCRETE_COLORMAP[5]),
 }
 
 METRICS_CONFIG = {
