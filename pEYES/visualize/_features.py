@@ -41,7 +41,7 @@ def feature_comparison(
     if isinstance(features, str):
         features = [features]
     fig, nrows, ncols = vis_utils.make_empty_figure(
-        list(map(lambda feat: feat.strip().replace("_", " ").title(), features)), sharex=False, sharey=False
+        list(map(lambda feat: feat.strip().replace("_", " ").title(), features)), sharex=False, sharey=True
     )
     with warnings.catch_warnings():
         warnings.simplefilter("ignore")
@@ -63,6 +63,7 @@ def feature_comparison(
                         line_color=color, opacity=kwargs.get("opacity", 0.75), width=kwargs.get("line_width", 2),
                         box_visible=kwargs.get("show_box", True), points=False,
                         orientation='h', spanmode='hard', side='positive',
+                        showlegend=j == 0,
                     )
                 )
         fig.update_layout(
