@@ -39,17 +39,31 @@ events_by_labelers = {
     lblr: all_events.xs(lblr, level=peyes.constants.LABELER_STR, axis=1).stack().dropna() for lblr in all_labelers
 }
 
-feature_comparison_figure = peyes.visualize.feature_comparison(
+fixations_comparison_figure = peyes.visualize.feature_comparison(
     [
         peyes.constants.DURATION_STR,
         peyes.constants.AMPLITUDE_STR,
         peyes.constants.PEAK_VELOCITY_STR,
         peyes.constants.MEDIAN_VELOCITY_STR
      ],
-    *list(events_by_labelers.values()),
+    *[vals[vals.apply(lambda e: e.label == 1)] for vals in events_by_labelers.values()],
     labels=events_by_labelers.keys(),
+    title="Fixation Features Comparison",
 )
-feature_comparison_figure.show()
+fixations_comparison_figure.show()
+
+saccades_comparison_figure = peyes.visualize.feature_comparison(
+    [
+        peyes.constants.DURATION_STR,
+        peyes.constants.AMPLITUDE_STR,
+        peyes.constants.PEAK_VELOCITY_STR,
+        peyes.constants.MEDIAN_VELOCITY_STR
+     ],
+    *[vals[vals.apply(lambda e: e.label == 2)] for vals in events_by_labelers.values()],
+    labels=events_by_labelers.keys(),
+    title="Saccade Features Comparison",
+)
+saccades_comparison_figure.show()
 
 # %%
 ##########################
