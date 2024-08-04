@@ -8,9 +8,10 @@ import plotly.graph_objects as go
 from plotly.subplots import make_subplots
 
 import pEYES as peyes
-from pEYES._DataModels.UnparsedEventLabel import UnparsedEventLabelType, UnparsedEventLabelSequenceType
 
 import analysis.utils as u
+from pEYES._utils.visualization_utils import make_empty_figure
+from pEYES._DataModels.UnparsedEventLabel import UnparsedEventLabelType, UnparsedEventLabelSequenceType
 
 
 def extract_subframe(
@@ -164,7 +165,10 @@ def distributions_figure(
         data.index.unique(),
         key=lambda met: u.METRICS_CONFIG[met][1] if met in u.METRICS_CONFIG else ord(met[0])
     )
-    fig, nrows, ncols = _make_empty_figure(indices, sharex=False, sharey=False)
+    fig, nrows, ncols = make_empty_figure(
+        subtitles=list(map(lambda idx: u.METRICS_CONFIG[idx][0] if idx in u.METRICS_CONFIG else idx, indices)),
+        sharex=False, sharey=False,
+    )
     for i, idx in enumerate(indices):
         r, c = (i, 0) if ncols == 1 else divmod(i, ncols)
         for j, gt_col in enumerate(gt_cols):
@@ -213,14 +217,3 @@ def distributions_figure(
         boxgap=0,
     )
     return fig
-
-
-def _make_empty_figure(metrics: Sequence[str], sharex=False, sharey=False) -> Tuple[go.Figure, int, int]:
-    ncols = 1 if len(metrics) <= 3 else 2 if len(metrics) <= 8 else 3
-    nrows = len(metrics) if len(metrics) <= 3 else sum(divmod(len(metrics), ncols))
-    fig = make_subplots(
-        rows=nrows, cols=ncols,
-        shared_xaxes=sharex, shared_yaxes=sharey,
-        subplot_titles=list(map(lambda met: u.METRICS_CONFIG[met][0] if met in u.METRICS_CONFIG else met, metrics)),
-    )
-    return fig, nrows, ncols

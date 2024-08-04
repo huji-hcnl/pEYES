@@ -5,10 +5,11 @@ import pandas as pd
 import plotly.graph_objects as go
 
 import pEYES as peyes
-from pEYES._DataModels.UnparsedEventLabel import UnparsedEventLabelType, UnparsedEventLabelSequenceType
 
 import analysis.utils as u
 import analysis.statistics._helpers as h
+from pEYES._utils.visualization_utils import make_empty_figure
+from pEYES._DataModels.UnparsedEventLabel import UnparsedEventLabelType, UnparsedEventLabelSequenceType
 
 ###################
 
@@ -106,7 +107,10 @@ def multi_threshold_figures(
             [m for m in gt_subframe.index.get_level_values(peyes.constants.METRIC_STR).unique()],
             key=lambda m: u.METRICS_CONFIG[m][1]
         )
-        fig, nrows, ncols = h._make_empty_figure(subframe_metrics, sharex=False, sharey=False)
+        fig, nrows, ncols = make_empty_figure(
+            subtitles=list(map(lambda met: u.METRICS_CONFIG[met][0] if met in u.METRICS_CONFIG else met, subframe_metrics)),
+            sharex=False, sharey=False,
+        )
         for i, met in enumerate(subframe_metrics):
             r, c = (i, 0) if ncols == 1 else divmod(i, ncols)
             met_frame = gt_subframe.xs(met, level=peyes.constants.METRIC_STR, axis=0, drop_level=True)

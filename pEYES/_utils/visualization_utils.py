@@ -1,9 +1,10 @@
 import os
-from typing import Union, Tuple, Dict
+from typing import Union, Tuple, Dict, Sequence
 
 import cv2
 import numpy as np
 import plotly.graph_objects as go
+from plotly.subplots import make_subplots
 
 from pEYES._DataModels.EventLabelEnum import EventLabelEnum as _EventLabelEnum
 from pEYES._DataModels.UnparsedEventLabel import UnparsedEventLabelType as _UnparsedEventLabelType
@@ -99,3 +100,10 @@ def to_rgb(color: ColorType) -> Tuple[int, int, int]:
         rgb = tuple(int(color[i: i + 2], 16) for i in (0, 2, 4))
         return rgb
     raise ValueError("Invalid color format. Must be hex string or RGB tuple.")
+
+
+def make_empty_figure(subtitles: Sequence[str], sharex=False, sharey=False) -> Tuple[go.Figure, int, int]:
+    ncols = 1 if len(subtitles) <= 3 else 2 if len(subtitles) <= 8 else 3
+    nrows = len(subtitles) if len(subtitles) <= 3 else sum(divmod(len(subtitles), ncols))
+    fig = make_subplots(rows=nrows, cols=ncols, shared_xaxes=sharex, shared_yaxes=sharey, subplot_titles=subtitles)
+    return fig, nrows, ncols
