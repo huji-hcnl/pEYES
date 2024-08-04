@@ -67,29 +67,5 @@ def global_metrics_distributions_figure(
         title: str = "",
         only_box: bool = False,
 ) -> go.Figure:
-    title = title or "Samples :: Global Metrics Distributions <br><sup>{peyes.constants.LABEL_STR.title()}:All</sup>"
+    title = title or f"Samples :: Global Metrics Distributions <br><sup>({peyes.constants.LABEL_STR.title()}:All)</sup>"
     return h.distributions_figure(data, gt1=gt1, gt2=gt2, title=title, only_box=only_box)
-
-
-# def load(
-#         dataset_name: str,
-#         output_dir: str,
-#         label: Optional[Union[UnparsedEventLabelType, UnparsedEventLabelSequenceType]] = None,
-#         stimulus_type: Optional[Union[str, List[str]]] = None,
-#         metric: Optional[Union[str, List[str]]] = None,
-# ) -> pd.DataFrame:
-#     return h.load_data(
-#         dataset_name=dataset_name, output_dir=output_dir,
-#         data_dir_name=f"{peyes.constants.SAMPLE_STR}_{peyes.constants.METRICS_STR}", label=label,
-#         iteration=1, stimulus_type=stimulus_type, sub_index=metric
-#     )
-
-
-# def distributions_figure(
-#         data: pd.DataFrame,
-#         gt1: str,
-#         gt2: str,
-#         title: str = "Samples :: Metric Distributions",
-#         only_box: bool = False,
-# ) -> go.Figure:
-#     return h.distributions_figure(data, gt1=gt1, gt2=gt2, title=title, only_box=only_box)

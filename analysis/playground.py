@@ -35,6 +35,7 @@ sm_global_statistics, sm_global_pvalues, sm_global_dunns, sm_global_Ns = sm.krus
 sm_global_metrics_fig = sm.global_metrics_distributions_figure(sample_global_metrics, GT1, gt2=GT2, only_box=False)
 sm_global_metrics_fig.show()
 
+###
 
 sample_sdt_metrics = sm.load_sdt(
     DATASET_NAME, os.path.join(u.OUTPUT_DIR, "default_values"), label=LABEL, stimulus_type=STIMULUS_TYPE, metric=None
@@ -44,15 +45,6 @@ sm_sdt_statistics, sm_sdt_pvalues, sm_sdt_dunns, sm_sdt_Ns = sm.kruskal_wallis_d
 )
 sample_sdt_metrics_fig = sm.sdt_distributions_figure(sample_sdt_metrics, GT1, gt2=GT2, only_box=False)
 sample_sdt_metrics_fig.show()
-
-# sample_metrics = sm.load(
-#     DATASET_NAME, os.path.join(u.OUTPUT_DIR, "default_values"), label=LABEL, stimulus_type=STIMULUS_TYPE, metric=None
-# )
-# sm_statistics, sm_pvalues, sm_dunns, sm_Ns = sm.kruskal_wallis_dunns(
-#     sample_metrics, [GT1, GT2], multi_comp=MULTI_COMP
-# )
-# sample_metrics_fig = sm.distributions_figure(sample_metrics, GT1, gt2=GT2, only_box=False)
-# sample_metrics_fig.show()
 
 # %%
 ##########################
@@ -75,10 +67,12 @@ time_diffs_fig.show()
 
 import analysis.statistics.channel_sdt as csdt
 
-CHANNEL_TYPE = "onset"
 THRESHOLD = 10  # samples
 
-sdt_metrics = csdt.load(
+###
+CHANNEL_TYPE = "onset"
+
+sdt_onset_metrics = csdt.load(
     dataset_name=DATASET_NAME,
     output_dir=os.path.join(u.OUTPUT_DIR, "default_values"),
     label=LABEL,
@@ -86,15 +80,36 @@ sdt_metrics = csdt.load(
     channel_type=None
 )
 
-csdt_statistics, csdt_pvalues, csdt_dunns, csdt_Ns = csdt.kruskal_wallis_dunns(
-    sdt_metrics, CHANNEL_TYPE, THRESHOLD, [GT1, GT2], multi_comp=MULTI_COMP
+csdt_onset_statistics, csdt_onset_pvalues, csdt_onset_dunns, csdt_onset_Ns = csdt.kruskal_wallis_dunns(
+    sdt_onset_metrics, CHANNEL_TYPE, THRESHOLD, [GT1, GT2], multi_comp=MULTI_COMP
 )
 
-threshold_fig = csdt.single_threshold_figure(sdt_metrics, CHANNEL_TYPE, THRESHOLD, GT1, gt2=GT2)
-threshold_fig.show()
+threshold_onset_fig = csdt.single_threshold_figure(sdt_onset_metrics, CHANNEL_TYPE, THRESHOLD, GT1, gt2=GT2)
+threshold_onset_fig.show()
 
-csdt_figs = csdt.multi_threshold_figures(sdt_metrics, CHANNEL_TYPE, show_err_bands=True)
-csdt_figs[GT1].show()
+csdt_onset_figs = csdt.multi_threshold_figures(sdt_onset_metrics, CHANNEL_TYPE, show_err_bands=True)
+csdt_onset_figs[GT1].show()
+
+###
+CHANNEL_TYPE = "offset"
+
+sdt_offset_metrics = csdt.load(
+    dataset_name=DATASET_NAME,
+    output_dir=os.path.join(u.OUTPUT_DIR, "default_values"),
+    label=LABEL,
+    stimulus_type=STIMULUS_TYPE,
+    channel_type=None
+)
+
+csdt_offset_statistics, csdt_offset_pvalues, csdt_offset_dunns, csdt_offset_Ns = csdt.kruskal_wallis_dunns(
+    sdt_offset_metrics, CHANNEL_TYPE, THRESHOLD, [GT1, GT2], multi_comp=MULTI_COMP
+)
+
+threshold_offset_fig = csdt.single_threshold_figure(sdt_offset_metrics, CHANNEL_TYPE, THRESHOLD, GT1, gt2=GT2)
+threshold_offset_fig.show()
+
+csdt_offset_figs = csdt.multi_threshold_figures(sdt_offset_metrics, CHANNEL_TYPE, show_err_bands=True)
+csdt_offset_figs[GT1].show()
 
 
 # %%
@@ -103,7 +118,7 @@ csdt_figs[GT1].show()
 
 import analysis.statistics.matched_features as mf
 
-SCHEME = "window_15"
+SCHEME = "window_10"
 ALPHA = 0.05
 
 matched_features = mf.load(

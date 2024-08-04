@@ -83,7 +83,7 @@ def single_threshold_figure(
     )
     title = title if title else (
         "Samples Channel :: SDT Metrics <br>" +
-        f"<sup>(Channel: {channel_type}  Max Difference: {threshold} samples</sup>"
+        f"<sup>(Channel: {channel_type}  Max Difference: {threshold} samples)</sup>"
     )
     fig = h.distributions_figure(sub_frame, gt1=gt1, gt2=gt2, title=title, only_box=only_box)
     return fig
