@@ -40,7 +40,12 @@ events_by_labelers = {
 }
 
 feature_comparison_figure = peyes.visualize.feature_comparison(
-    [peyes.constants.DURATION_STR, peyes.constants.AZIMUTH_STR],
+    [
+        peyes.constants.DURATION_STR,
+        peyes.constants.AMPLITUDE_STR,
+        peyes.constants.PEAK_VELOCITY_STR,
+        peyes.constants.MEDIAN_VELOCITY_STR
+     ],
     *list(events_by_labelers.values()),
     labels=events_by_labelers.keys(),
 )
