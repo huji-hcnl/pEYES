@@ -32,7 +32,6 @@ def save_figure(
         fig.write_html(os.path.join(output_dir, f"{fig_name}.html"))
     if as_png:
         fig.write_image(os.path.join(output_dir, f"{fig_name}.png"))
-    return None
 
 
 def create_image(
