@@ -15,6 +15,8 @@ pio.renderers.default = "browser"
 ######################
 
 DATASET_NAME = "lund2013"
+OUTPUT_DIR = os.path.join(u.OUTPUT_DIR, "default_values")
+
 LABEL = 1
 STIMULUS_TYPE = peyes.constants.IMAGE_STR
 GT1, GT2 = "RA", "MN"
@@ -27,7 +29,7 @@ MULTI_COMP = "fdr_bh"
 import analysis.statistics.sample_metrics as sm
 
 sample_global_metrics = sm.load_global_metrics(
-    DATASET_NAME, os.path.join(u.OUTPUT_DIR, "default_values"), stimulus_type=STIMULUS_TYPE, metric=None
+    DATASET_NAME, OUTPUT_DIR, stimulus_type=STIMULUS_TYPE, metric=None
 )
 sm_global_statistics, sm_global_pvalues, sm_global_dunns, sm_global_Ns = sm.kruskal_wallis_dunns(
     sample_global_metrics, [GT1, GT2], multi_comp=MULTI_COMP
@@ -38,7 +40,7 @@ sm_global_metrics_fig.show()
 ###
 
 sample_sdt_metrics = sm.load_sdt(
-    DATASET_NAME, os.path.join(u.OUTPUT_DIR, "default_values"), label=LABEL, stimulus_type=STIMULUS_TYPE, metric=None
+    DATASET_NAME, OUTPUT_DIR, label=LABEL, stimulus_type=STIMULUS_TYPE, metric=None
 )
 sm_sdt_statistics, sm_sdt_pvalues, sm_sdt_dunns, sm_sdt_Ns = sm.kruskal_wallis_dunns(
     sample_sdt_metrics, [GT1, GT2], multi_comp=MULTI_COMP
@@ -53,7 +55,7 @@ sample_sdt_metrics_fig.show()
 import analysis.statistics.channel_time_diffs as ctd
 
 time_diffs = ctd.load(
-    DATASET_NAME, os.path.join(u.OUTPUT_DIR, "default_values"), label=LABEL, stimulus_type=STIMULUS_TYPE
+    DATASET_NAME, OUTPUT_DIR, label=LABEL, stimulus_type=STIMULUS_TYPE
 )
 ctd_statistics, ctd_pvalues, ctd_dunns, ctd_Ns = ctd.kruskal_wallis_dunns(
     time_diffs, [GT1, GT2], multi_comp=MULTI_COMP
@@ -74,7 +76,7 @@ CHANNEL_TYPE = "onset"
 
 sdt_onset_metrics = csdt.load(
     dataset_name=DATASET_NAME,
-    output_dir=os.path.join(u.OUTPUT_DIR, "default_values"),
+    output_dir=OUTPUT_DIR,
     label=LABEL,
     stimulus_type=STIMULUS_TYPE,
     channel_type=None
@@ -95,7 +97,7 @@ CHANNEL_TYPE = "offset"
 
 sdt_offset_metrics = csdt.load(
     dataset_name=DATASET_NAME,
-    output_dir=os.path.join(u.OUTPUT_DIR, "default_values"),
+    output_dir=OUTPUT_DIR,
     label=LABEL,
     stimulus_type=STIMULUS_TYPE,
     channel_type=None
@@ -123,7 +125,7 @@ ALPHA = 0.05
 
 matched_features = mf.load(
     dataset_name=DATASET_NAME,
-    output_dir=os.path.join(u.OUTPUT_DIR, "default_values"),
+    output_dir=OUTPUT_DIR,
     label=None,
     stimulus_type=STIMULUS_TYPE,
     matching_schemes=None,
@@ -147,7 +149,7 @@ mf_fig.show()
 import analysis.statistics.matched_sdt as msdt
 
 matched_sdt = msdt.load(
-    dataset_name=DATASET_NAME, output_dir=os.path.join(u.OUTPUT_DIR, "default_values"),
+    dataset_name=DATASET_NAME, output_dir=OUTPUT_DIR,
     label=LABEL, stimulus_type=STIMULUS_TYPE, matching_schemes=None, metrics=None
 )
 
