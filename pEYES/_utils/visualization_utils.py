@@ -113,7 +113,9 @@ def to_rgb(color: ColorType) -> Tuple[int, int, int]:
     raise ValueError("Invalid color format. Must be hex string or RGB tuple.")
 
 
-def make_empty_figure(subtitles: Sequence[str], sharex=False, sharey=False) -> Tuple[go.Figure, int, int]:
+def make_empty_figure(subtitles: Union[str, Sequence[str]], sharex=False, sharey=False) -> Tuple[go.Figure, int, int]:
+    if isinstance(subtitles, str):
+        subtitles = [subtitles]
     ncols = 1 if len(subtitles) <= 3 else 2 if len(subtitles) <= 8 else 3
     nrows = len(subtitles) if len(subtitles) <= 3 else sum(divmod(len(subtitles), ncols))
     fig = make_subplots(rows=nrows, cols=ncols, shared_xaxes=sharex, shared_yaxes=sharey, subplot_titles=subtitles)
