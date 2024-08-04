@@ -335,7 +335,7 @@ class IVVTDetector(IVTDetector):
         "In Proceedings of the Symposium on Eye Tracking Research & Applications (pp. 71-78)",
     ]
 
-    _DEFAULT_SMOOTH_PURSUIT_VELOCITY_THRESHOLD = 5  # deg/s
+    _DEFAULT_SMOOTH_PURSUIT_VELOCITY_THRESHOLD = 20  # deg/s
     _SMOOTH_PURSUIT_VELOCITY_THRESHOLD_STR = "smooth_pursuit_velocity_threshold"
 
     def __init__(
