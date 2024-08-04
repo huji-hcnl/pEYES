@@ -25,11 +25,17 @@ _DEFAULT_COLORMAP = {
     "rz": _DISCRETE_COLORMAP[0],
     "mn": _DISCRETE_COLORMAP[1],
     "ivt": _DISCRETE_COLORMAP[2],
+    "ivtdetector": _DISCRETE_COLORMAP[2],
     "ivvt": _DISCRETE_COLORMAP[3],
+    "ivvtdetector": _DISCRETE_COLORMAP[3],
     "idt": _DISCRETE_COLORMAP[4],
+    "idtdetector": _DISCRETE_COLORMAP[4],
     "engbert": _DISCRETE_COLORMAP[5],
+    "engbertdetector": _DISCRETE_COLORMAP[5],
     "nh": _DISCRETE_COLORMAP[6],
+    "nhdetector": _DISCRETE_COLORMAP[6],
     "remodnav": _DISCRETE_COLORMAP[7],
+    "remodnavdetector": _DISCRETE_COLORMAP[7],
 }
 
 
