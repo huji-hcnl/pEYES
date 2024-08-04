@@ -4,6 +4,7 @@ from typing import Union, Tuple, Dict, Sequence
 import cv2
 import numpy as np
 import plotly.graph_objects as go
+import plotly.express as px
 from plotly.subplots import make_subplots
 
 from pEYES._DataModels.EventLabelEnum import EventLabelEnum as _EventLabelEnum
@@ -12,6 +13,7 @@ from pEYES._DataModels.UnparsedEventLabel import UnparsedEventLabelType as _Unpa
 ColorType = Union[str, Tuple[int, int, int]]
 LabelColormapType = Dict[_UnparsedEventLabelType, ColorType]
 
+_DISCRETE_COLORMAP = px.colors.qualitative.Dark24
 _DEFAULT_COLORMAP = {
     _EventLabelEnum.UNDEFINED: "#dddddd",
     _EventLabelEnum.FIXATION: "#1f78b4",
@@ -19,6 +21,15 @@ _DEFAULT_COLORMAP = {
     _EventLabelEnum.PSO: "#b2df8a",
     _EventLabelEnum.SMOOTH_PURSUIT: "#fb9a99",
     _EventLabelEnum.BLINK: "#222222",
+    "ra": _DISCRETE_COLORMAP[0],
+    "rz": _DISCRETE_COLORMAP[0],
+    "mn": _DISCRETE_COLORMAP[1],
+    "ivt": _DISCRETE_COLORMAP[2],
+    "ivvt": _DISCRETE_COLORMAP[3],
+    "idt": _DISCRETE_COLORMAP[4],
+    "engbert": _DISCRETE_COLORMAP[5],
+    "nh": _DISCRETE_COLORMAP[6],
+    "remodnav": _DISCRETE_COLORMAP[7],
 }
 
 
