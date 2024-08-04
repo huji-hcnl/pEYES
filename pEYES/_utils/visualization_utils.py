@@ -11,7 +11,7 @@ from pEYES._DataModels.UnparsedEventLabel import UnparsedEventLabelType as _Unpa
 ColorType = Union[str, Tuple[int, int, int]]
 LabelColormapType = Dict[_UnparsedEventLabelType, ColorType]
 
-_DEFAULT_LABEL_COLORMAP = {
+_DEFAULT_COLORMAP = {
     _EventLabelEnum.UNDEFINED: "#dddddd",
     _EventLabelEnum.FIXATION: "#1f78b4",
     _EventLabelEnum.SACCADE: "#33a02c",
@@ -74,7 +74,7 @@ def get_label_colormap(
     If a custom mapping is provided, it will override the default colors for the labels that are present, and use the
     default colors for the rest.
     """
-    default_colors_rgb = {k: to_rgb(v) for k, v in _DEFAULT_LABEL_COLORMAP.items()}
+    default_colors_rgb = {k: to_rgb(v) for k, v in _DEFAULT_COLORMAP.items()}
     if label_colors is None:
         return default_colors_rgb
     event_colors_rgb = {k: to_rgb(v) if isinstance(v, str) else v for k, v in label_colors.items()}
