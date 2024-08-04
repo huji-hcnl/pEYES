@@ -1155,12 +1155,12 @@ class REMoDNaVDetector(BaseDetector):
     :param missing_value: the value that indicates missing data in the gaze data.
     :param min_event_duration: the minimum duration of a gaze event, in milliseconds.
     :param pad_blinks_ms: the duration to pad around detected blinks, in milliseconds.
-    :param min_saccade_duration: the minimum duration of a saccade (ms), default is 10 ms
+    :param min_saccade_duration: the minimum duration of a saccade (ms), default is 4 ms
     :param saccade_initial_velocity_threshold: the initial velocity threshold for saccade detection (deg/s), default is 300
     :param saccade_context_window_duration: the duration of the context window for saccade detection (ms), default is 1000
     :param saccade_initial_max_freq: the initial maximum frequency for saccade detection (Hz), default is 2.0
     :param saccade_onset_threshold_noise_factor: the noise factor for saccade onset threshold, default is 5.0
-    :param min_smooth_pursuit_duration: the minimum duration of a smooth pursuit (ms), default is 40 ms
+    :param min_smooth_pursuit_duration: the minimum duration of a smooth pursuit (ms), default is 4 ms
     :param smooth_pursuits_lowpass_cutoff_freq: the lowpass cutoff frequency for smooth pursuit detection (Hz), default is 4.0
     :param smooth_pursuit_drift_velocity_threshold: the drift velocity threshold for smooth pursuit detection (deg/s), default is 2.0
     :param min_fixation_duration: the minimum duration of a fixation (ms), default is 50 ms
