@@ -1230,7 +1230,7 @@ class REMoDNaVDetector(BaseDetector):
             smooth_pursuits_lowpass_cutoff_freq: float = _DEFAULT_SMOOTH_PURSUIT_LOWPASS_CUTOFF_FREQ,
             smooth_pursuit_drift_velocity_threshold: float = _DEFAULT_SMOOTH_PURSUIT_DRIFT_VELOCITY_THRESHOLD,
             min_fixation_duration: float = _DEFAULT_MIN_FIXATION_DURATION_MS,
-            min_blink_duration: float = cnfg.EVENT_MAPPING[EventLabelEnum.BLINK][cnst.MIN_DURATION_STR],
+            min_blink_duration: float = _DEFAULT_MIN_BLINK_DURATION_MS,
             max_pso_duration: float = _DEFAULT_MAX_PSO_DURATION_MS,
             savgol_filter_polyorder: int = _DEFAULT_SAVGOL_POLYORDER,
             savgol_filter_duration_ms: float = _DEFAULT_SAVGOL_DURATION_MS,
