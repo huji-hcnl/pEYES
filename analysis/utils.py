@@ -37,9 +37,9 @@ DATASET_ANNOTATORS = {
 _default_detector_params = dict(missing_value=np.nan, min_event_duration=4, pad_blinks_time=0)
 LABELERS_CONFIG = {
     # detector name -> (detector object, order, color)
-    "RA": (None, 0.1, DEFAULT_DISCRETE_COLORMAP[0]),
-    "RZ": (None, 0.1, DEFAULT_DISCRETE_COLORMAP[0]),
-    "MN": (None, 0.2, DEFAULT_DISCRETE_COLORMAP[1]),
+    "ra": (None, 0.1, DEFAULT_DISCRETE_COLORMAP[0]),
+    "rz": (None, 0.1, DEFAULT_DISCRETE_COLORMAP[0]),
+    "mn": (None, 0.2, DEFAULT_DISCRETE_COLORMAP[1]),
     "ivt": (peyes.create_detector("ivt", **_default_detector_params), 2, DEFAULT_DISCRETE_COLORMAP[2]),
     "ivvt": (peyes.create_detector("ivvt", **_default_detector_params), 3, DEFAULT_DISCRETE_COLORMAP[3]),
     "idt": (peyes.create_detector("idt", **_default_detector_params), 4, DEFAULT_DISCRETE_COLORMAP[4]),
