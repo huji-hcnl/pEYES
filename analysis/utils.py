@@ -5,8 +5,8 @@ import numpy as np
 import pandas as pd
 import plotly.express as px
 
-import pEYES as peyes
-from pEYES._DataModels.UnparsedEventLabel import UnparsedEventLabelType, UnparsedEventLabelSequenceType
+import peyes
+from peyes._DataModels.UnparsedEventLabel import UnparsedEventLabelType, UnparsedEventLabelSequenceType
 
 ###########################
 

@@ -1,7 +1,7 @@
 import unittest
 
-import pEYES._utils.constants as cnst
-from pEYES._utils.visualization_utils import *
+import peyes._utils.constants as cnst
+from peyes._utils.visualization_utils import *
 
 
 class TestVisualizationUtils(unittest.TestCase):

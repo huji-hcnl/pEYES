@@ -3,7 +3,7 @@ from typing import List
 
 import pandas as pd
 
-import pEYES as peyes
+import peyes
 
 import analysis.utils as u
 

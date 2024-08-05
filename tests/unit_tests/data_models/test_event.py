@@ -2,10 +2,10 @@ import unittest
 
 import numpy as np
 
-import pEYES._utils.constants as cnst
-from pEYES._DataModels.Event import FixationEvent, SaccadeEvent
-from pEYES._DataModels.EventLabelEnum import EventLabelEnum
-from pEYES._utils.pixel_utils import pixels_to_visual_angle
+import peyes._utils.constants as cnst
+from peyes._DataModels.Event import FixationEvent, SaccadeEvent
+from peyes._DataModels.EventLabelEnum import EventLabelEnum
+from peyes._utils.pixel_utils import pixels_to_visual_angle
 
 
 class TestEvent(unittest.TestCase):

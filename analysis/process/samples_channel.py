@@ -5,9 +5,9 @@ import numpy as np
 import pandas as pd
 from tqdm import tqdm
 
-import pEYES as peyes
-from pEYES._DataModels.UnparsedEventLabel import UnparsedEventLabelType, UnparsedEventLabelSequenceType
-from pEYES._DataModels.EventLabelEnum import EventLabelEnum
+import peyes
+from peyes._DataModels.UnparsedEventLabel import UnparsedEventLabelType, UnparsedEventLabelSequenceType
+from peyes._DataModels.EventLabelEnum import EventLabelEnum
 
 import analysis.utils as u
 import analysis.process._helpers as h

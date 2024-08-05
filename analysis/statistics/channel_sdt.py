@@ -4,12 +4,12 @@ import numpy as np
 import pandas as pd
 import plotly.graph_objects as go
 
-import pEYES as peyes
+import peyes
 
 import analysis.utils as u
 import analysis.statistics._helpers as h
-from pEYES._utils.visualization_utils import make_empty_figure
-from pEYES._DataModels.UnparsedEventLabel import UnparsedEventLabelType, UnparsedEventLabelSequenceType
+from peyes._utils.visualization_utils import make_empty_figure
+from peyes._DataModels.UnparsedEventLabel import UnparsedEventLabelType, UnparsedEventLabelSequenceType
 
 ###################
 
