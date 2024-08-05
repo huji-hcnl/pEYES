@@ -1,5 +1,5 @@
 # pEYES
-## A python package for the eye tracking scientist
+## A Python Package for Eye-Tracking Researchers
 This package is intended for scientific use when processing and analyzing eye-tracking data.  
 It provides easy-to-use functions for:
 - Downloading & parsing publicly available annotated eye-tracking datasets.
