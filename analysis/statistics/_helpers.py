@@ -7,11 +7,11 @@ import scikit_posthocs as sp
 import plotly.graph_objects as go
 from plotly.subplots import make_subplots
 
-import pEYES as peyes
+import peyes
 
 import analysis.utils as u
-from pEYES._utils.visualization_utils import make_empty_figure
-from pEYES._DataModels.UnparsedEventLabel import UnparsedEventLabelType, UnparsedEventLabelSequenceType
+from peyes._utils.visualization_utils import make_empty_figure
+from peyes._DataModels.UnparsedEventLabel import UnparsedEventLabelType, UnparsedEventLabelSequenceType
 
 
 def extract_subframe(

@@ -4,8 +4,8 @@ import numpy as np
 import Levenshtein
 from scipy.stats import norm
 
-from pEYES._utils.metric_utils import transition_matrix, dprime_and_criterion, _dprime_rates
-from pEYES._utils.metric_utils import complement_normalized_levenshtein_distance as comp_nld
+from peyes._utils.metric_utils import transition_matrix, dprime_and_criterion, _dprime_rates
+from peyes._utils.metric_utils import complement_normalized_levenshtein_distance as comp_nld
 
 
 class TestMetricUtils(unittest.TestCase):

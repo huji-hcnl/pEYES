@@ -5,9 +5,9 @@ from typing import List, Union, Dict, Optional
 import numpy as np
 import pandas as pd
 
-import pEYES as peyes
-from pEYES._DataModels.Detector import BaseDetector
-from pEYES._DataModels.UnparsedEventLabel import UnparsedEventLabelType, UnparsedEventLabelSequenceType
+import peyes
+from peyes._DataModels.Detector import BaseDetector
+from peyes._DataModels.UnparsedEventLabel import UnparsedEventLabelType, UnparsedEventLabelSequenceType
 
 import analysis.utils as u
 import analysis.process.preprocess as preprocess

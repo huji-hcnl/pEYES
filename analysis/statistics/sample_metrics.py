@@ -3,8 +3,8 @@ from typing import List, Optional, Union, Tuple, Sequence
 import pandas as pd
 import plotly.graph_objects as go
 
-import pEYES as peyes
-from pEYES._DataModels.UnparsedEventLabel import UnparsedEventLabelType, UnparsedEventLabelSequenceType
+import peyes
+from peyes._DataModels.UnparsedEventLabel import UnparsedEventLabelType, UnparsedEventLabelSequenceType
 
 import analysis.utils as u
 import analysis.statistics._helpers as h

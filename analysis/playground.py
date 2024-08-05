@@ -8,7 +8,7 @@ import plotly.graph_objects as go
 from plotly.subplots import make_subplots
 import plotly.io as pio
 
-import pEYES as peyes
+import peyes
 import analysis.utils as u
 
 pio.renderers.default = "browser"
