@@ -8,9 +8,10 @@ import plotly.graph_objects as go
 from plotly.subplots import make_subplots
 
 import pEYES as peyes
-from pEYES._DataModels.UnparsedEventLabel import UnparsedEventLabelType, UnparsedEventLabelSequenceType
 
 import analysis.utils as u
+from pEYES._utils.visualization_utils import make_empty_figure
+from pEYES._DataModels.UnparsedEventLabel import UnparsedEventLabelType, UnparsedEventLabelSequenceType
 
 
 def extract_subframe(
@@ -56,12 +57,9 @@ def load_data(
         raise FileNotFoundError(f"Couldn't find `{fullpath}`. Please preprocess the dataset first.")
     if iteration is not None:
         data = data.xs(iteration, level=peyes.constants.ITERATION_STR, axis=1, drop_level=True)
-    if isinstance(stimulus_type, str):
-        stimulus_type = [stimulus_type]
     if stimulus_type:
-        stimulus_type = [stmtp.lower().strip() for stmtp in stimulus_type if isinstance(stmtp, str)]
-        trial_ids = _trial_ids_by_condition(dataset_name, key=peyes.constants.STIMULUS_TYPE_STR, values=stimulus_type)
-        is_trial_ids = data.columns.get_level_values(peyes.constants.TRIAL_ID_STR).isin(trial_ids)
+        stim_trial_ids = u.get_trials_for_stimulus_type(dataset_name, stimulus_type)
+        is_trial_ids = data.columns.get_level_values(peyes.constants.TRIAL_ID_STR).isin(stim_trial_ids)
         data = data.loc[:, is_trial_ids]
     if sub_index:
         data = extract_subframe(data, level=0, value=sub_index, axis=0, drop_single_values=False)
@@ -106,7 +104,7 @@ def kruskal_wallis_dunns(
                 continue
             gt_df = gt_series.unstack().drop(columns=gt_cols, errors='ignore')
             detectors = sorted(
-                gt_df.columns, key=lambda det: u.DEFAULT_DETECTORS_CONFIG[det.removesuffix("Detector").lower()][1]
+                gt_df.columns, key=lambda det: u.LABELERS_CONFIG[det.removesuffix("Detector").lower()][1]
             )
             detector_values = {}
             for det in detectors:
@@ -167,18 +165,21 @@ def distributions_figure(
         data.index.unique(),
         key=lambda met: u.METRICS_CONFIG[met][1] if met in u.METRICS_CONFIG else ord(met[0])
     )
-    fig, nrows, ncols = _make_empty_figure(indices, sharex=False, sharey=False)
+    fig, nrows, ncols = make_empty_figure(
+        subtitles=list(map(lambda idx: u.METRICS_CONFIG[idx][0] if idx in u.METRICS_CONFIG else idx, indices)),
+        sharex=False, sharey=False,
+    )
     for i, idx in enumerate(indices):
         r, c = (i, 0) if ncols == 1 else divmod(i, ncols)
         for j, gt_col in enumerate(gt_cols):
             gt_series = data.xs(gt_col, level=u.GT_STR, axis=1).loc[idx]
             gt_df = gt_series.unstack().drop(columns=gt_cols, errors='ignore')
             detectors = sorted(
-                gt_df.columns, key=lambda det: u.DEFAULT_DETECTORS_CONFIG[det.removesuffix("Detector").lower()][1]
+                gt_df.columns, key=lambda det: u.LABELERS_CONFIG[det.removesuffix("Detector").lower()][1]
             )
             for k, det in enumerate(detectors):
                 det_name = det.removesuffix("Detector")
-                det_color = u.DEFAULT_DETECTORS_CONFIG[det_name.lower()][2]
+                det_color = u.LABELERS_CONFIG[det_name.lower()][2]
                 if len(gt_cols) == 1:
                     violin_side = None
                     opacity = 0.75
@@ -216,23 +217,3 @@ def distributions_figure(
         boxgap=0,
     )
     return fig
-
-
-def _trial_ids_by_condition(dataset_name: str, key: str, values: Union[Any, List[Any]]) -> List[int]:
-    dataset = u.load_dataset(dataset_name, verbose=False)
-    if not isinstance(values, list):
-        values = [values]
-    all_trial_ids = dataset[peyes.constants.TRIAL_ID_STR]
-    is_condition = dataset[key].isin(values)
-    return all_trial_ids[is_condition].unique().tolist()
-
-
-def _make_empty_figure(metrics: Sequence[str], sharex=False, sharey=False) -> Tuple[go.Figure, int, int]:
-    ncols = 1 if len(metrics) <= 3 else 2 if len(metrics) <= 8 else 3
-    nrows = len(metrics) if len(metrics) <= 3 else sum(divmod(len(metrics), ncols))
-    fig = make_subplots(
-        rows=nrows, cols=ncols,
-        shared_xaxes=sharex, shared_yaxes=sharey,
-        subplot_titles=list(map(lambda met: u.METRICS_CONFIG[met][0] if met in u.METRICS_CONFIG else met, metrics)),
-    )
-    return fig, nrows, ncols

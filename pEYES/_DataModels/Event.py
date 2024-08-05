@@ -186,11 +186,13 @@ class BaseEvent(ABC):
     @classmethod
     @final
     def get_min_duration(cls) -> float:
+        """  Returns the minimum duration for this event type (in milliseconds)  """
         return cnfg.EVENT_MAPPING[cls._LABEL][cnst.MIN_DURATION_STR]
 
     @classmethod
     @final
     def set_min_duration(cls, min_duration: float):
+        """  Sets the minimum duration for this event type (in milliseconds)  """
         event_type = cls._LABEL.name.capitalize()
         if min_duration < 0:
             raise ValueError(f"min_duration for {event_type} must be a positive number")
@@ -202,11 +204,13 @@ class BaseEvent(ABC):
     @classmethod
     @final
     def get_max_duration(cls) -> float:
+        """  Returns the maximum duration for this event type (in milliseconds)  """
         return cnfg.EVENT_MAPPING[cls._LABEL][cnst.MAX_DURATION_STR]
 
     @classmethod
     @final
     def set_max_duration(cls, max_duration: float):
+        """  Sets the maximum duration for this event type (in milliseconds)  """
         event_type = cls._LABEL.name.capitalize()
         if max_duration < 0:
             raise ValueError(f"max_duration for {event_type} must be a positive number")

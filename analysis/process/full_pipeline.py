@@ -26,7 +26,7 @@ def run(
         matching_schemes: Dict[str, Dict[str, Union[str, int, float]]] = preprocess.DEFAULT_MATCHING_SCHEMES,
         allow_xmatch: bool = False,
         pos_labels: Optional[Union[UnparsedEventLabelType, UnparsedEventLabelSequenceType]] = None,
-        sample_metrics_average: str = "weighted",
+        sample_sdt_average: str = "weighted",
         sample_dprime_correction: str = "loglinear",
         channel_dprime_correction: str = "loglinear",
         verbose: bool = True
@@ -38,7 +38,7 @@ def run(
     os.makedirs(output_dir, exist_ok=True)
 
     ## default detectors & annotators ##
-    detectors = detectors or [v[0] for v in u.DEFAULT_DETECTORS_CONFIG.values()]
+    detectors = detectors or [v[0] for v in u.LABELERS_CONFIG.values()]
     annotators = annotators or u.DATASET_ANNOTATORS[dataset_name]
 
     ## labels, metadata, events, matches ##
@@ -64,18 +64,35 @@ def run(
     ## Sample metrics ##
     sample_metrics_dir = os.path.join(output_dir, f"{peyes.constants.SAMPLE_STR}_{peyes.constants.METRICS_STR}")
     os.makedirs(sample_metrics_dir, exist_ok=True)
-    sample_metrics_fullpath = os.path.join(sample_metrics_dir, u.get_filename_for_labels(pos_labels, extension="pkl"))
-    try:
-        sample_mets = pd.read_pickle(sample_metrics_fullpath)
-    except FileNotFoundError:
-        sample_mets = sample_metrics.calculate_sample_metrics(
-            labels,
-            annotators,
-            pos_labels=pos_labels,
-            average=sample_metrics_average,
-            correction=sample_dprime_correction,
+
+    # Sample SDT metrics
+    sdt_sample_metrics_fullpath = os.path.join(
+        sample_metrics_dir, u.get_filename_for_labels(
+            pos_labels, suffix=f"{u.SDT_STR}_{peyes.constants.METRICS_STR}", extension="pkl"
         )
-        sample_mets.to_pickle(sample_metrics_fullpath)
+    )
+    try:
+        sdt_sample_metrics = pd.read_pickle(sdt_sample_metrics_fullpath)
+    except FileNotFoundError:
+        sdt_sample_metrics = sample_metrics.calculate_sdt_sample_metrics(
+            labels, annotators, pos_labels=pos_labels, average=sample_sdt_average, correction=sample_dprime_correction
+        )
+        sdt_sample_metrics.to_pickle(sdt_sample_metrics_fullpath)
+
+    # Sample Global metrics - only when pos_labels is None
+    if pos_labels is None or (isinstance(pos_labels, list) and len(pos_labels) == 0):
+        global_sample_metrics_fullpath = os.path.join(
+            sample_metrics_dir, u.get_filename_for_labels(
+                pos_labels, suffix=f"{u.GLOBAL_STR}_{peyes.constants.METRICS_STR}", extension="pkl"
+            )
+        )
+        try:
+            global_sample_metrics = pd.read_pickle(global_sample_metrics_fullpath)
+        except FileNotFoundError:
+            global_sample_metrics = sample_metrics.calculate_global_sample_metrics(labels, annotators)
+            global_sample_metrics.to_pickle(global_sample_metrics_fullpath)
+    else:
+        global_sample_metrics = None
 
     ## Sample Channel metrics ##
     channel_metrics_dir = os.path.join(output_dir, peyes.constants.SAMPLES_CHANNEL_STR)
@@ -128,7 +145,8 @@ def run(
         metadata,
         events,
         matches,
-        sample_mets,
+        sdt_sample_metrics,
+        global_sample_metrics,
         time_diffs,
         channel_sdt_metrics,
         matched_features,

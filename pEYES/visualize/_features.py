@@ -1,12 +1,75 @@
+import warnings
+from typing import Union, Sequence
+
 import pandas as pd
 import plotly.graph_objects as go
 import plotly.express as px
 
 import pEYES._utils.constants as cnst
+import pEYES._utils.visualization_utils as vis_utils
 from pEYES._DataModels.Event import EventSequenceType
 from pEYES._DataModels.EventLabelEnum import EventLabelEnum
 
 from pEYES import summarize_events
+
+
+def feature_comparison(
+        features: Union[str, Sequence[str]],
+        *event_sequences: EventSequenceType,
+        **kwargs
+) -> go.Figure:
+    """
+    Creates a Ridge Plot comparing the distribution of features across multiple event sequences.
+    Each feature is shown in a separate subplot.
+
+    :param features: name(s) of the feature(s) to compare.
+    :param event_sequences: array-like of Event objects
+
+    :keyword include_outliers: bool; whether to include outliers in the plot (default is False)
+    :keyword labels: array-like of str; labels for each event sequence (default is 1, 2, ...)
+    :keyword colors: dict; color map for each label (default is the colormap from `utils.visualization_utils.py`)
+    :keyword opacity: float; opacity of the violins (default is 0.75)
+    :keyword line_width: float; width of the violin lines (default is 2)
+    :keyword show_box: bool; whether to show the box plot (default is True)
+    :keyword title: str; title for the plot (default is "Feature Comparison")
+
+    :return: the plotly figure
+    """
+    include_outliers = kwargs.get("include_outliers", False)
+    labels = kwargs.get("labels", list(range(len(event_sequences))))
+    colors = vis_utils.get_label_colormap(kwargs.get("colors", None))
+    if isinstance(features, str):
+        features = [features]
+    fig, nrows, ncols = vis_utils.make_empty_figure(
+        list(map(lambda feat: feat.strip().replace("_", " ").title(), features)), sharex=False, sharey=True
+    )
+    with warnings.catch_warnings():
+        warnings.simplefilter("ignore")
+        for i, (ev_name, ev_seq) in enumerate(zip(labels, event_sequences)):
+            summary_df = summarize_events(ev_seq)
+            if not include_outliers:
+                summary_df = summary_df[~summary_df["is_outlier"]]
+            for j, feat in enumerate(features):
+                color = (
+                        colors.get(ev_name, None) or colors.get(ev_name.strip().lower(), None) or
+                        colors.get(ev_name.strip().upper(), None) or colors[i]
+                )
+                color = f"rgb{color}"
+                r, c = (j, 0) if ncols == 1 else divmod(j, ncols)
+                fig.add_trace(
+                    row=r+1, col=c+1, trace=go.Violin(
+                        x=summary_df[feat].dropna().values,
+                        name=ev_name, legendgroup=ev_name, scalegroup=feat,
+                        line_color=color, opacity=kwargs.get("opacity", 0.75), width=kwargs.get("line_width", 2),
+                        box_visible=kwargs.get("show_box", True), points=False,
+                        orientation='h', spanmode='hard', side='positive',
+                        showlegend=j == 0,
+                    )
+                )
+        fig.update_layout(
+            title=kwargs.get("title", "Feature Comparison"),
+        )
+    return fig
 
 
 def main_sequence(
@@ -39,13 +102,15 @@ def main_sequence(
         )
     else:
         raise KeyError(f"Invalid `y_feature` argument: {y_feature}. Must be `duration` or `peak_velocity`.")
-    fig, stat_results = feature_over_feature(events=saccades, x_feature="amplitude", x_feature_units="deg",
-                                             include_outliers=include_outliers, trendline="trace", marginal_x='box',
-                                             marginal_y='box', **params)
+    fig, stat_results = feature_relationship(
+        events=saccades, x_feature="amplitude", x_feature_units="deg",
+        include_outliers=include_outliers, trendline="trace", marginal_x='box',
+        marginal_y='box', **params
+    )
     return fig, stat_results
 
 
-def feature_over_feature(
+def feature_relationship(
         events: EventSequenceType, x_feature: str, y_feature: str, title: str = None, **kwargs
 ) -> (go.Figure, pd.DataFrame):
     """

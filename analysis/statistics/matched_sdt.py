@@ -5,10 +5,11 @@ import pandas as pd
 import plotly.graph_objects as go
 
 import pEYES as peyes
-from pEYES._DataModels.UnparsedEventLabel import UnparsedEventLabelType, UnparsedEventLabelSequenceType
 
 import analysis.utils as u
 import analysis.statistics._helpers as h
+from pEYES._utils.visualization_utils import make_empty_figure
+from pEYES._DataModels.UnparsedEventLabel import UnparsedEventLabelType, UnparsedEventLabelSequenceType
 
 ###################
 
@@ -106,13 +107,16 @@ def multi_threshold_figures(
             [m for m in gt_subframe.index.get_level_values(peyes.constants.METRIC_STR).unique()],
             key=lambda m: u.METRICS_CONFIG[m][1]
         )
-        fig, nrows, ncols = h._make_empty_figure(subframe_metrics, sharex=False, sharey=False)
+        fig, nrows, ncols = make_empty_figure(
+            subtitles=list(map(lambda met: u.METRICS_CONFIG[met][0] if met in u.METRICS_CONFIG else met, subframe_metrics)),
+            sharex=False, sharey=False,
+        )
         for i, met in enumerate(subframe_metrics):
             r, c = (i, 0) if ncols == 1 else divmod(i, ncols)
             met_frame = gt_subframe.xs(met, level=peyes.constants.METRIC_STR, axis=0, drop_level=True)
             detectors = sorted(
                 [d for d in met_frame.columns.get_level_values(u.PRED_STR).unique() if d not in gt_cols],
-                key=lambda d: u.DEFAULT_DETECTORS_CONFIG[d.removesuffix("Detector").lower()][1]
+                key=lambda d: u.LABELERS_CONFIG[d.removesuffix("Detector").lower()][1]
             )
             for j, det in enumerate(detectors):
                 met_det_frame = met_frame.xs(det, level=u.PRED_STR, axis=1, drop_level=True)
@@ -122,7 +126,7 @@ def multi_threshold_figures(
                 mean = met_det_frame.mean(axis=1)
                 sem = met_det_frame.std(axis=1) / np.sqrt(met_det_frame.count(axis=1))
                 det_name = det.strip().removesuffix("Detector")
-                det_color = u.DEFAULT_DETECTORS_CONFIG[det_name.lower()][2]
+                det_color = u.LABELERS_CONFIG[det_name.lower()][2]
                 fig.add_trace(
                     row=r + 1, col=c + 1, trace=go.Scatter(
                         x=thresholds, y=mean, error_y=dict(type="data", array=sem),

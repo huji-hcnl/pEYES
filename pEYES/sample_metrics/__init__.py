@@ -30,7 +30,7 @@ def complement_nld(ground_truth: EventLabelSequenceType, prediction: EventLabelS
 def precision(
         ground_truth: EventLabelSequenceType,
         prediction: EventLabelSequenceType,
-        pos_labels: Optional[Union[UnparsedEventLabelType, UnparsedEventLabelSequenceType]] = None,
+        pos_labels: Optional[Union[UnparsedEventLabelType, UnparsedEventLabelSequenceType]],
         average: str = "weighted",
 ) -> float:
     return calculate(ground_truth, prediction, "precision", pos_labels=pos_labels, average=average)
@@ -39,7 +39,7 @@ def precision(
 def recall(
         ground_truth: EventLabelSequenceType,
         prediction: EventLabelSequenceType,
-        pos_labels: Optional[Union[UnparsedEventLabelType, UnparsedEventLabelSequenceType]] = None,
+        pos_labels: Optional[Union[UnparsedEventLabelType, UnparsedEventLabelSequenceType]],
         average: str = "weighted",
 ) -> float:
     return calculate(ground_truth, prediction, "recall", pos_labels=pos_labels, average=average)
@@ -48,7 +48,7 @@ def recall(
 def f1_score(
         ground_truth: EventLabelSequenceType,
         prediction: EventLabelSequenceType,
-        pos_labels: Optional[Union[UnparsedEventLabelType, UnparsedEventLabelSequenceType]] = None,
+        pos_labels: Optional[Union[UnparsedEventLabelType, UnparsedEventLabelSequenceType]],
         average: str = "weighted",
 ) -> float:
     return calculate(ground_truth, prediction, "f1", pos_labels=pos_labels, average=average)

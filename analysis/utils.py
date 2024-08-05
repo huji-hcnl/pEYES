@@ -1,5 +1,5 @@
 import os
-from typing import Optional, Union, Sequence
+from typing import Optional, Union, Sequence, List
 
 import numpy as np
 import pandas as pd
@@ -16,6 +16,8 @@ DATASETS_DIR = os.path.join(CWD, peyes.constants.OUTPUT_STR, "datasets")
 
 ###########################
 
+GLOBAL_STR = "global"
+SDT_STR = "sdt"
 GT_STR, PRED_STR = "gt", "pred"
 MATCHING_SCHEME_STR = "matching_scheme"
 
@@ -33,14 +35,17 @@ DATASET_ANNOTATORS = {
 }
 
 _default_detector_params = dict(missing_value=np.nan, min_event_duration=4, pad_blinks_time=0)
-DEFAULT_DETECTORS_CONFIG = {
+LABELERS_CONFIG = {
     # detector name -> (detector object, order, color)
-    "ivt": (peyes.create_detector("ivt", **_default_detector_params), 0, DEFAULT_DISCRETE_COLORMAP[0]),
-    "ivvt": (peyes.create_detector("ivvt", **_default_detector_params), 1, DEFAULT_DISCRETE_COLORMAP[1]),
-    "idt": (peyes.create_detector("idt", **_default_detector_params), 2, DEFAULT_DISCRETE_COLORMAP[2]),
-    "engbert": (peyes.create_detector("engbert", **_default_detector_params), 3, DEFAULT_DISCRETE_COLORMAP[3]),
-    "nh": (peyes.create_detector("nh", **_default_detector_params), 4, DEFAULT_DISCRETE_COLORMAP[4]),
-    "remodnav": (peyes.create_detector("remodnav", **_default_detector_params), 5, DEFAULT_DISCRETE_COLORMAP[5]),
+    "ra": (None, 0.1, DEFAULT_DISCRETE_COLORMAP[0]),
+    "rz": (None, 0.1, DEFAULT_DISCRETE_COLORMAP[0]),
+    "mn": (None, 0.2, DEFAULT_DISCRETE_COLORMAP[1]),
+    "ivt": (peyes.create_detector("ivt", **_default_detector_params), 2, DEFAULT_DISCRETE_COLORMAP[2]),
+    "ivvt": (peyes.create_detector("ivvt", **_default_detector_params), 3, DEFAULT_DISCRETE_COLORMAP[3]),
+    "idt": (peyes.create_detector("idt", **_default_detector_params), 4, DEFAULT_DISCRETE_COLORMAP[4]),
+    "engbert": (peyes.create_detector("engbert", **_default_detector_params), 5, DEFAULT_DISCRETE_COLORMAP[5]),
+    "nh": (peyes.create_detector("nh", **_default_detector_params), 6, DEFAULT_DISCRETE_COLORMAP[6]),
+    "remodnav": (peyes.create_detector("remodnav", **_default_detector_params), 7, DEFAULT_DISCRETE_COLORMAP[7]),
 }
 
 METRICS_CONFIG = {
@@ -114,3 +119,18 @@ def get_filename_for_labels(
         return f"{prefix}{'_'.join([peyes.parse_label(l).name.lower() for l in labels])}{suffix}.{extension}"
     else:
         raise TypeError(f"Unknown pos_labels type: {type(labels)}")
+
+
+def get_trials_for_stimulus_type(
+        dataset_name: str,
+        stimulus_type: Union[str, List[str]],
+) -> List[int]:
+    if not stimulus_type:
+        raise ValueError("Stimulus type is not specified")
+    if isinstance(stimulus_type, str):
+        stimulus_type = [stimulus_type]
+    stimulus_type = list(set([stmtp.lower().strip() for stmtp in stimulus_type if isinstance(stmtp, str)]))
+    dataset = load_dataset(dataset_name, verbose=False)
+    is_stimulus_type = dataset[peyes.constants.STIMULUS_TYPE_STR].str.lower().isin(stimulus_type)
+    trials = dataset.loc[is_stimulus_type, peyes.constants.TRIAL_ID_STR].unique()
+    return trials

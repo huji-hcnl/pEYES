@@ -45,7 +45,7 @@ def run_default(
         metadata = pd.read_pickle(os.path.join(default_output_dir, f"{peyes.constants.METADATA_STR}.pkl"))
         events = pd.read_pickle(os.path.join(default_output_dir, f"{peyes.constants.EVENTS_STR}.pkl"))
     except FileNotFoundError:
-        default_detectors = [v[0] for v in u.DEFAULT_DETECTORS_CONFIG.values()]
+        default_detectors = [v[0] for v in u.LABELERS_CONFIG.values()]
         default_annotators = u.DATASET_ANNOTATORS[dataset_name]
         labels, metadata, events = detect_labels_and_events(
             dataset, default_detectors, default_annotators, verbose=verbose
