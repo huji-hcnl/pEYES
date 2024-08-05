@@ -7,18 +7,7 @@ authors = [
 ]
 description = "A package for eye tracking data analysis and visualization"
 readme = "README.md"
-dependencies = "requirements.txt"
-classifiers = [
-    "Programming Language :: Python :: 3",
-    "License :: OSI Approved :: MIT License",
-]
-
-[project.urls]
-"Homepage" = "https://github.com/huji-hcnl/pEYES"
-"Bug Tracker" = "https://github.com/huji-hcnl/pEYES/issues"
-
-[build-system]
-requires = [
+dependencies = [
     "numpy>=1.26.4",
     "pandas>=2.2.2",
     "scipy>=1.13.1",
@@ -34,4 +23,15 @@ requires = [
     "remodnav>=1.1.2",
     "liac-arff~=2.5.0",
 ]
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "License :: OSI Approved :: MIT License",
+]
+
+[project.urls]
+"Homepage" = "https://github.com/huji-hcnl/pEYES"
+"Bug Tracker" = "https://github.com/huji-hcnl/pEYES/issues"
+
+[build-system]
+requires = ["hatchling"]
 build-backend = "hatchling.build"
