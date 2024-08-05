@@ -38,7 +38,7 @@ def run(
     os.makedirs(output_dir, exist_ok=True)
 
     ## default detectors & annotators ##
-    detectors = detectors or [v[0] for v in u.LABELERS_CONFIG.values()]
+    detectors = detectors or [v[0] for v in u.LABELERS_CONFIG.values() if v[0] is not None]
     annotators = annotators or u.DATASET_ANNOTATORS[dataset_name]
 
     ## labels, metadata, events, matches ##
