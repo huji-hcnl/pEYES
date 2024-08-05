@@ -118,6 +118,7 @@ def kruskal_wallis_dunns(
                 sp.posthoc_dunn(a=list(detector_values.values()), p_adjust=multi_comp).values,
                 index=list(detector_values.keys()), columns=list(detector_values.keys())
             )
+            dunn.index.names = dunn.columns.names = [u.PRED_STR]
             statistics[(met, gt_col)] = statistic
             pvalues[(met, gt_col)] = pvalue
             dunns[(met, gt_col)] = dunn
@@ -125,10 +126,9 @@ def kruskal_wallis_dunns(
     # create outputs
     statistics = pd.Series(statistics).unstack()
     pvalues = pd.Series(pvalues).unstack()
-    statistics.index.names = pvalues.index.names = [peyes.constants.METRIC_STR]
-    statistics.columns.names = pvalues.columns.names = [u.GT_STR]
     dunns = pd.Series(dunns).unstack()
-    dunns.index.names = dunns.columns.names = [u.PRED_STR]
+    statistics.index.names = pvalues.index.names = dunns.index.names = [peyes.constants.METRIC_STR]
+    statistics.columns.names = pvalues.columns.names, dunns.columns.names = [u.GT_STR]
     Ns = pd.Series(Ns)
     Ns.index.names = [peyes.constants.METRIC_STR, u.GT_STR, u.PRED_STR]
     Ns = Ns.unstack([u.GT_STR, u.PRED_STR])
