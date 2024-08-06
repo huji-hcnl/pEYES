@@ -1,6 +1,6 @@
 [project]
 name = "peyes"
-version = "0.0.6"
+version = "0.0.6.2"
 authors = [
     {name="Human Cognitive Neuroscience Lab @ HUJI", email="hcnl@mail.huji.ac.il", website="https://www.hcnl.org/"},
     {name="Jonathan Nir", email="jonathan.nir@mail.huji.ac.il"},
@@ -8,20 +8,20 @@ authors = [
 description = "A package for eye tracking data analysis and visualization"
 readme = "README.md"
 dependencies = [
-    "numpy~=1.26.4",
-    "pandas~=2.2.2",
-    "scipy~=1.13.1",
-    "plotly~=5.22.0",
-    "opencv-python~=4.10.0.84",
-    "overrides~=7.7.0",
-    "requests~=2.32.3",
-    "scikit-learn~=1.5.0",
-    "statsmodels~=0.14.2",
-    "scikit_posthocs~=0.9.0",
-    "tqdm~=4.66.4",
-    "python-Levenshtein~=0.25.1",
-    "remodnav~=1.1.2",
-    "liac-arff~=2.5.0",
+    "numpy~=1.26",
+    "pandas~=2.2",
+    "scipy~=1.13",
+    "plotly~=5.22",
+    "opencv-python~=4.10",
+    "overrides~=7.7",
+    "requests~=2.32",
+    "scikit-learn~=1.5",
+    "statsmodels~=0.14",
+    "scikit_posthocs~=0.9",
+    "tqdm~=4.66",
+    "python-Levenshtein~=0.25",
+    "remodnav~=1.1",
+    "liac-arff~=2.5",
 ]
 classifiers = [
     "Programming Language :: Python :: 3",
