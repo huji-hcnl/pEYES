@@ -1,6 +1,6 @@
 [project]
 name = "peyes"
-version = "0.0.6.3"
+version = "0.0.7"
 authors = [
     {name="Human Cognitive Neuroscience Lab @ HUJI", email="hcnl@mail.huji.ac.il", website="https://www.hcnl.org/"},
     {name="Jonathan Nir", email="jonathan.nir@mail.huji.ac.il"},
@@ -21,7 +21,7 @@ dependencies = [
     "tqdm~=4.66",
     "python-Levenshtein~=0.25",
     "remodnav~=1.1",
-    "liac-arff~=2.0",
+    "liac-arff~=2.4",
 ]
 classifiers = [
     "Programming Language :: Python :: 3",
