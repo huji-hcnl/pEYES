@@ -8,13 +8,18 @@ It provides easy-to-use functions for:
 - Visualizing the results of the detection algorithms.
 
 ## Installation Instructions
-This package has been created and tested with python ```3.12```.  
-The steps to install this package are -  
+This package has been created and tested with python ```3.12```.
 
+To install this package as a user, use
 ```angular2html
-python -m venv env 
-source ./env/bin/activate (In linux, instructions on other OS will vary)
-pip install . (or pip install -e . for installing the editable version)
+pip install peyes
+```
+To install this package as a developer, clone the package from GitHub and run the following commands:
+```angular2html
+python -m venv env
+git pull
+pip install -e .
+git checkout -b dev
 ```
 
 ## Citation & License
