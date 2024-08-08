@@ -251,7 +251,6 @@ def __create_single_event_trace(
         show_legend: bool = False,
 ):
     name = __INLIERS_STR if is_inlier else __OUTLIERS_STR
-    violin_side = 'positive' if is_inlier else 'negative'
     opacity = 1 if is_inlier else outlier_opacity
     if metric == cnst.CENTER_PIXEL_STR:
         px = pd.DataFrame(data.to_list(), columns=[cnst.X, cnst.Y])  # data is a 2-tuple of x-y coordinates
@@ -271,9 +270,11 @@ def __create_single_event_trace(
     if metric in {
         cnst.DURATION_STR, cnst.AMPLITUDE_STR, cnst.PEAK_VELOCITY_STR, cnst.ELLIPSE_AREA_STR
     }:
+        violin_side = 'positive' if is_inlier else 'negative'
         return go.Violin(
-                x=data, spanmode='hard', side=violin_side.lower(), showlegend=show_legend,
-                name=name, legendgroup=name, scalegroup=name, fillcolor=color, opacity=opacity,
-                box_visible=True, meanline_visible=True, line_color='black',
-            )
+            x=data, side=violin_side, showlegend=show_legend,
+            name=name, legendgroup=name, scalegroup=metric, fillcolor=color, opacity=opacity,
+            box_visible=True, meanline_visible=True, line_color='black',
+            spanmode='hard', orientation='h', points=False,
+        )
     raise ValueError(f"Invalid metric: {metric}")
