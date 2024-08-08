@@ -31,6 +31,7 @@ DISTANCE_STR = "distance"
 DIFFERENCE_STR = "difference"
 THRESHOLD_STR = "threshold"
 FIELD_NAME_STR = f"field_{NAME_STR}"
+RUNTIME_STR = "runtime"
 
 #### Trial Field Names  ####
 SUBJECT_STR = "subject"

@@ -1,3 +1,4 @@
+import time
 from abc import ABC, abstractmethod
 from typing import final, Dict
 
@@ -67,6 +68,7 @@ class BaseDetector(ABC):
             viewer_distance_cm: float,
             pixel_size_cm: float,
     ) -> (EventLabelSequenceType, dict):
+        start_time = time.time()
         if not np.isfinite(viewer_distance_cm) or viewer_distance_cm <= 0:
             raise ValueError("Viewer distance must be a positive finite number")
         if not np.isfinite(pixel_size_cm) or pixel_size_cm <= 0:
@@ -88,6 +90,7 @@ class BaseDetector(ABC):
             cnst.SAMPLING_RATE_STR: self.sr,
             cnst.PIXEL_SIZE_STR: pixel_size_cm,
             cnst.VIEWER_DISTANCE_STR: viewer_distance_cm,
+            cnst.RUNTIME_STR: time.time() - start_time,
         })
         return labels, copy.deepcopy(self._metadata)
 
@@ -957,8 +960,9 @@ class NHDetector(BaseDetector):
                 ]
                 # drop samples at the edges of each chunk to avoid contamination from saccades:
                 chunks_below_pt = [ch[num_edge_sample_to_drop: -num_edge_sample_to_drop] for ch in chunks_below_pt]
-                # concatenate the chunks to get the final boolean array:
-                is_below_pt = np.concatenate(chunks_below_pt)
+                if len(chunks_below_pt) > 0:
+                    # concatenate the chunks to get the final boolean array:
+                    is_below_pt = np.concatenate(chunks_below_pt)
             mu = np.nanmean(v[is_below_pt])
             sigma = np.nanstd(v[is_below_pt])
             pt = mu + 6 * sigma
