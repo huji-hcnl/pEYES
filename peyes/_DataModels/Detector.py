@@ -957,8 +957,9 @@ class NHDetector(BaseDetector):
                 ]
                 # drop samples at the edges of each chunk to avoid contamination from saccades:
                 chunks_below_pt = [ch[num_edge_sample_to_drop: -num_edge_sample_to_drop] for ch in chunks_below_pt]
-                # concatenate the chunks to get the final boolean array:
-                is_below_pt = np.concatenate(chunks_below_pt)
+                if len(chunks_below_pt) > 0:
+                    # concatenate the chunks to get the final boolean array:
+                    is_below_pt = np.concatenate(chunks_below_pt)
             mu = np.nanmean(v[is_below_pt])
             sigma = np.nanstd(v[is_below_pt])
             pt = mu + 6 * sigma
