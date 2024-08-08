@@ -5,6 +5,7 @@ import pandas as pd
 import plotly.graph_objects as go
 import plotly.express as px
 
+import peyes
 import peyes._utils.constants as cnst
 import peyes._utils.visualization_utils as vis_utils
 from peyes._DataModels.Event import EventSequenceType
@@ -45,27 +46,36 @@ def feature_comparison(
     )
     with warnings.catch_warnings():
         warnings.simplefilter("ignore")
-        for i, (ev_name, ev_seq) in enumerate(zip(labels, event_sequences)):
+        for i, (seq_name, ev_seq) in enumerate(zip(labels, event_sequences)):
             summary_df = summarize_events(ev_seq)
             if not include_outliers:
                 summary_df = summary_df[~summary_df["is_outlier"]]
             for j, feat in enumerate(features):
                 color = (
-                        colors.get(ev_name, None) or colors.get(ev_name.strip().lower(), None) or
-                        colors.get(ev_name.strip().upper(), None) or colors[i]
+                        colors.get(seq_name, None) or colors.get(seq_name.strip().lower(), None) or
+                        colors.get(seq_name.strip().upper(), None) or colors[i]
                 )
                 color = f"rgb{color}"
                 r, c = (j, 0) if ncols == 1 else divmod(j, ncols)
-                fig.add_trace(
-                    row=r+1, col=c+1, trace=go.Violin(
-                        x=summary_df[feat].dropna().values,
-                        name=ev_name, legendgroup=ev_name, scalegroup=feat,
-                        line_color=color, opacity=kwargs.get("opacity", 0.75), width=kwargs.get("line_width", 2),
-                        box_visible=kwargs.get("show_box", True), points=False,
-                        orientation='h', spanmode='hard', side='positive',
-                        showlegend=j == 0,
+                if feat.lower().strip() == peyes.constants.COUNT_STR:
+                    num_events = summary_df.shape[0]
+                    fig.add_trace(
+                        row=r+1, col=c+1, trace=go.Bar(
+                            x=[num_events], y=[seq_name], orientation='h',
+                            marker=dict(color=color), showlegend=j == 0,
+                        )
                     )
-                )
+                else:
+                    fig.add_trace(
+                        row=r + 1, col=c + 1, trace=go.Violin(
+                            x=summary_df[feat].dropna().values,
+                            name=seq_name, legendgroup=seq_name, scalegroup=feat,
+                            line_color=color, opacity=kwargs.get("opacity", 0.75), width=kwargs.get("line_width", 2),
+                            box_visible=kwargs.get("show_box", True), points=False,
+                            orientation='h', spanmode='hard', side='positive',
+                            showlegend=j == 0,
+                        )
+                    )
         fig.update_layout(
             title=kwargs.get("title", "Feature Comparison"),
         )
