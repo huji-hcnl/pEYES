@@ -128,7 +128,7 @@ def kruskal_wallis_dunns(
     pvalues = pd.Series(pvalues).unstack()
     dunns = pd.Series(dunns).unstack()
     statistics.index.names = pvalues.index.names = dunns.index.names = [peyes.constants.METRIC_STR]
-    statistics.columns.names = pvalues.columns.names, dunns.columns.names = [u.GT_STR]
+    statistics.columns.names = pvalues.columns.names = dunns.columns.names = [u.GT_STR]
     Ns = pd.Series(Ns)
     Ns.index.names = [peyes.constants.METRIC_STR, u.GT_STR, u.PRED_STR]
     Ns = Ns.unstack([u.GT_STR, u.PRED_STR])
