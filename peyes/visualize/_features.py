@@ -5,6 +5,7 @@ import pandas as pd
 import plotly.graph_objects as go
 import plotly.express as px
 
+import peyes
 import peyes._utils.constants as cnst
 import peyes._utils.visualization_utils as vis_utils
 from peyes._DataModels.Event import EventSequenceType
@@ -56,16 +57,20 @@ def feature_comparison(
                 )
                 color = f"rgb{color}"
                 r, c = (j, 0) if ncols == 1 else divmod(j, ncols)
-                fig.add_trace(
-                    row=r+1, col=c+1, trace=go.Violin(
-                        x=summary_df[feat].dropna().values,
-                        name=seq_name, legendgroup=seq_name, scalegroup=feat,
-                        line_color=color, opacity=kwargs.get("opacity", 0.75), width=kwargs.get("line_width", 2),
-                        box_visible=kwargs.get("show_box", True), points=False,
-                        orientation='h', spanmode='hard', side='positive',
-                        showlegend=j == 0,
+                if feat.lower().strip() == peyes.constants.COUNT_STR:
+                    # TODO
+                    continue
+                else:
+                    fig.add_trace(
+                        row=r + 1, col=c + 1, trace=go.Violin(
+                            x=summary_df[feat].dropna().values,
+                            name=seq_name, legendgroup=seq_name, scalegroup=feat,
+                            line_color=color, opacity=kwargs.get("opacity", 0.75), width=kwargs.get("line_width", 2),
+                            box_visible=kwargs.get("show_box", True), points=False,
+                            orientation='h', spanmode='hard', side='positive',
+                            showlegend=j == 0,
+                        )
                     )
-                )
         fig.update_layout(
             title=kwargs.get("title", "Feature Comparison"),
         )
