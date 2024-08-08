@@ -58,8 +58,13 @@ def feature_comparison(
                 color = f"rgb{color}"
                 r, c = (j, 0) if ncols == 1 else divmod(j, ncols)
                 if feat.lower().strip() == peyes.constants.COUNT_STR:
-                    # TODO
-                    continue
+                    num_events = summary_df.shape[0]
+                    fig.add_trace(
+                        row=r+1, col=c+1, trace=go.Bar(
+                            x=[num_events], y=[seq_name], orientation='h',
+                            marker=dict(color=color), showlegend=j == 0,
+                        )
+                    )
                 else:
                     fig.add_trace(
                         row=r + 1, col=c + 1, trace=go.Violin(
