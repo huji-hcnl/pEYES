@@ -61,8 +61,8 @@ def feature_comparison(
                     num_events = summary_df.shape[0]
                     fig.add_trace(
                         row=r+1, col=c+1, trace=go.Bar(
-                            x=[num_events], y=[seq_name], orientation='h',
-                            marker=dict(color=color), showlegend=j == 0,
+                            x=[num_events], y=[seq_name], name=seq_name, legendgroup=seq_name,
+                            marker=dict(color=color), showlegend=j == 0, orientation='h',
                         )
                     )
                 else:
