@@ -32,8 +32,10 @@ def transition_matrix(
         normalize_rows: bool = False
 ) -> pd.DataFrame:
     """
-    Calculates the transition matrix from a sequence of event-labels.
-    If `normalize_rows` is True, the matrix will be normalized by the sum of each row, i.e. contains transition probabilities.
+    Calculates the transition matrix from a sequence of event-labels and returns a DataFrame where rows indicate the
+    origin label and columns indicate the destination label. If `normalize_rows` is True, the matrix will be normalized
+    by the sum of each row, i.e. contains transition **probabilities** and not **counts**.
+
     Returns a DataFrame where rows indicate the origin label and columns indicate the destination label.
     """
     seq = [_parse_label(l) for l in seq]
