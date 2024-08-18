@@ -1,5 +1,6 @@
 from typing import Union, Optional
 
+from peyes._utils import constants as cnst
 from peyes._DataModels.EventLabelEnum import EventLabelSequenceType
 from peyes._DataModels.UnparsedEventLabel import UnparsedEventLabelType, UnparsedEventLabelSequenceType
 
@@ -8,23 +9,23 @@ from peyes.sample_metrics._calculate_metrics import calculate
 
 
 def accuracy(ground_truth: EventLabelSequenceType, prediction: EventLabelSequenceType,) -> float:
-    return calculate(ground_truth, prediction, "accuracy")
+    return calculate(ground_truth, prediction, cnst.ACCURACY_STR)
 
 
 def balanced_accuracy(ground_truth: EventLabelSequenceType, prediction: EventLabelSequenceType,) -> float:
-    return calculate(ground_truth, prediction, "balanced_accuracy")
+    return calculate(ground_truth, prediction, cnst.BALANCED_ACCURACY_STR)
 
 
 def cohen_kappa(ground_truth: EventLabelSequenceType, prediction: EventLabelSequenceType,) -> float:
-    return calculate(ground_truth, prediction, "cohen's_kappa")
+    return calculate(ground_truth, prediction, cnst.COHENS_KAPPA_STR)
 
 
 def mcc(ground_truth: EventLabelSequenceType, prediction: EventLabelSequenceType,) -> float:
-    return calculate(ground_truth, prediction, "mcc")
+    return calculate(ground_truth, prediction, cnst.MCC_STR)
 
 
 def complement_nld(ground_truth: EventLabelSequenceType, prediction: EventLabelSequenceType,) -> float:
-    return calculate(ground_truth, prediction, "1_nld")
+    return calculate(ground_truth, prediction, cnst.COMPLEMENT_NLD_STR)
 
 
 def precision(
@@ -33,7 +34,7 @@ def precision(
         pos_labels: Optional[Union[UnparsedEventLabelType, UnparsedEventLabelSequenceType]],
         average: str = "weighted",
 ) -> float:
-    return calculate(ground_truth, prediction, "precision", pos_labels=pos_labels, average=average)
+    return calculate(ground_truth, prediction, cnst.PRECISION_STR, pos_labels=pos_labels, average=average)
 
 
 def recall(
@@ -42,7 +43,7 @@ def recall(
         pos_labels: Optional[Union[UnparsedEventLabelType, UnparsedEventLabelSequenceType]],
         average: str = "weighted",
 ) -> float:
-    return calculate(ground_truth, prediction, "recall", pos_labels=pos_labels, average=average)
+    return calculate(ground_truth, prediction, cnst.RECALL_STR, pos_labels=pos_labels, average=average)
 
 
 def f1_score(
@@ -51,7 +52,7 @@ def f1_score(
         pos_labels: Optional[Union[UnparsedEventLabelType, UnparsedEventLabelSequenceType]],
         average: str = "weighted",
 ) -> float:
-    return calculate(ground_truth, prediction, "f1", pos_labels=pos_labels, average=average)
+    return calculate(ground_truth, prediction, cnst.F1_STR, pos_labels=pos_labels, average=average)
 
 
 def d_prime(
@@ -60,7 +61,7 @@ def d_prime(
         pos_labels: Union[UnparsedEventLabelType, UnparsedEventLabelSequenceType],
         correction: str = "loglinear",
 ) -> float:
-    return calculate(ground_truth, prediction, "d_prime", pos_labels=pos_labels, correction=correction)
+    return calculate(ground_truth, prediction, cnst.D_PRIME_STR, pos_labels=pos_labels, correction=correction)
 
 
 def criterion(
@@ -69,4 +70,4 @@ def criterion(
         pos_labels: Union[UnparsedEventLabelType, UnparsedEventLabelSequenceType],
         correction: str = "loglinear",
 ) -> float:
-    return calculate(ground_truth, prediction, "criterion", pos_labels=pos_labels, correction=correction)
+    return calculate(ground_truth, prediction, cnst.CRITERION_STR, pos_labels=pos_labels, correction=correction)

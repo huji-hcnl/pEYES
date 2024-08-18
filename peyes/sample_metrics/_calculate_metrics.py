@@ -15,6 +15,7 @@ from peyes._utils.metric_utils import dprime_and_criterion as _dprime_and_criter
 
 _GLOBAL_METRICS = {
     cnst.ACCURACY_STR, cnst.BALANCED_ACCURACY_STR, cnst.COHENS_KAPPA_STR, cnst.MCC_STR, cnst.COMPLEMENT_NLD_STR,
+    "mathew's_correlation", "cohen_kappa", "1_nld",
 }
 _SDT_METRICS = {
     cnst.RECALL_STR, cnst.PRECISION_STR, cnst.F1_STR, cnst.D_PRIME_STR, cnst.CRITERION_STR
