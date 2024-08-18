@@ -22,6 +22,7 @@ dependencies = [
     "python-Levenshtein~=0.25",
     "remodnav~=1.1",
     "liac-arff~=2.4",
+    "kaleido~=0.2",
 ]
 classifiers = [
     "Programming Language :: Python :: 3",
