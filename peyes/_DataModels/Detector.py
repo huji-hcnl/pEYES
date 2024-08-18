@@ -153,6 +153,15 @@ class BaseDetector(ABC):
             raise AttributeError(f"Class {cls.__name__} must implement class attribute `_{cnst.ARTICLES_STR}`")
         return cls._ARTICLES
 
+    @classmethod
+    @final
+    def documentation(cls) -> str:
+        """ Returns the documentation of the class """
+        name = f"Detector:\t{cls.__name__.removesuffix("Detector")}"
+        articles = "Articles:\n" + "\n".join([f"- {a}" for a in cls.articles()])
+        docstring = cls.__doc__ if cls.__doc__ else ""
+        return f"{name}\n{articles}\n\n{docstring}"
+
     def _detect_blinks(
             self,
             x: np.ndarray,

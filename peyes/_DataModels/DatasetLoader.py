@@ -114,6 +114,17 @@ class BaseDatasetLoader(ABC):
             raise AttributeError(f"Class {cls.__name__} must implement class attribute `_LICENSE`")
         return cls._LICENSE
 
+    @classmethod
+    @final
+    def documentation(cls) -> str:
+        """ Returns a string with information about the dataset """
+        title = f"Dataset:\t{cls.name().replace('_', ' ').title()}"
+        lcns = f"License:\t{cls.license()}"
+        urls = f"URL:\t{cls.url()}"
+        articles = "Articles:\n" + "\n".join([f"- {a}" for a in cls.articles()])
+        docstring = cls.__doc__ if cls.__doc__ else ""
+        return f"{title}\n{lcns}\n{urls}\n{articles}\n\n{docstring}"
+
     @staticmethod
     def column_order() -> Dict[str, float]:
         return {
@@ -134,6 +145,16 @@ class BaseDatasetLoader(ABC):
 
 
 class Lund2013DatasetLoader(BaseDatasetLoader):
+    """
+    Loads the dataset from article: "One algorithm to rule them all? An evaluation and discussion of ten eye movement
+    event-detection algorithms.", Andersson et al. (2017).
+    This implementation is based on a code implemented for the article "Using machine learning to detect events in
+    eye-tracking data.", Zemblys et al. (2018).
+
+    Note two files had to be replaced due to errors in the original dataset. The corrected files are included in the
+    dataset and used instead of the erroneous ones.
+    """
+
     _NAME = "Lund2013"
     _URL = 'https://github.com/richardandersson/EyeMovementDetectorEvaluation/archive/refs/heads/master.zip'
     _LICENSE = "GNU GPL-3.0"

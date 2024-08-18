@@ -15,6 +15,7 @@ from peyes._utils.metric_utils import dprime_and_criterion as _dprime_and_criter
 
 _GLOBAL_METRICS = {
     cnst.ACCURACY_STR, cnst.BALANCED_ACCURACY_STR, cnst.COHENS_KAPPA_STR, cnst.MCC_STR, cnst.COMPLEMENT_NLD_STR,
+    "mathew's_correlation", "cohen_kappa", "1_nld",
 }
 _SDT_METRICS = {
     cnst.RECALL_STR, cnst.PRECISION_STR, cnst.F1_STR, cnst.D_PRIME_STR, cnst.CRITERION_STR
@@ -22,8 +23,8 @@ _SDT_METRICS = {
 
 
 def calculate(
-        ground_truth: EventLabelSequenceType,
-        prediction: EventLabelSequenceType,
+        ground_truth: UnparsedEventLabelSequenceType,
+        prediction: UnparsedEventLabelSequenceType,
         *metrics: str,
         pos_labels: Optional[Union[UnparsedEventLabelType, UnparsedEventLabelSequenceType]] = None,
         average: str = "weighted",
@@ -57,6 +58,8 @@ def calculate(
     with warnings.catch_warnings():
         warnings.simplefilter("ignore", category=UserWarning)
         assert len(ground_truth) == len(prediction), "Ground Truth and Prediction must have the same length."
+        ground_truth = [parse_label(label) for label in ground_truth]
+        prediction = [parse_label(label) for label in prediction]
         results: Dict[str, float] = {}
         for metric in tqdm(metrics, desc="Calculating Metrics", disable=not verbose):
             metric_lower = metric.lower().strip().replace(" ", "_").replace("-", "_").removesuffix("_score")
@@ -100,8 +103,12 @@ def _calculate_sdt_metrics(
         correction: str = "loglinear",
 ) -> float:
     average = average.lower().strip()
-    pos_labels = pos_labels or [l for l in EventLabelEnum]
-    pos_labels = [parse_label(pos_labels)] if isinstance(pos_labels, UnparsedEventLabelType) else [parse_label(l) for l in pos_labels]
+    if pos_labels is None:
+        pos_labels = [l for l in EventLabelEnum]
+    elif isinstance(pos_labels, UnparsedEventLabelType):
+        pos_labels = [parse_label(pos_labels)]
+    else:
+        pos_labels = [parse_label(l) for l in pos_labels]
     if metric == cnst.RECALL_STR:
         return met.recall_score(ground_truth, prediction, labels=pos_labels, average=average, zero_division=np.nan)
     if metric == cnst.PRECISION_STR:

@@ -31,6 +31,7 @@ def match(
         - 'offset' or 'offset difference': match the predicted event with least offset difference
         - 'window' or 'window based': match the predicted event within a specified onset- and offset-latency window
         - 'l2' or 'l2 timing': match the predicted event with minimum timing l2 norm
+        - 'other' or 'generic': match the predicted event using multiple criteria
     :param ignore_events: a set of event-labels to ignore during the matching process, default is None.
     :param allow_xmatch: if True, allows cross-matching between detectors/raters, default is False.
 
