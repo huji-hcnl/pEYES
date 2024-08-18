@@ -134,6 +134,16 @@ class BaseDatasetLoader(ABC):
 
 
 class Lund2013DatasetLoader(BaseDatasetLoader):
+    """
+    Loads the dataset from article: "One algorithm to rule them all? An evaluation and discussion of ten eye movement
+    event-detection algorithms.", Andersson et al. (2017).
+    This implementation is based on a code implemented for the article "Using machine learning to detect events in
+    eye-tracking data.", Zemblys et al. (2018).
+
+    Note two files had to be replaced due to errors in the original dataset. The corrected files are included in the
+    dataset and used instead of the erroneous ones.
+    """
+
     _NAME = "Lund2013"
     _URL = 'https://github.com/richardandersson/EyeMovementDetectorEvaluation/archive/refs/heads/master.zip'
     _LICENSE = "GNU GPL-3.0"
