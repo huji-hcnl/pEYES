@@ -41,11 +41,11 @@ events_by_labelers = {
 
 fixations_comparison_figure = peyes.visualize.feature_comparison(
     [
-        peyes.constants.COUNT_STR,
         peyes.constants.DURATION_STR,
         peyes.constants.AMPLITUDE_STR,
         peyes.constants.PEAK_VELOCITY_STR,
-        peyes.constants.MEDIAN_VELOCITY_STR
+        peyes.constants.MEDIAN_VELOCITY_STR,
+        peyes.constants.COUNT_STR,
      ],
     *[vals[vals.apply(lambda e: e.label == 1)] for vals in events_by_labelers.values()],
     labels=events_by_labelers.keys(),
@@ -55,11 +55,11 @@ fixations_comparison_figure.show()
 
 saccades_comparison_figure = peyes.visualize.feature_comparison(
     [
-        peyes.constants.COUNT_STR,
         peyes.constants.DURATION_STR,
         peyes.constants.AMPLITUDE_STR,
         peyes.constants.PEAK_VELOCITY_STR,
-        peyes.constants.MEDIAN_VELOCITY_STR
+        peyes.constants.MEDIAN_VELOCITY_STR,
+        peyes.constants.COUNT_STR,
      ],
     *[vals[vals.apply(lambda e: e.label == 2)] for vals in events_by_labelers.values()],
     labels=events_by_labelers.keys(),
