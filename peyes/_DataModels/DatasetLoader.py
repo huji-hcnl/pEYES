@@ -114,6 +114,17 @@ class BaseDatasetLoader(ABC):
             raise AttributeError(f"Class {cls.__name__} must implement class attribute `_LICENSE`")
         return cls._LICENSE
 
+    @classmethod
+    @final
+    def documentation(cls) -> str:
+        """ Returns a string with information about the dataset """
+        title = f"Dataset:\t{cls.name().replace('_', ' ').title()}"
+        lcns = f"License:\t{cls.license()}"
+        urls = f"URL:\t{cls.url()}"
+        articles = "Articles:\n" + "\n".join([f"- {a}" for a in cls.articles()])
+        docstring = cls.__doc__ if cls.__doc__ else ""
+        return f"{title}\n{lcns}\n{urls}\n{articles}\n\n{docstring}"
+
     @staticmethod
     def column_order() -> Dict[str, float]:
         return {
