@@ -22,6 +22,15 @@ pip install -e .
 git checkout -b dev
 ```
 
+## Usage
+This package is intended for scientific use, and is designed to be easy to use for anyone with basic python knowledge.  
+Most of the functions in this package are documented, and can be accessed by running:
+```angular2html
+import peyes
+help(peyes)
+```
+For more detailed information, please refer to the user tutorials provided in the `docs` directory of this repository.
+
 ## Citation & License
 This package is distributed under the MIT License, but some of the datasets & detection algorithms that are implemented
 in this package are distributed under different licenses. Please refer to the documentation of the specific dataset or
