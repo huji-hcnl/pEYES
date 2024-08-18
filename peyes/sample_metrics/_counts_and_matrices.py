@@ -24,7 +24,7 @@ def label_counts(
         return pd.Series({l: 0 for l in EventLabelEnum})
     seq = [_parse_label(l) for l in seq]
     counts = pd.Series(seq).value_counts()
-    return counts.reindex(EventLabelEnum, fill_value=0)
+    return counts.reindex([l for l in EventLabelEnum], fill_value=0)
 
 
 def transition_matrix(
