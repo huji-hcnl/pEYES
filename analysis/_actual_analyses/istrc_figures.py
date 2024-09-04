@@ -51,6 +51,7 @@ del stim_trial_ids, all_events, all_labelers, events_by_labelers
 
 fig1 = px.bar(event_counts_by_labelers, title="Event Counts", text_auto=True)
 fig1.update_layout(
+    title=None,
     xaxis_title="Labeler",
     yaxis_title="Count",
     # legend_title="Event",
