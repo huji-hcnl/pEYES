@@ -5,7 +5,7 @@ from peyes._DataModels.EventLabelEnum import EventLabelEnum as _EventLabelEnum
 from peyes.event_metrics._get_features import get_features as _features
 from peyes.event_metrics._rates_and_transitions import event_rate as _event_rate
 from peyes.event_metrics._get_features import features_by_labels
-from peyes.event_metrics._rates_and_transitions import microsaccade_ratio, transition_matrix
+from peyes.event_metrics._rates_and_transitions import microsaccade_rate, microsaccade_ratio, transition_matrix
 
 
 def start_times(events: _EventSequenceType):
