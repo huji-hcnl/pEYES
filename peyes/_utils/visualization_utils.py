@@ -65,13 +65,14 @@ def create_image(
     :param resolution: tuple of (width, height) in pixels
     :param bg_image: background image (numpy array)
     :param color_format: color format of the background image (RGB/GRAY/BGR). Default is BGR.
-    :param bg_color: background color (RGB tuple)
+    :param bg_color: background color (RGB tuple or hex string). Default is black.
 
     :return: numpy array of the image
     """
     if not resolution or len(resolution) != 2 or resolution[0] <= 0 or resolution[1] <= 0:
         raise ValueError("resolution must be a tuple of two positive integers")
-    if bg_image is None or not bg_image or bg_image.size == 0:
+    if bg_image is None or bg_image.size == 0 or bg_image.ndim not in (2, 3):
+        bg_color = to_rgb(bg_color)
         return np.full((resolution[1], resolution[0], 3), bg_color, dtype=np.uint8)
     if color_format.upper() == "RGB":
         bg = cv2.cvtColor(bg_image, cv2.COLOR_RGB2BGR)

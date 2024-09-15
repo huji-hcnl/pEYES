@@ -6,26 +6,23 @@ import numpy as np
 import peyes._utils.constants as cnst
 
 
-def cast_to_integers(xs: np.ndarray, ys: np.ndarray, filter_warnings: bool = True) -> Tuple[np.ndarray, np.ndarray]:
+def cast_to_integers(xs: np.ndarray, ys: np.ndarray) -> Tuple[np.ndarray, np.ndarray]:
     """
     Casts the given x and y coordinates to integers, rounding to the nearest integer.
     If `filter_warnings` is True, ignores warnings about casting to int.
 
     :param xs: 1D array of x coordinates
     :param ys: 1D array of y coordinates
-    :param filter_warnings: if True, ignores warnings about casting to int
 
     :return: 1D arrays of x and y coordinates, cast to integers
     """
-    if filter_warnings:
-        with warnings.catch_warnings():
-            # ignore warnings about casting to int
-            warnings.filterwarnings('ignore', category=RuntimeWarning, message='invalid value encountered in cast')
-            x_int = np.rint(xs).astype(int)
-            y_int = np.rint(ys).astype(int)
-    else:
-        x_int = np.rint(xs).astype(int)
-        y_int = np.rint(ys).astype(int)
+    def cast_finites_to_integers(arr: np.ndarray) -> np.ndarray:
+        new_arr = arr.copy()
+        new_arr[np.isfinite(arr)] = np.rint(arr[np.isfinite(arr)]).astype(int)
+        return new_arr
+
+    x_int = cast_finites_to_integers(xs)
+    y_int = cast_finites_to_integers(ys)
     return x_int, y_int
 
 
