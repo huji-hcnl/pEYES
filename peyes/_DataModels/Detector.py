@@ -879,7 +879,7 @@ class NHDetector(BaseDetector):
         Note the original paper calculates the velocity and acceleration using:
             v = sr * sqrt[(x')^2 + (y')^2] * pixel-to-angle-constant
             a = sr * sqrt[(x'')^2 + (y'')^2] * pixel-to-angle-constant
-        We use `delta=1/self._sr` when calculating the derivatives, to account for sampling time, so we don't need to
+        We use `delta=1/self.sr` when calculating the derivatives, to account for sampling time, so we don't need to
         multiply by sr when computing `v` and `a`. See more in the scipy documentation and in the following links:
             - https://stackoverflow.com/q/56168730/8543025
             - https://github.com/scipy/scipy/issues/9910
@@ -896,12 +896,12 @@ class NHDetector(BaseDetector):
                 "and sampling rate of {self.sr}Hz"
             )
         # calculate angular velocity (deg/s): v = sqrt((x')^2 + (y')^2) * pixel-to-angle-constant:
-        dx = savgol_filter(x, ws, self._filter_polyorder, deriv=1, delta=1/self._sr)
-        dy = savgol_filter(y, ws, self._filter_polyorder, deriv=1, delta=1/self._sr)
+        dx = savgol_filter(x, ws, self._filter_polyorder, deriv=1, delta=1/self.sr)
+        dy = savgol_filter(y, ws, self._filter_polyorder, deriv=1, delta=1/self.sr)
         v = np.sqrt(dx ** 2 + dy ** 2) * px_to_deg_constant
         # calculate angular acceleration (deg/s^2): a = sqrt((x'')^2 + (y'')^2) * pixel-to-angle-constant:
-        ddx = savgol_filter(x, ws, self._filter_polyorder, deriv=2, delta=1/self._sr)
-        ddy = savgol_filter(y, ws, self._filter_polyorder, deriv=2, delta=1/self._sr)
+        ddx = savgol_filter(x, ws, self._filter_polyorder, deriv=2, delta=1/self.sr)
+        ddy = savgol_filter(y, ws, self._filter_polyorder, deriv=2, delta=1/self.sr)
         a = np.sqrt(ddx ** 2 + ddy ** 2) * px_to_deg_constant
         return v, a
 
