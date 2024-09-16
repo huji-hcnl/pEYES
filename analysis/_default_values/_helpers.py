@@ -3,6 +3,7 @@ import os
 import analysis.utils as u
 
 DATASET_NAME = "lund2013"
+GT1, GT2 = "RA", "MN"
 ALPHA = 0.05
 
 _DEFAULT_VALUES_STR = "default_values"
