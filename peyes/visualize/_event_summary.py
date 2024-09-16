@@ -228,7 +228,7 @@ def _create_single_event_figure(
             ))
         fig.update_xaxes(title_text=measure, row=r + 1, col=c + 1)
         if metric == cnst.CENTER_PIXEL_STR:
-            fig.update_yaxes(title_text="y coordinate", row=r + 1, col=c + 1)
+            fig.update_yaxes(title_text="y coordinate", autorange='reversed', row=r + 1, col=c + 1)
 
     # adjust layout:
     fig.update_layout(
