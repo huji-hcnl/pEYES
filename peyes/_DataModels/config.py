@@ -41,13 +41,13 @@ EVENT_MAPPING = {
     EventLabelEnum.SMOOTH_PURSUIT: {
         cnst.LABEL_STR: EventLabelEnum.SMOOTH_PURSUIT.name,
         cnst.COLOR_STR: "#fb9a99",
-        cnst.MIN_DURATION_STR: 40,
+        cnst.MIN_DURATION_STR: 50,
         cnst.MAX_DURATION_STR: 2000
     },
     EventLabelEnum.BLINK: {
         cnst.LABEL_STR: EventLabelEnum.BLINK.name,
         cnst.COLOR_STR: "#222222",
-        cnst.MIN_DURATION_STR: 20,
+        cnst.MIN_DURATION_STR: 50,
         cnst.MAX_DURATION_STR: 2000
     }
 }
