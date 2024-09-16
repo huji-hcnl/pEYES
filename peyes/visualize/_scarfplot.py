@@ -67,7 +67,11 @@ def add_scarfplot_to_figure(
     """
     assert len(t) == len(labels), f"Length mismatch: len(t)={len(t)} != {len(labels)}=len(labels)"
     label_colors = vis_utils.get_label_colormap(label_colors)
+    label_colors = {k: v for k, v in label_colors.items() if k in labels}   # Remove unused colors
     colormap, tick_centers = _discrete_colormap(label_colors)
+    # # Normalize tick centers to [0, 1]
+    # see https://community.plotly.com/t/heatmap-colorbar-displays-ticks-in-incorrect-locations/84278/3?u=jonnir
+    tick_centers = tick_centers * colorbar_length * (np.max(tick_centers) - np.min(tick_centers)) / len(tick_centers)
     scarfplot = go.Heatmap(
         x=t,
         y=[bottom, top],
@@ -78,8 +82,8 @@ def add_scarfplot_to_figure(
         colorbar=dict(
             len=colorbar_length,
             thickness=colorbar_thickness,
-            tickvals=tick_centers * colorbar_length,
-            ticktext=list(label_colors.keys()),
+            tickvals=tick_centers,
+            ticktext=list(map(lambda lbl: EventLabelEnum(lbl).name, label_colors.keys())),
         ),
         showscale=show_colorbar,
     )
@@ -93,5 +97,5 @@ def _discrete_colormap(colors: dict):
     borders = borders / len(colors)  # Normalize to [0, 1]
     colormap = []
     for i, key in enumerate(sorted(colors.keys())):
-        colormap.extend([(borders[i], colors[key]), (borders[i + 1], colors[key])])
+        colormap.extend([(borders[i], f"rgb{colors[key]}"), (borders[i + 1], f"rgb{colors[key]}")])
     return colormap, centers
