@@ -17,13 +17,9 @@ pio.renderers.default = "browser"
 ######################
 
 DATASET_NAME = "lund2013"
-OUTPUT_DIR = os.path.join(u.OUTPUT_DIR, "default_values")
 
 STIMULUS_TYPE = peyes.constants.IMAGE_STR
 STIMULUS_DIR = os.path.join(u.BASE_DIR, "stimuli", DATASET_NAME.capitalize(), STIMULUS_TYPE)
-
-LABEL = 1
-RESOLUTION = (1024, 768)    # all images in the dataset have the same resolution, see https://github.com/richardandersson/EyeMovementDetectorEvaluation/tree/master/Stimuli/images
 
 ######################
 
@@ -52,7 +48,11 @@ t_fig = peyes.visualize.gaze_trajectory(
     bg_image=img, bg_image_format='rgb',
     t=t, colorscale='Jet'
 )
+t_fig.update_layout(
+    title=None,
+)
 t_fig.show()
+peyes.visualize.save_figure()
 
 
 b_fig = peyes.visualize.gaze_over_time(
@@ -63,7 +63,15 @@ b_fig.update_layout(
     paper_bgcolor='rgba(0, 0, 0, 0)',
     plot_bgcolor='rgba(0, 0, 0, 0)',
     height=t_fig.layout.height // 2,
-    width=t_fig.layout.width
+    width=t_fig.layout.width,
+    title=None,
 )
 b_fig.show()
 
+######################
+
+# combined_fig = make_subplots(cols=1, rows=2, shared_xaxes=False, shared_yaxes=False)
+#
+# [combined_fig.add_trace(fig_data, row=1, col=1) for fig_data in t_fig.data]
+# [combined_fig.add_trace(fig_data, row=2, col=1) for fig_data in b_fig.data]
+# combined_fig.show()
