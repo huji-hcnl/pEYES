@@ -6,11 +6,9 @@ import plotly.io as pio
 
 import peyes
 import analysis.utils as u
-from analysis._default_values._helpers import DATASET_NAME, PROCESSED_DATA_DIR, FIGURES_DIR, GT1
+from analysis._default_values._helpers import DATASET_NAME, STIMULUS_TYPE, PROCESSED_DATA_DIR, FIGURES_DIR, GT1
 
 pio.renderers.default = "browser"
-
-STIMULUS_TYPE = peyes.constants.IMAGE_STR
 
 ######################
 # Load Events Data

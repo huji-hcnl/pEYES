@@ -7,11 +7,10 @@ import plotly.io as pio
 
 import peyes
 import analysis.utils as u
-from analysis._default_values._helpers import DATASET_NAME, PROCESSED_DATA_DIR, FIGURES_DIR
+from analysis._default_values._helpers import DATASET_NAME, STIMULUS_TYPE, PROCESSED_DATA_DIR, FIGURES_DIR
 
 pio.renderers.default = "browser"
 
-STIMULUS_TYPE = peyes.constants.IMAGE_STR
 STIMULUS_DIR = os.path.join(u.BASE_DIR, "stimuli", DATASET_NAME.capitalize(), STIMULUS_TYPE)
 
 ######################
