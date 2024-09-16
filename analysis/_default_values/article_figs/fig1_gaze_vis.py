@@ -1,11 +1,7 @@
 import os
-import warnings
 
 import numpy as np
-import pandas as pd
 import cv2
-from tqdm import tqdm
-import plotly.graph_objects as go
 from plotly.subplots import make_subplots
 import plotly.io as pio
 
