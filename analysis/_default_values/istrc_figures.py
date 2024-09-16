@@ -1,9 +1,7 @@
 import os
-import warnings
 
 import numpy as np
 import pandas as pd
-from tqdm import tqdm
 import plotly.express as px
 import plotly.graph_objects as go
 from plotly.subplots import make_subplots
@@ -11,16 +9,13 @@ import plotly.io as pio
 
 import peyes
 import analysis.utils as u
+from analysis._default_values.analysis_config import DATASET_NAME, PROCESSED_DATA_DIR
 import analysis.statistics._helpers as h
-
-from peyes._DataModels.EventLabelEnum import EventLabelEnum
-import peyes._utils.visualization_utils as viz
 
 pio.renderers.default = "browser"
 
 ######################
 
-DATASET_NAME = "lund2013"
 OUTPUT_DIR = r'Z:\jonathan.nir\ISTRC Scholarship'
 
 LABEL = 1
@@ -33,7 +28,7 @@ GT1, GT2 = "RA", "MN"
 
 stim_trial_ids = u.get_trials_for_stimulus_type(DATASET_NAME, STIMULUS_TYPE)
 
-all_events = pd.read_pickle(os.path.join(u.PROCESSED_DATA_DIR, DATASET_NAME, "events.pkl"))
+all_events = pd.read_pickle(os.path.join(PROCESSED_DATA_DIR, DATASET_NAME, "events.pkl"))
 all_events = all_events.xs(1, level=peyes.constants.ITERATION_STR, axis=1)
 all_events = all_events.loc[:, all_events.columns.get_level_values(peyes.constants.TRIAL_ID_STR).isin(stim_trial_ids)]
 all_events = all_events.dropna(axis=0, how="all")
@@ -68,8 +63,8 @@ peyes.visualize.save_figure(fig1, "event_counts", OUTPUT_DIR, as_png=True)
 import analysis.statistics.sample_metrics as sm
 
 sample_metrics = pd.concat([
-    sm.load_global_metrics(DATASET_NAME, u.PROCESSED_DATA_DIR, stimulus_type=STIMULUS_TYPE, metric=None),
-    sm.load_sdt(DATASET_NAME, u.PROCESSED_DATA_DIR, label=LABEL, stimulus_type=STIMULUS_TYPE, metric=None)
+    sm.load_global_metrics(DATASET_NAME, PROCESSED_DATA_DIR, stimulus_type=STIMULUS_TYPE, metric=None),
+    sm.load_sdt(DATASET_NAME, PROCESSED_DATA_DIR, label=LABEL, stimulus_type=STIMULUS_TYPE, metric=None)
 ], axis=0).loc[[peyes.constants.BALANCED_ACCURACY_STR, peyes.constants.COHENS_KAPPA_STR, peyes.constants.D_PRIME_STR]]
 fig2 = h.distributions_figure(data=sample_metrics, gt1=GT1, gt2=GT2, title="Agreement Metrics (global)")
 fig2.update_layout(
@@ -91,7 +86,7 @@ CHANNEL_TYPES = ["onset", "offset"]
 
 sdt_metrics = csdt.load(
     dataset_name=DATASET_NAME,
-    output_dir=u.PROCESSED_DATA_DIR,
+    output_dir=PROCESSED_DATA_DIR,
     label=LABEL,
     stimulus_type=STIMULUS_TYPE,
     channel_type=None

@@ -1,21 +1,16 @@
 import os
 import warnings
 
-import numpy as np
 import pandas as pd
-from tqdm import tqdm
-import plotly.graph_objects as go
-from plotly.subplots import make_subplots
 import plotly.io as pio
 
 import peyes
 import analysis.utils as u
+from analysis._default_values.analysis_config import DATASET_NAME, PROCESSED_DATA_DIR, ALPHA
 
 pio.renderers.default = "browser"
 
 ######################
-
-DATASET_NAME = "lund2013"
 
 LABEL = 1
 STIMULUS_TYPE = peyes.constants.IMAGE_STR
@@ -28,7 +23,7 @@ MULTI_COMP = "fdr_bh"
 
 stim_trial_ids = u.get_trials_for_stimulus_type(DATASET_NAME, STIMULUS_TYPE)
 
-all_events = pd.read_pickle(os.path.join(u.PROCESSED_DATA_DIR, DATASET_NAME, "events.pkl"))
+all_events = pd.read_pickle(os.path.join(PROCESSED_DATA_DIR, DATASET_NAME, "events.pkl"))
 all_events = all_events.xs(1, level=peyes.constants.ITERATION_STR, axis=1)
 all_events = all_events.loc[:, all_events.columns.get_level_values(peyes.constants.TRIAL_ID_STR).isin(stim_trial_ids)]
 all_events = all_events.dropna(axis=0, how="all")
@@ -106,7 +101,7 @@ saccades_summary_figures[GT1].show()
 import analysis.statistics.sample_metrics as sm
 
 sample_global_metrics = sm.load_global_metrics(
-    DATASET_NAME, u.PROCESSED_DATA_DIR, stimulus_type=STIMULUS_TYPE, metric=None
+    DATASET_NAME, PROCESSED_DATA_DIR, stimulus_type=STIMULUS_TYPE, metric=None
 )
 sm_global_statistics, sm_global_pvalues, sm_global_dunns, sm_global_Ns = sm.kruskal_wallis_dunns(
     sample_global_metrics, [GT1, GT2], multi_comp=MULTI_COMP
@@ -117,7 +112,7 @@ sm_global_metrics_fig.show()
 ###
 
 sample_sdt_metrics = sm.load_sdt(
-    DATASET_NAME, u.PROCESSED_DATA_DIR, label=LABEL, stimulus_type=STIMULUS_TYPE, metric=None
+    DATASET_NAME, PROCESSED_DATA_DIR, label=LABEL, stimulus_type=STIMULUS_TYPE, metric=None
 )
 sm_sdt_statistics, sm_sdt_pvalues, sm_sdt_dunns, sm_sdt_Ns = sm.kruskal_wallis_dunns(
     sample_sdt_metrics, [GT1, GT2], multi_comp=MULTI_COMP
@@ -132,7 +127,7 @@ sample_sdt_metrics_fig.show()
 import analysis.statistics.channel_time_diffs as ctd
 
 time_diffs = ctd.load(
-    DATASET_NAME, u.PROCESSED_DATA_DIR, label=LABEL, stimulus_type=STIMULUS_TYPE
+    DATASET_NAME, PROCESSED_DATA_DIR, label=LABEL, stimulus_type=STIMULUS_TYPE
 )
 ctd_statistics, ctd_pvalues, ctd_dunns, ctd_Ns = ctd.kruskal_wallis_dunns(
     time_diffs, [GT1, GT2], multi_comp=MULTI_COMP
@@ -153,7 +148,7 @@ CHANNEL_TYPE = "onset"
 
 sdt_onset_metrics = csdt.load(
     dataset_name=DATASET_NAME,
-    output_dir=u.PROCESSED_DATA_DIR,
+    output_dir=PROCESSED_DATA_DIR,
     label=LABEL,
     stimulus_type=STIMULUS_TYPE,
     channel_type=None
@@ -174,7 +169,7 @@ CHANNEL_TYPE = "offset"
 
 sdt_offset_metrics = csdt.load(
     dataset_name=DATASET_NAME,
-    output_dir=u.PROCESSED_DATA_DIR,
+    output_dir=PROCESSED_DATA_DIR,
     label=LABEL,
     stimulus_type=STIMULUS_TYPE,
     channel_type=None
@@ -198,11 +193,10 @@ csdt_offset_figs[GT1].show()
 import analysis.statistics.matched_features as mf
 
 SCHEME = "window_10"
-ALPHA = 0.05
 
 matched_features = mf.load(
     dataset_name=DATASET_NAME,
-    output_dir=u.PROCESSED_DATA_DIR,
+    output_dir=PROCESSED_DATA_DIR,
     label=None,
     stimulus_type=STIMULUS_TYPE,
     matching_schemes=None,
@@ -226,7 +220,7 @@ mf_fig.show()
 import analysis.statistics.matched_sdt as msdt
 
 matched_sdt = msdt.load(
-    dataset_name=DATASET_NAME, output_dir=u.PROCESSED_DATA_DIR,
+    dataset_name=DATASET_NAME, output_dir=PROCESSED_DATA_DIR,
     label=LABEL, stimulus_type=STIMULUS_TYPE, matching_schemes=None, metrics=None
 )
 

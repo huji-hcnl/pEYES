@@ -13,7 +13,6 @@ from peyes._DataModels.UnparsedEventLabel import UnparsedEventLabelType, Unparse
 BASE_DIR = r'Z:\Lab-Shared\Experiments\pEYES'   # lab-shared directory
 DATASETS_DIR = os.path.join(BASE_DIR, "datasets")
 OUTPUT_DIR = os.path.join(BASE_DIR, peyes.constants.OUTPUT_STR)
-PROCESSED_DATA_DIR = os.path.join(OUTPUT_DIR, "default_values")
 
 ###########################
 
