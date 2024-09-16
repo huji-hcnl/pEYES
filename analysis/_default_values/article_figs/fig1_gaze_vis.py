@@ -11,12 +11,11 @@ import plotly.io as pio
 
 import peyes
 import analysis.utils as u
+from analysis._default_values.analysis_config import DATASET_NAME
 
 pio.renderers.default = "browser"
 
 ######################
-
-DATASET_NAME = "lund2013"
 
 STIMULUS_TYPE = peyes.constants.IMAGE_STR
 STIMULUS_DIR = os.path.join(u.BASE_DIR, "stimuli", DATASET_NAME.capitalize(), STIMULUS_TYPE)
