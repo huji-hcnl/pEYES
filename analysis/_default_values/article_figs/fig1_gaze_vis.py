@@ -7,7 +7,7 @@ import plotly.io as pio
 
 import peyes
 import analysis.utils as u
-from analysis._default_values._helpers import DATASET_NAME
+from analysis._default_values._helpers import DATASET_NAME, FIGURES_DIR
 
 pio.renderers.default = "browser"
 
@@ -47,7 +47,6 @@ t_fig.update_layout(
     title=None,
 )
 t_fig.show()
-peyes.visualize.save_figure()
 
 
 b_fig = peyes.visualize.gaze_over_time(
@@ -62,6 +61,11 @@ b_fig.update_layout(
     title=None,
 )
 b_fig.show()
+
+######################
+
+peyes.visualize.save_figure(t_fig, "1A_gaze_trajectory", FIGURES_DIR, as_png=True, as_html=False, as_json=False)
+peyes.visualize.save_figure(b_fig, "1B_gaze_over_time", FIGURES_DIR, as_png=True, as_html=False, as_json=False)
 
 ######################
 
