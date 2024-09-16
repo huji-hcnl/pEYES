@@ -6,7 +6,7 @@ import plotly.io as pio
 
 import peyes
 import analysis.utils as u
-from analysis._default_values.analysis_config import DATASET_NAME, PROCESSED_DATA_DIR, ALPHA
+from analysis._default_values._helpers import DATASET_NAME, PROCESSED_DATA_DIR, ALPHA
 
 pio.renderers.default = "browser"
 

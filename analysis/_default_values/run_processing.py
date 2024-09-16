@@ -1,4 +1,4 @@
-from analysis._default_values.analysis_config import DATASET_NAME, PROCESSED_DATA_DIR
+from analysis._default_values._helpers import DATASET_NAME, PROCESSED_DATA_DIR
 from analysis.process.full_pipeline import full_pipeline
 
 ###################
