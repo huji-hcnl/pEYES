@@ -3,7 +3,6 @@ import os
 import numpy as np
 import pandas as pd
 import cv2
-from plotly.subplots import make_subplots
 import plotly.io as pio
 
 import peyes
@@ -11,8 +10,6 @@ import analysis.utils as u
 from analysis._default_values._helpers import DATASET_NAME, PROCESSED_DATA_DIR, FIGURES_DIR
 
 pio.renderers.default = "browser"
-
-######################
 
 STIMULUS_TYPE = peyes.constants.IMAGE_STR
 STIMULUS_DIR = os.path.join(u.BASE_DIR, "stimuli", DATASET_NAME.capitalize(), STIMULUS_TYPE)
@@ -90,15 +87,8 @@ bottom_fig.update_layout(
 bottom_fig.show()
 
 ######################
+# Save Figures
 
 peyes.visualize.save_figure(top_fig, "1A_gaze_trajectory", FIGURES_DIR, as_png=True, as_html=False, as_json=False)
 peyes.visualize.save_figure(middle_fig, "1B_gaze_over_time", FIGURES_DIR, as_png=True, as_html=False, as_json=False)
 peyes.visualize.save_figure(bottom_fig, "1C_scarfplot", FIGURES_DIR, as_png=True, as_html=False, as_json=False)
-
-######################
-
-# combined_fig = make_subplots(cols=1, rows=2, shared_xaxes=False, shared_yaxes=False)
-#
-# [combined_fig.add_trace(fig_data, row=1, col=1) for fig_data in top_fig.data]
-# [combined_fig.add_trace(fig_data, row=2, col=1) for fig_data in middle_fig.data]
-# combined_fig.show()
