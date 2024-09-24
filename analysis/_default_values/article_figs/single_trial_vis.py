@@ -88,6 +88,12 @@ bottom_fig.show()
 ######################
 # Save Figures
 
-peyes.visualize.save_figure(top_fig, "single_tria-gaze_trajectory", FIGURES_DIR, as_png=True, as_html=False, as_json=False)
-peyes.visualize.save_figure(middle_fig, "single_tria-gaze_over_time", FIGURES_DIR, as_png=True, as_html=False, as_json=False)
-peyes.visualize.save_figure(bottom_fig, "single_tria-scarfplot", FIGURES_DIR, as_png=True, as_html=False, as_json=False)
+peyes.visualize.save_figure(
+    top_fig, "single_trial-gaze_trajectory", FIGURES_DIR, as_png=True, as_html=False, as_json=False
+)
+peyes.visualize.save_figure(
+    middle_fig, "single_trial-gaze_over_time", FIGURES_DIR, as_png=True, as_html=False, as_json=False
+)
+peyes.visualize.save_figure(
+    bottom_fig, "single_trial-scarfplot", FIGURES_DIR, as_png=True, as_html=False, as_json=False
+)
