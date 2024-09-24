@@ -1,13 +1,8 @@
-import os
-import warnings
-
 import pandas as pd
 import plotly.io as pio
 
 import peyes
-import analysis.utils as u
 import analysis.statistics.sample_metrics as sm
-import analysis.statistics._helpers as h
 from analysis._default_values._helpers import *
 from peyes._DataModels.EventLabelEnum import EventLabelEnum
 
