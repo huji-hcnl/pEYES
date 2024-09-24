@@ -3,6 +3,7 @@ from typing import Optional, Union, Tuple, Sequence, Dict
 import numpy as np
 import pandas as pd
 import plotly.graph_objects as go
+from plotly.subplots import make_subplots
 
 import peyes
 
@@ -174,6 +175,84 @@ def multi_threshold_figures(
         fig.update_layout(title=title)
         figures[gt] = fig
     return figures
+
+
+def multi_channel_figure(
+        sdt_metrics: pd.DataFrame,
+        metric: str,
+        title: str = "",
+        yaxis_title: str = "",
+        show_other_gt: bool = True,
+        show_err_bands: bool = False
+) -> go.Figure:
+    subframe = _extract_sdt_subframe(sdt_metrics, metrics=metric, channel_type=None, threshold=None)
+    subframe = subframe.droplevel(peyes.constants.METRIC_STR, axis=0)  # remove single-value levels from index
+    gt_cols = subframe.columns.get_level_values(u.GT_STR).unique()
+    assert 0 < len(gt_cols) <= 2, "Only 1 or 2 GT labelers are allowed for multi-channel figure"
+    channel_types = subframe.index.get_level_values(peyes.constants.CHANNEL_TYPE_STR).unique()
+    fig = make_subplots(
+        rows=len(channel_types), cols=len(gt_cols), shared_xaxes="all", shared_yaxes="all",
+        vertical_spacing=0.025, horizontal_spacing=0.01,
+        row_titles=list(map(lambda ch: ch.title(), channel_types)),
+        column_titles=list(map(lambda gt: gt.upper(), gt_cols)),
+    )
+    for i, gt in enumerate(gt_cols):
+        for j, ch_type in enumerate(channel_types):
+            data = subframe.xs(gt, level=u.GT_STR, axis=1).xs(ch_type, level=peyes.constants.CHANNEL_TYPE_STR, axis=0)
+            detectors = sorted(
+                [d for d in data.columns.get_level_values(u.PRED_STR).unique()],
+                key=lambda d: u.LABELERS_CONFIG[d.removesuffix("Detector").lower()][1]
+            )
+            for k, det in enumerate(detectors):
+                if det in gt_cols:
+                    if show_other_gt:
+                        # current detector is a GT labeler, and we want to refer to it as "Other GT"
+                        det_name = "Other GT"
+                        det_color = "#bab0ac"
+                        dash = "dot"
+                    else:
+                        # current detector is a GT labeler, and we don't want to show it in the figure
+                        continue
+                else:
+                    # current detector is a prediction labeler (detection algorithm)
+                    det_name = det.strip().removesuffix("Detector")
+                    det_color = u.LABELERS_CONFIG[det_name.lower()][2]
+                    dash = None
+                det_data = data.xs(det, level=u.PRED_STR, axis=1)
+                thresholds = det_data.index.get_level_values(peyes.constants.THRESHOLD_STR).unique()
+                mean = det_data.mean(axis=1)
+                sem = det_data.std(axis=1) / np.sqrt(det_data.count(axis=1))
+                fig.add_trace(
+                    row=j + 1, col=i + 1, trace=go.Scatter(
+                        x=thresholds, y=mean, error_y=dict(type="data", array=sem),
+                        name=det_name, legendgroup=det_name,
+                        mode="lines+markers",
+                        marker=dict(size=5, color=det_color),
+                        line=dict(color=det_color, dash=dash),
+                        showlegend=(i == 0 and j == 0),
+                    )
+                )
+                if show_err_bands:
+                    y_upper, y_lower = mean + sem, mean - sem
+                    fig.add_trace(
+                        row=j + 1, col=i + 1, trace=go.Scatter(
+                            x=np.concatenate((thresholds, thresholds[::-1])),
+                            y=np.concatenate((y_upper, y_lower[::-1])),
+                            fill="toself", fillcolor=det_color, opacity=0.2,
+                            line=dict(color=det_color, width=0),
+                            name=det_name, legendgroup=det_name, showlegend=False, hoverinfo="skip",
+                        )
+                    )
+            if j == 0:
+                yaxis_title = yaxis_title if yaxis_title else metric.replace("_", " ").lower()
+                fig.update_yaxes(title_text=yaxis_title, row=i + 1, col=1)
+            if i == len(gt_cols) - 1:
+                fig.update_xaxes(title_text="Threshold (samples)", row=i + 1, col=j + 1)
+    fig.update_layout(
+        title=title if title else f"Samples Channel :: {metric.replace("_", " ").title()} for Increasing Thresholds",
+        legend=dict(orientation="h", yanchor="bottom", y=-0.3, xanchor="left", x=0.25),
+    )
+    return fig
 
 
 def _extract_sdt_subframe(

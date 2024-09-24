@@ -179,6 +179,14 @@ threshold_offset_fig.show()
 csdt_offset_figs = csdt.multi_threshold_figures(label_csdt_metrics, CHANNEL_TYPE, show_err_bands=True)
 csdt_offset_figs[GT1].show()
 
+###
+# Both GT, Both Channels, Only d'
+
+csdt_multi_channel_fig = csdt.multi_channel_figure(
+    label_csdt_metrics, peyes.constants.D_PRIME_STR, yaxis_title=r"$d'$", show_err_bands=True
+)
+csdt_multi_channel_fig.show()
+
 
 # %%
 ###############################
