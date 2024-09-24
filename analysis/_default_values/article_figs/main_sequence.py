@@ -32,7 +32,7 @@ events_by_labelers = {
 main_sequence_figures = {
     lblr: peyes.visualize.main_sequence(
         saccades=events_by_labelers[lblr][events_by_labelers[lblr].apply(lambda e: e.label == EventLabelEnum.SACCADE)],
-        include_outliers=True,
+        include_outliers=False,
     ) for lblr in all_labelers
 }
 
@@ -40,7 +40,7 @@ main_sequence_figures = {
 # Show Stat Results & Figure for Single Labeler
 
 main_sequence_figures[GT1][0].show()
-print(main_sequence_figures[GT1][1].iloc[0, 2].summary())    # print the statistical results for the inliers' m.s.
+print(main_sequence_figures[GT1][1].iloc[0, 0].summary())    # print the statistical results for the inliers' m.s.
 
 ######################
 # Save Figures
