@@ -161,7 +161,9 @@ csdt_onset_statistics, csdt_onset_pvalues, csdt_onset_dunns, csdt_onset_Ns = csd
 threshold_onset_fig = csdt.single_threshold_figure(sdt_onset_metrics, CHANNEL_TYPE, THRESHOLD, GT1, gt2=GT2)
 threshold_onset_fig.show()
 
-csdt_onset_figs = csdt.multi_threshold_figures(sdt_onset_metrics, CHANNEL_TYPE, show_err_bands=True)
+csdt_onset_figs = csdt.multi_threshold_figures(
+    sdt_onset_metrics, CHANNEL_TYPE, show_other_gt=True, show_err_bands=True
+)
 csdt_onset_figs[GT1].show()
 
 ###
