@@ -17,7 +17,7 @@ pio.renderers.default = "browser"
 stim_trial_ids = u.get_trials_for_stimulus_type(DATASET_NAME, STIMULUS_TYPE)
 
 all_events = pd.read_pickle(os.path.join(PROCESSED_DATA_DIR, DATASET_NAME, "events.pkl"))
-all_events = all_events.xs(1, level=peyes.constants.ITERATION_STR, axis=1)
+all_events = all_events.xs(1, level=peyes.constants.ITERATION_STR, axis=1)  # Keep only the first iteration
 all_events = all_events.loc[:, all_events.columns.get_level_values(peyes.constants.TRIAL_ID_STR).isin(stim_trial_ids)]
 all_events = all_events.dropna(axis=0, how="all")
 
