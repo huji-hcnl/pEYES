@@ -143,10 +143,7 @@ import analysis.statistics.channel_sdt as csdt
 
 THRESHOLD = 10  # samples
 
-###
-CHANNEL_TYPE = "onset"
-
-sdt_onset_metrics = csdt.load(
+label_csdt_metrics = csdt.load(
     dataset_name=DATASET_NAME,
     output_dir=PROCESSED_DATA_DIR,
     label=LABEL,
@@ -154,37 +151,32 @@ sdt_onset_metrics = csdt.load(
     channel_type=None
 )
 
+###
+CHANNEL_TYPE = "onset"
+
 csdt_onset_statistics, csdt_onset_pvalues, csdt_onset_dunns, csdt_onset_Ns = csdt.kruskal_wallis_dunns(
-    sdt_onset_metrics, CHANNEL_TYPE, THRESHOLD, [GT1, GT2], multi_comp=MULTI_COMP
+    label_csdt_metrics, CHANNEL_TYPE, THRESHOLD, [GT1, GT2], multi_comp=MULTI_COMP
 )
 
-threshold_onset_fig = csdt.single_threshold_figure(sdt_onset_metrics, CHANNEL_TYPE, THRESHOLD, GT1, gt2=GT2)
+threshold_onset_fig = csdt.single_threshold_figure(label_csdt_metrics, CHANNEL_TYPE, THRESHOLD, GT1, gt2=GT2)
 threshold_onset_fig.show()
 
 csdt_onset_figs = csdt.multi_threshold_figures(
-    sdt_onset_metrics, CHANNEL_TYPE, show_other_gt=True, show_err_bands=True
+    label_csdt_metrics, CHANNEL_TYPE, show_other_gt=True, show_err_bands=True
 )
 csdt_onset_figs[GT1].show()
 
 ###
 CHANNEL_TYPE = "offset"
 
-sdt_offset_metrics = csdt.load(
-    dataset_name=DATASET_NAME,
-    output_dir=PROCESSED_DATA_DIR,
-    label=LABEL,
-    stimulus_type=STIMULUS_TYPE,
-    channel_type=None
-)
-
 csdt_offset_statistics, csdt_offset_pvalues, csdt_offset_dunns, csdt_offset_Ns = csdt.kruskal_wallis_dunns(
-    sdt_offset_metrics, CHANNEL_TYPE, THRESHOLD, [GT1, GT2], multi_comp=MULTI_COMP
+    label_csdt_metrics, CHANNEL_TYPE, THRESHOLD, [GT1, GT2], multi_comp=MULTI_COMP
 )
 
-threshold_offset_fig = csdt.single_threshold_figure(sdt_offset_metrics, CHANNEL_TYPE, THRESHOLD, GT1, gt2=GT2)
+threshold_offset_fig = csdt.single_threshold_figure(label_csdt_metrics, CHANNEL_TYPE, THRESHOLD, GT1, gt2=GT2)
 threshold_offset_fig.show()
 
-csdt_offset_figs = csdt.multi_threshold_figures(sdt_offset_metrics, CHANNEL_TYPE, show_err_bands=True)
+csdt_offset_figs = csdt.multi_threshold_figures(label_csdt_metrics, CHANNEL_TYPE, show_err_bands=True)
 csdt_offset_figs[GT1].show()
 
 
