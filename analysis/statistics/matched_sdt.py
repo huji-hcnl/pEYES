@@ -98,6 +98,11 @@ def multi_threshold_figures(
             if m in u.METRICS_CONFIG.keys()
         ]
     subframe = _extract_sdt_subframe(matches_sdt, all_schemes, metrics)
+    subframe.sort_index(
+        level=subframe.index.names.index(u.MATCHING_SCHEME_STR),
+        key=lambda x: [all_schemes.index(s) for s in x],
+        axis=0, inplace=True,
+    )
     gt_cols = subframe.columns.get_level_values(u.GT_STR).unique()
     figures = dict()
     for gt in gt_cols:
