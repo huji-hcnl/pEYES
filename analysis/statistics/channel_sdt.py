@@ -196,9 +196,9 @@ def multi_channel_figure(
         row_titles=list(map(lambda ch: ch.title(), channel_types)),
         column_titles=list(map(lambda gt: gt.upper(), gt_cols)),
     )
-    for i, gt in enumerate(gt_cols):
-        for j, ch_type in enumerate(channel_types):
-            data = subframe.xs(gt, level=u.GT_STR, axis=1).xs(ch_type, level=peyes.constants.CHANNEL_TYPE_STR, axis=0)
+    for r, ch_type in enumerate(channel_types):
+        for c, gt in enumerate(gt_cols):
+            data = subframe.xs(ch_type, level=peyes.constants.CHANNEL_TYPE_STR, axis=0).xs(gt, level=u.GT_STR, axis=1)
             detectors = sorted(
                 [d for d in data.columns.get_level_values(u.PRED_STR).unique()],
                 key=lambda d: u.LABELERS_CONFIG[d.removesuffix("Detector").lower()][1]
@@ -223,19 +223,19 @@ def multi_channel_figure(
                 mean = det_data.mean(axis=1)
                 sem = det_data.std(axis=1) / np.sqrt(det_data.count(axis=1))
                 fig.add_trace(
-                    row=j + 1, col=i + 1, trace=go.Scatter(
+                    row=r + 1, col=c + 1, trace=go.Scatter(
                         x=thresholds, y=mean, error_y=dict(type="data", array=sem),
                         name=det_name, legendgroup=det_name,
                         mode="lines+markers",
                         marker=dict(size=5, color=det_color),
                         line=dict(color=det_color, dash=dash),
-                        showlegend=(i == 0 and j == 0),
+                        showlegend=(c == 0 and r == 0),
                     )
                 )
                 if show_err_bands:
                     y_upper, y_lower = mean + sem, mean - sem
                     fig.add_trace(
-                        row=j + 1, col=i + 1, trace=go.Scatter(
+                        row=r + 1, col=c + 1, trace=go.Scatter(
                             x=np.concatenate((thresholds, thresholds[::-1])),
                             y=np.concatenate((y_upper, y_lower[::-1])),
                             fill="toself", fillcolor=det_color, opacity=0.2,
@@ -243,11 +243,11 @@ def multi_channel_figure(
                             name=det_name, legendgroup=det_name, showlegend=False, hoverinfo="skip",
                         )
                     )
-            if j == 0:
+            if c == 0:
                 yaxis_title = yaxis_title if yaxis_title else metric.replace("_", " ").lower()
-                fig.update_yaxes(title_text=yaxis_title, row=i + 1, col=1)
-            if i == len(gt_cols) - 1:
-                fig.update_xaxes(title_text="Threshold (samples)", row=i + 1, col=j + 1)
+                fig.update_yaxes(title_text=yaxis_title, row=r + 1, col=1)
+            if r == len(channel_types) - 1:
+                fig.update_xaxes(title_text="Threshold (samples)", row=len(channel_types), col=c + 1)
     fig.update_layout(
         title=title if title else f"Samples Channel :: {metric.replace("_", " ").title()} for Increasing Thresholds",
         legend=dict(orientation="h", yanchor="bottom", y=-0.3, xanchor="left", x=0.25),
