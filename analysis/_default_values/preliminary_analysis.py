@@ -235,5 +235,7 @@ msdt_single_fig = msdt.single_scheme_figure(
 )
 msdt_single_fig.show()
 
-msdt_figs = msdt.multi_threshold_figures(matched_sdt, "window", metrics=None, show_err_bands=True)
+msdt_figs = msdt.multi_threshold_figures(
+    matched_sdt, "window", metrics=None, show_other_gt=True, show_err_bands=True
+)
 msdt_figs[GT1].show()

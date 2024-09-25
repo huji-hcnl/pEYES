@@ -86,6 +86,7 @@ def multi_threshold_figures(
         matching_scheme: str,
         metrics: Union[str, Sequence[str]] = None,
         title: str = "",
+        show_other_gt: bool = True,
         show_err_bands: bool = False
 ) -> Dict[str, go.Figure]:
     all_schemes = sorted(
@@ -120,25 +121,37 @@ def multi_threshold_figures(
             r, c = (i, 0) if ncols == 1 else divmod(i, ncols)
             met_frame = gt_subframe.xs(met, level=peyes.constants.METRIC_STR, axis=0, drop_level=True)
             detectors = sorted(
-                [d for d in met_frame.columns.get_level_values(u.PRED_STR).unique() if d not in gt_cols],
+                [d for d in met_frame.columns.get_level_values(u.PRED_STR).unique()],
                 key=lambda d: u.LABELERS_CONFIG[d.removesuffix("Detector").lower()][1]
             )
             for j, det in enumerate(detectors):
+                if det in gt_cols:
+                    if show_other_gt:
+                        # current detector is a GT labeler, and we want to refer to it as "Other GT"
+                        det_name = "Other GT"
+                        det_color = "#bab0ac"
+                        dash = "dot"
+                    else:
+                        # current detector is a GT labeler, and we don't want to show it in the figure
+                        continue
+                else:
+                    # current detector is a prediction labeler (detection algorithm)
+                    det_name = det.strip().removesuffix("Detector")
+                    det_color = u.LABELERS_CONFIG[det_name.lower()][2]
+                    dash = None
                 met_det_frame = met_frame.xs(det, level=u.PRED_STR, axis=1, drop_level=True)
                 # TODO: the following line is the only difference between this func & the similar one in channel_sdt.py,
                 #  if we change how the thresholds are stored in the index, we could change this line
                 thresholds = met_det_frame.index.to_series(name=peyes.constants.THRESHOLD_STR).apply(lambda ms: int(ms.split("_")[-1]))
                 mean = met_det_frame.mean(axis=1)
                 sem = met_det_frame.std(axis=1) / np.sqrt(met_det_frame.count(axis=1))
-                det_name = det.strip().removesuffix("Detector")
-                det_color = u.LABELERS_CONFIG[det_name.lower()][2]
                 fig.add_trace(
                     row=r + 1, col=c + 1, trace=go.Scatter(
                         x=thresholds, y=mean, error_y=dict(type="data", array=sem),
                         name=det_name, legendgroup=det_name,
                         mode="lines+markers",
                         marker=dict(size=5, color=det_color),
-                        line=dict(color=det_color),
+                        line=dict(color=det_color, dash=dash),
                         showlegend=i == 0,
                     )
                 )
