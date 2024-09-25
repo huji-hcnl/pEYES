@@ -3,6 +3,7 @@ from typing import Optional, Union, Sequence, Tuple, Dict
 import numpy as np
 import pandas as pd
 import plotly.graph_objects as go
+from plotly.subplots import make_subplots
 
 import peyes
 
@@ -175,6 +176,115 @@ def multi_threshold_figures(
         fig.update_layout(title=title)
         figures[gt] = fig
     return figures
+
+
+def multi_metric_figure(
+        matches_sdt: pd.DataFrame,
+        matching_scheme: str,
+        metrics: Union[str, Sequence[str]] = None,
+        title: str = "",
+        show_other_gt: bool = True,
+        show_err_bands: bool = False,
+) -> go.Figure:
+    all_schemes = sorted(
+        [ms for ms in matches_sdt.index.get_level_values(u.MATCHING_SCHEME_STR).unique() if
+         ms.startswith(matching_scheme)],
+        key=lambda ms: int(ms.split("_")[-1])
+    )
+    if metrics is None:
+        metrics = [
+            m for m in matches_sdt.index.get_level_values(peyes.constants.METRIC_STR).unique()
+            if m in u.METRICS_CONFIG.keys()
+        ]
+    subframe = _extract_sdt_subframe(matches_sdt, all_schemes, metrics)
+    subframe.sort_index(
+        level=subframe.index.names.index(u.MATCHING_SCHEME_STR),
+        key=lambda x: [all_schemes.index(s) for s in x],
+        axis=0, inplace=True,
+    )
+    gt_cols = subframe.columns.get_level_values(u.GT_STR).unique()
+    assert 0 < len(gt_cols) <= 2, "Only 1 or 2 GT labelers are allowed for multi-channel figure"
+    fig = make_subplots(
+        rows=len(metrics), cols=len(gt_cols), shared_xaxes=True, shared_yaxes=True,
+        vertical_spacing=0.05, horizontal_spacing=0.01,
+        row_titles=list(map(lambda met: met.replace("_", " ").title(), metrics)),
+        column_titles=list(map(lambda gt: gt.upper(), gt_cols)),
+    )
+    for r, met in enumerate(metrics):
+        for c, gt in enumerate(gt_cols):
+            data = subframe.xs(
+                met, level=peyes.constants.METRIC_STR, axis=0, drop_level=True).xs(
+                gt, level=u.GT_STR, axis=1, drop_level=True
+            )
+            detectors = sorted(
+                [d for d in data.columns.get_level_values(u.PRED_STR).unique()],
+                key=lambda d: u.LABELERS_CONFIG[d.removesuffix("Detector").lower()][1]
+            )
+            for k, det in enumerate(detectors):
+                if det in gt_cols:
+                    if show_other_gt:
+                        # current detector is a GT labeler, and we want to refer to it as "Other GT"
+                        det_name = "Other GT"
+                        det_color = "#bab0ac"
+                        dash = "dot"
+                    else:
+                        # current detector is a GT labeler, and we don't want to show it in the figure
+                        continue
+                else:
+                    # current detector is a prediction labeler (detection algorithm)
+                    det_name = det.strip().removesuffix("Detector")
+                    det_color = u.LABELERS_CONFIG[det_name.lower()][2]
+                    dash = None
+
+                det_data = data.xs(det, level=u.PRED_STR, axis=1)
+                # TODO: the following line is the only difference between this func & the similar one in channel_sdt.py,
+                #  if we change how the thresholds are stored in the index, we could change this line
+                thresholds = det_data.index.to_series(name=peyes.constants.THRESHOLD_STR).apply(lambda ms: int(ms.split("_")[-1]))
+                mean = det_data.mean(axis=1)
+                sem = det_data.std(axis=1) / np.sqrt(det_data.count(axis=1))
+                fig.add_trace(
+                    go.Scatter(
+                        x=thresholds, y=mean, error_y=dict(type="data", array=sem),
+                        name=det_name, legendgroup=det_name,
+                        mode="lines+markers",
+                        marker=dict(size=5, color=det_color),
+                        line=dict(color=det_color, dash=dash),
+                        showlegend=r == 0 and c == 0,
+                    ),
+                    row=r + 1, col=c + 1
+                )
+                if show_err_bands:
+                    y_upper, y_lower = mean + sem, mean - sem
+                    fig.add_trace(
+                        go.Scatter(
+                            x=np.concatenate((thresholds, thresholds[::-1])),
+                            y=np.concatenate((y_upper, y_lower[::-1])),
+                            fill="toself", fillcolor=det_color, opacity=0.2,
+                            line=dict(color=det_color, width=0),
+                            name=det_name, legendgroup=det_name,
+                            showlegend=False, hoverinfo="skip",
+                        ),
+                        row=r + 1, col=c + 1
+                    )
+            # fig.update_yaxes(
+            #     range=u.METRICS_CONFIG[met][2] if met in u.METRICS_CONFIG else None,
+            #     row=r + 1, col=c + 1
+            # )
+            if r == len(metrics) - 1:
+                fig.update_xaxes(title_text="Threshold (samples)", row=r + 1, col=c + 1)
+            # if c == len(gt_cols) - 1:
+            #     # TODO: update y-axis range, see https://stackoverflow.com/q/79023648/8543025
+            #     y_range = u.METRICS_CONFIG[met][2] if met in u.METRICS_CONFIG else None
+            #     fig.update_yaxes(range=y_range, row=r + 1, col=c + 1)
+    fig.update_layout(
+        title=title if title else (
+                "Matched Events :: Metrics for Increasing Thresholds <br>" +
+                f"<sup>({u.MATCHING_SCHEME_STR.replace('_', ' ').title()}: " +
+                f"{matching_scheme.replace('_', ' ').title()})</sup>"
+        ),
+        legend=dict(orientation="h", yanchor="top", y=1.04, xanchor="left", x=0.3),
+    )
+    return fig
 
 
 def _extract_sdt_subframe(

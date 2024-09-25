@@ -3,6 +3,7 @@ import warnings
 
 import pandas as pd
 import plotly.io as pio
+from docutils.nodes import legend
 
 import peyes
 import analysis.utils as u
@@ -221,6 +222,8 @@ mf_fig.show()
 
 import analysis.statistics.matched_sdt as msdt
 
+SCHEME = "window_10"
+
 matched_sdt = msdt.load(
     dataset_name=DATASET_NAME, output_dir=PROCESSED_DATA_DIR,
     label=LABEL, stimulus_type=STIMULUS_TYPE, matching_schemes=None, metrics=None
@@ -239,3 +242,13 @@ msdt_figs = msdt.multi_threshold_figures(
     matched_sdt, "window", metrics=None, show_other_gt=True, show_err_bands=True
 )
 msdt_figs[GT1].show()
+
+###
+# Both GT, Both Channels, Only match-rate, f1, d'
+
+msdt_multi_metric_fic = msdt.multi_metric_figure(
+    matched_sdt, "window",
+    [peyes.constants.MATCH_RATIO_STR, peyes.constants.F1_STR, peyes.constants.D_PRIME_STR],
+    show_other_gt=True, show_err_bands=True
+)
+msdt_multi_metric_fic.show()
