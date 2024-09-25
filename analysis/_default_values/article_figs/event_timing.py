@@ -33,13 +33,18 @@ fix_offset_statistics, fix_offset_pvalues, fix_offset_dunns, fix_offset_Ns = ch_
 
 ### Show Figures
 
-fixation_dprime_figure = ch_sdt.multi_channel_figure(fixation_csdt_metrics, metric=peyes.constants.D_PRIME_STR,
-                                                     yaxis_title=r"$d'$", show_other_gt=True, show_err_bands=True)
+fixation_dprime_figure = ch_sdt.multi_channel_figure(
+    fixation_csdt_metrics,
+    metric=peyes.constants.D_PRIME_STR,
+    yaxis_title=r"$d'$", show_other_gt=True, show_err_bands=True
+)
 fixation_dprime_figure.show()
 
-fixation_criterion_figure = ch_sdt.multi_channel_figure(fixation_csdt_metrics, metric=peyes.constants.CRITERION_STR,
-                                                        yaxis_title="Criterion", show_other_gt=True,
-                                                        show_err_bands=True)
+fixation_criterion_figure = ch_sdt.multi_channel_figure(
+    fixation_csdt_metrics,
+    metric=peyes.constants.CRITERION_STR,
+    yaxis_title="Criterion", show_other_gt=True, show_err_bands=True
+)
 fixation_criterion_figure.show()
 
 ### Save Figures
@@ -90,14 +95,18 @@ saccade_criterion_figure.show()
 ## Save Figures
 
 peyes.visualize.save_figure(
-    fixation_dprime_figure, "channel_metrics-fixation-dprime", FIGURES_DIR, as_png=True, as_html=False, as_json=False
+    fixation_dprime_figure, "channel_metrics-fixation-dprime", FIGURES_DIR,
+    as_png=True, as_html=False, as_json=False
 )
 peyes.visualize.save_figure(
-    fixation_criterion_figure, "channel_metrics-fixation-criterion", FIGURES_DIR, as_png=True, as_html=False, as_json=False
+    fixation_criterion_figure, "channel_metrics-fixation-criterion", FIGURES_DIR,
+    as_png=True, as_html=False, as_json=False
 )
 peyes.visualize.save_figure(
-    saccade_dprime_figure, "channel_metrics-saccade-dprime", FIGURES_DIR, as_png=True, as_html=False, as_json=False
+    saccade_dprime_figure, "channel_metrics-saccade-dprime", FIGURES_DIR,
+    as_png=True, as_html=False, as_json=False
 )
 peyes.visualize.save_figure(
-    saccade_criterion_figure, "channel_metrics-saccade-criterion", FIGURES_DIR, as_png=True, as_html=False, as_json=False
+    saccade_criterion_figure, "channel_metrics-saccade-criterion", FIGURES_DIR,
+    as_png=True, as_html=False, as_json=False
 )
