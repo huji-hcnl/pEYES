@@ -44,6 +44,7 @@ print(main_sequence_figures[GT1][1].iloc[0, 0].summary())    # print the statist
 
 ######################
 # Save Figures
+
 peyes.visualize.save_figure(
     main_sequence_figures[GT1][0], "main_sequence", FIGURES_DIR, as_png=True, as_html=False, as_json=False
 )
