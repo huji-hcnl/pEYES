@@ -266,16 +266,15 @@ def multi_metric_figure(
                         ),
                         row=r + 1, col=c + 1
                     )
-            # fig.update_yaxes(
-            #     range=u.METRICS_CONFIG[met][2] if met in u.METRICS_CONFIG else None,
-            #     row=r + 1, col=c + 1
-            # )
             if r == len(metrics) - 1:
                 fig.update_xaxes(title_text="Threshold (samples)", row=r + 1, col=c + 1)
-            # if c == len(gt_cols) - 1:
-            #     # TODO: update y-axis range, see https://stackoverflow.com/q/79023648/8543025
-            #     y_range = u.METRICS_CONFIG[met][2] if met in u.METRICS_CONFIG else None
-            #     fig.update_yaxes(range=y_range, row=r + 1, col=c + 1)
+            if c == len(gt_cols) - 1:
+                # update y-axis range, see https://stackoverflow.com/a/79023935/8543025
+                y_range = u.METRICS_CONFIG[met][2] if met in u.METRICS_CONFIG else None
+                if y_range:
+                    fig.update_yaxes(range=y_range, row=r + 1)
+                else:
+                    fig.update_yaxes(autorange=True, row=r + 1)
     fig.update_layout(
         title=title if title else (
                 "Matched Events :: Metrics for Increasing Thresholds <br>" +
