@@ -46,10 +46,10 @@ def gaze_trajectory(
     bg_image = kwargs.get("bg_image", None)
     bg = vis_utils.create_image(
         resolution,
-        bg_image=bg_image,
+        image=bg_image,
+        alpha=kwargs.get("bg_alpha", 1),
         color_format=kwargs.get("bg_image_format", "BGR"),
-        bg_color=kwargs.get("bg_color", "#ffffff"),     # default background color is white
-        bg_alpha=kwargs.get("bg_alpha", 1),             # default alpha value is 100% opaque
+        default_color=kwargs.get("bg_color", "#ffffff"),
     )
     fig = go.Figure(
         data=go.Image(z=bg),
@@ -108,10 +108,10 @@ def gaze_heatmap(
     x, y, _, _ = __verify_arrays(x=x, y=y)
     bg = vis_utils.create_image(
         resolution,
-        bg_image=kwargs.get("bg_image", None),
+        image=kwargs.get("bg_image", None),
+        alpha=kwargs.get("bg_alpha", 1),
         color_format=kwargs.get("bg_image_format", "BGR"),
-        bg_color=kwargs.get("bg_color", "#ffffff"),     # default background color is white
-        bg_alpha=kwargs.get("bg_alpha", 1),             # default alpha value is 100% opaque
+        default_color=kwargs.get("bg_color", "#ffffff"),
     )
     fig = go.Figure(
         data=go.Image(z=bg),

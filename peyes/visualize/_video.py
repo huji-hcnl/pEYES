@@ -88,13 +88,7 @@ def create_frames(
     assert len(x) == len(y) == len(labels), "All input arrays must have the same length."
     frames = []
     n_samples = len(x)
-    bg_image = vis_utils.create_image(
-        resolution,
-        bg_image,
-        bg_image_format,
-        "#000000",      # default: black background
-        bg_image_alpha,         # default: 100% opacity
-    )
+    bg_image = vis_utils.create_image(resolution, bg_image, bg_image_alpha, bg_image_format, "#000000")
     label_colors = vis_utils.get_label_colormap(label_colors)
     for i in trange(n_samples, desc="Creating Frames", disable=not verbose):
         curr_img = bg_image.copy()
