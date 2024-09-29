@@ -62,6 +62,7 @@ def create_frames(
         resolution: Tuple[int, int],
         bg_image: np.ndarray = None,
         bg_image_format: str = "BGR",
+        bg_image_alpha: int = 127,
         label_colors: vis_utils.LabelColormapType = None,
         gaze_radius: int = 10,
         verbose: bool = False,
@@ -77,6 +78,7 @@ def create_frames(
     Optional Parameters:
     :param bg_image: background image (numpy array). If None, a black background will be used (default).
     :param bg_image_format: color format (RGB/BGR) for the background image, if provided. Default is BGR.
+    :param bg_image_alpha: alpha value of the background image. Default is 127 (50% opacity).
     :param label_colors: dictionary mapping event labels to hex/rgb colors. If a label is missing, the default color is used.
     :param gaze_radius: radius of the gaze point in pixels. Default is 10.
     :param verbose: if True, prints progress messages. Default is False.
@@ -86,7 +88,13 @@ def create_frames(
     assert len(x) == len(y) == len(labels), "All input arrays must have the same length."
     frames = []
     n_samples = len(x)
-    bg_image = vis_utils.create_image(resolution, bg_image, bg_image_format, "#000000")  # default: black background
+    bg_image = vis_utils.create_image(
+        resolution,
+        bg_image,
+        bg_image_format,
+        "#000000",      # default: black background
+        bg_image_alpha,         # default: 50% opacity
+    )
     label_colors = vis_utils.get_label_colormap(label_colors)
     for i in trange(n_samples, desc="Creating Frames", disable=not verbose):
         curr_img = bg_image.copy()

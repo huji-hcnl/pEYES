@@ -34,6 +34,7 @@ def gaze_trajectory(
     :keyword bg_image: the background image to overlay on, defaults to None.
     :keyword bg_image_format: the color format of the background image (if provided), defaults to "BGR".
     :keyword bg_color: the background color if no image is provided, defaults to white.
+    :keyword bg_alpha: the alpha value of the background image, defaults to 127.
     :keyword marker_size: the size of the markers, defaults to 5.
     :keyword opacity: the opacity of the markers, defaults to 1 if no background image is provided, else 0.5.
     :keyword colorscale: the colorscale to use for displaying time (if `t` is provided), defaults to "Jet".
@@ -47,7 +48,8 @@ def gaze_trajectory(
         resolution,
         bg_image=bg_image,
         color_format=kwargs.get("bg_image_format", "BGR"),
-        bg_color=kwargs.get("bg_color", "#ffffff")  # default background color is white
+        bg_color=kwargs.get("bg_color", "#ffffff"),     # default background color is white
+        bg_alpha=kwargs.get("bg_alpha", 127),           # default alpha value is 127
     )
     fig = go.Figure(
         data=go.Image(z=bg),
@@ -96,6 +98,7 @@ def gaze_heatmap(
     :keyword bg_image: the background image to overlay on, defaults to None.
     :keyword bg_image_format: the color format of the background image (if provided), defaults to "BGR".
     :keyword bg_color: the background color if no image is provided, defaults to white.
+    :keyword bg_alpha: the alpha value of the background image, defaults to 127.
     :keyword sigma: standard deviation of the Gaussian filter that smooths the heatmap, defaults to 10.0
     :keyword colorscale: name of the color scale to use. Must be one of the named color scales in plotly.express.colors
     :keyword opacity: opacity of the heatmap (0-1). Default is 0.5
@@ -107,7 +110,8 @@ def gaze_heatmap(
         resolution,
         bg_image=kwargs.get("bg_image", None),
         color_format=kwargs.get("bg_image_format", "BGR"),
-        bg_color=kwargs.get("bg_color", "#ffffff")  # default background color is white
+        bg_color=kwargs.get("bg_color", "#ffffff"),     # default background color is white
+        bg_alpha=kwargs.get("bg_alpha", 127),           # default alpha value is 127
     )
     fig = go.Figure(
         data=go.Image(z=bg),
