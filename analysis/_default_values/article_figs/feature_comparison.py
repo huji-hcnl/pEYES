@@ -39,6 +39,9 @@ fixations_comparison_figure = peyes.visualize.feature_comparison(
     labels=events_by_labelers.keys(),
     title="Fixation Features Comparison",
 )
+fixations_comparison_figure.update_layout(
+    width=1440, height=900
+)
 fixations_comparison_figure.show()
 
 ######################
@@ -55,6 +58,9 @@ saccades_comparison_figure = peyes.visualize.feature_comparison(
     *[vals[vals.apply(lambda e: e.label == 2)] for vals in events_by_labelers.values()],
     labels=events_by_labelers.keys(),
     title="Saccade Features Comparison",
+)
+saccades_comparison_figure.update_layout(
+    width=1440, height=900
 )
 saccades_comparison_figure.show()
 
