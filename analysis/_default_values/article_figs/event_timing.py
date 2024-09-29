@@ -38,6 +38,7 @@ fixation_dprime_figure = ch_sdt.multi_channel_figure(
     metric=peyes.constants.D_PRIME_STR,
     yaxis_title=r"$d'$", show_other_gt=True, show_err_bands=True
 )
+fixation_dprime_figure.update_layout(width=1400, height=500,)
 fixation_dprime_figure.show()
 
 fixation_criterion_figure = ch_sdt.multi_channel_figure(
@@ -45,16 +46,8 @@ fixation_criterion_figure = ch_sdt.multi_channel_figure(
     metric=peyes.constants.CRITERION_STR,
     yaxis_title="Criterion", show_other_gt=True, show_err_bands=True
 )
+fixation_criterion_figure.update_layout(width=1400, height=500,)
 fixation_criterion_figure.show()
-
-### Save Figures
-
-peyes.visualize.save_figure(
-    fixation_dprime_figure, "fixation_dprime", FIGURES_DIR, as_png=True, as_html=False, as_json=False
-)
-peyes.visualize.save_figure(
-    fixation_criterion_figure, "fixation_criterion", FIGURES_DIR, as_png=True, as_html=False, as_json=False
-)
 
 # %%
 ######################
@@ -82,12 +75,20 @@ sac_offset_statistics, sac_offset_pvalues, sac_offset_dunns, sac_offset_Ns = ch_
 
 ### Show Figures
 
-saccade_dprime_figure = ch_sdt.multi_channel_figure(saccade_csdt_metrics, metric=peyes.constants.D_PRIME_STR,
-                                                    yaxis_title=r"$d'$", show_other_gt=True, show_err_bands=True)
+saccade_dprime_figure = ch_sdt.multi_channel_figure(
+    saccade_csdt_metrics,
+    metric=peyes.constants.D_PRIME_STR,
+    yaxis_title=r"$d'$", show_other_gt=True, show_err_bands=True
+)
+saccade_dprime_figure.update_layout(width=1400, height=500,)
 saccade_dprime_figure.show()
 
-saccade_criterion_figure = ch_sdt.multi_channel_figure(saccade_csdt_metrics, metric=peyes.constants.CRITERION_STR,
-                                                       yaxis_title="Criterion", show_other_gt=True, show_err_bands=True)
+saccade_criterion_figure = ch_sdt.multi_channel_figure(
+    saccade_csdt_metrics,
+    metric=peyes.constants.CRITERION_STR,
+    yaxis_title="Criterion", show_other_gt=True, show_err_bands=True
+)
+saccade_criterion_figure.update_layout(width=1400, height=500,)
 saccade_criterion_figure.show()
 
 # %%
