@@ -71,9 +71,13 @@ def create_image(
     """
     if not resolution or len(resolution) != 2 or resolution[0] <= 0 or resolution[1] <= 0:
         raise ValueError("resolution must be a tuple of two positive integers")
+
+    # If bg_image is not provided or invalid, create an image with the specified RGB background color
     if bg_image is None or bg_image.size == 0 or bg_image.ndim not in (2, 3):
         bg_color = to_rgb(bg_color)
-        return np.full((resolution[1], resolution[0], 3), bg_color, dtype=np.uint8)
+        bg_image = np.full((resolution[1], resolution[0], 3), bg_color, dtype=np.uint8)
+        color_format = "RGB"
+
     if color_format.upper() == "RGB":
         bg = cv2.cvtColor(bg_image, cv2.COLOR_RGB2BGR)
     elif color_format.upper() == "GRAY" or color_format.upper() == "GREY":
