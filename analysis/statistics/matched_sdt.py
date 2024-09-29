@@ -281,7 +281,7 @@ def multi_metric_figure(
                 f"<sup>({u.MATCHING_SCHEME_STR.replace('_', ' ').title()}: " +
                 f"{matching_scheme.replace('_', ' ').title()})</sup>"
         ),
-        legend=dict(orientation="h", yanchor="top", y=1.04, xanchor="left", x=0.3),
+        legend=dict(orientation="h", yanchor="top", y=1.045, xanchor="left", x=0.3),
     )
     return fig
 
