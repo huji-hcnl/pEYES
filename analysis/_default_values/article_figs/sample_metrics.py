@@ -1,5 +1,6 @@
 import pandas as pd
 import plotly.io as pio
+from patsy.util import widen
 
 import peyes
 import analysis.statistics.sample_metrics as sm
@@ -24,6 +25,7 @@ sm_global_statistics, sm_global_pvalues, sm_global_dunns, sm_global_Ns = sm.krus
 
 # Show Figure
 sm_global_metrics_fig = sm.global_metrics_distributions_figure(sample_global_metrics, GT1, gt2=GT2, only_box=False)
+sm_global_metrics_fig.update_layout(width=1600, height=550,)
 sm_global_metrics_fig.show()
 
 # Save Figure
@@ -60,6 +62,7 @@ sdt_statistics, sdt_pvalues, sdt_dunns, sdt_Ns = sm.kruskal_wallis_dunns(
 sdt_metrics_fig = sm.sdt_distributions_figure(
     fixation_saccade_sdt, GT1, GT2, title="SDT Metrics (fixations & saccades)", only_box=False,
 )
+sdt_metrics_fig.update_layout(width=1600, height=550,)
 sdt_metrics_fig.show()
 
 # Save Figure
