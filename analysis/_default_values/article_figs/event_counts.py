@@ -39,7 +39,7 @@ fig.update_layout(
     xaxis_title=peyes.constants.LABELER_STR,
     yaxis_title=peyes.constants.COUNT_STR,
     width=1200, height=600,
-    legend=dict(title="Event:", orientation="h", yanchor="top", y=1.07, xanchor="left", x=0.21)
+    legend=dict(title="Event:", orientation="h", yanchor="top", y=1.07, xanchor="left", x=0.21),
 )
 fig.show()
 
