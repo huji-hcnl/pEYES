@@ -78,6 +78,7 @@ def create_image(
         bg_image = np.full((resolution[1], resolution[0], 3), bg_color, dtype=np.uint8)
         color_format = "RGB"
 
+    # Convert the background image to BGR format
     if color_format.upper() == "RGB":
         bg = cv2.cvtColor(bg_image, cv2.COLOR_RGB2BGR)
     elif color_format.upper() == "GRAY" or color_format.upper() == "GREY":
