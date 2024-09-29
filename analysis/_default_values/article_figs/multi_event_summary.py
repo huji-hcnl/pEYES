@@ -58,19 +58,38 @@ with warnings.catch_warnings():
 ######################
 # Show Figures Single Labeler
 
-events_summary_figures[GT1].show()
-fixations_summary_figures[GT1].show()
-saccades_summary_figures[GT1].show()
+for lblr in all_labelers:
+    if lblr != GT1:
+        # avoid showing all labelers' figures to avoid cluttering the browser
+        # TODO: remove this condition if you want to see all labelers' figures
+        continue
+    events_summary_figures[lblr].show()
+    fixations_summary_figures[lblr].show()
+    saccades_summary_figures[lblr].show()
 
 ######################
 # Save Figures Single Labeler
 
-peyes.visualize.save_figure(
-    events_summary_figures[GT1], "events_summary_RA", FIGURES_DIR, as_png=True, as_html=False, as_json=False
-)
-peyes.visualize.save_figure(
-    fixations_summary_figures[GT1], "fixations_summary_RA", FIGURES_DIR, as_png=True, as_html=False, as_json=False
-)
-peyes.visualize.save_figure(
-    saccades_summary_figures[GT1], "saccades_summary_RA", FIGURES_DIR, as_png=True, as_html=False, as_json=False
-)
+for lblr in all_labelers:
+    if lblr != GT1:
+        # avoid saving all labelers' figures to avoid cluttering the filesystem
+        # TODO: remove this condition if you want to save all labelers' figures
+        continue
+    peyes.visualize.save_figure(
+        events_summary_figures[lblr],
+        f"events_summary_{lblr}",
+        FIGURES_DIR,
+        as_png=True, as_html=False, as_json=False
+    )
+    peyes.visualize.save_figure(
+        fixations_summary_figures[lblr],
+        f"fixations_summary_{lblr}",
+        FIGURES_DIR,
+        as_png=True, as_html=False, as_json=False
+    )
+    peyes.visualize.save_figure(
+        saccades_summary_figures[lblr],
+        f"saccades_summary_{lblr}",
+        FIGURES_DIR,
+        as_png=True, as_html=False, as_json=False
+    )
