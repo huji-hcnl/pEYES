@@ -22,7 +22,8 @@ dependencies = [
     "python-Levenshtein~=0.2",
     "remodnav~=1.1",
     "liac-arff~=2.4",
-    "kaleido~=0.2",
+    # "kaleido~=0.2",   # TODO: kaleido has a bug in the current version, see https://github.com/huji-hcnl/pEYES/issues/15
+    "kaleido==0.1.0post1",
 ]
 classifiers = [
     "Programming Language :: Python :: 3",
