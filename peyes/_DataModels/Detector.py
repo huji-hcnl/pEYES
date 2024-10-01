@@ -157,10 +157,10 @@ class BaseDetector(ABC):
     @final
     def documentation(cls) -> str:
         """ Returns the documentation of the class """
-        name = f"Detector:\t{cls.__name__.removesuffix("Detector")}"
+        name = f"Detector:\t{cls.__name__.removesuffix('Detector')}"
         articles = "Articles:\n" + "\n".join([f"- {a}" for a in cls.articles()])
         docstring = cls.__doc__ if cls.__doc__ else ""
-        return f"{name}\n{articles}\n\n{docstring}"
+        return f"{name}\n{articles}\n{docstring}"
 
     def _detect_blinks(
             self,
