@@ -51,7 +51,7 @@ labeler_names = sorted(
 
 top_fig = peyes.visualize.gaze_trajectory(
     x=x, y=y, resolution=resolution, title="Gaze Trajectory",
-    bg_image=img, bg_image_format='rgb',
+    bg_image=img, bg_image_format='rgb', bg_alpha=0.5, marker_alpha=1,
     t=t, colorscale='Jet'
 )
 top_fig.update_layout(

@@ -34,9 +34,9 @@ def gaze_trajectory(
     :keyword bg_image: the background image to overlay on, defaults to None.
     :keyword bg_image_format: the color format of the background image (if provided), defaults to "BGR".
     :keyword bg_color: the background color if no image is provided, defaults to white.
-    :keyword bg_alpha: the alpha value of the background image (range [0, 1]). defaults to 1.
+    :keyword bg_alpha: the alpha value (opacity) of the background image (range [0, 1]). defaults to 1.
     :keyword marker_size: the size of the markers, defaults to 5.
-    :keyword opacity: the opacity of the markers, defaults to 1 if no background image is provided, else 0.5.
+    :keyword marker_alpha: the alpha value (opacity) of the markers (range [0, 1]). default is 1.
     :keyword colorscale: the colorscale to use for displaying time (if `t` is provided), defaults to "Jet".
     :keyword color: the color of the markers if `t` is not provided, defaults to black.
 
@@ -56,18 +56,18 @@ def gaze_trajectory(
         layout=dict(width=resolution[0], height=resolution[1], margin=dict(l=0, r=0, b=0, t=0)),
     )
     marker_size = kwargs.get("marker_size", 5)
-    opacity = kwargs.get("opacity", 1 if bg_image is None else 0.5)
+    marker_alpha = kwargs.get("marker_alpha", 1)
     if t is None:
         color = kwargs.get("color", "#000000")
         fig.add_trace(
-            go.Scatter(x=x, y=y, mode="markers", marker=dict(color=color, size=marker_size, opacity=opacity))
+            go.Scatter(x=x, y=y, mode="markers", marker=dict(color=color, size=marker_size, opacity=marker_alpha))
         )
     else:
         fig.add_trace(go.Scatter(
             x=x, y=y, mode="markers", marker=dict(
                 color=t,
                 size=marker_size,
-                opacity=opacity,
+                opacity=marker_alpha,
                 colorscale=kwargs.get("colorscale", "Jet"),
                 colorbar=dict(title=cnst.TIME_STR),
             )
