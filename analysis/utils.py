@@ -10,9 +10,9 @@ from peyes._DataModels.UnparsedEventLabel import UnparsedEventLabelType, Unparse
 
 ###########################
 
-CWD = os.getcwd()
-OUTPUT_DIR = os.path.join(CWD, peyes.constants.OUTPUT_STR)
-DATASETS_DIR = os.path.join(CWD, peyes.constants.OUTPUT_STR, "datasets")
+BASE_DIR = r'Z:\Lab-Shared\Experiments\pEYES'   # lab-shared directory
+DATASETS_DIR = os.path.join(BASE_DIR, "datasets")
+OUTPUT_DIR = os.path.join(BASE_DIR, peyes.constants.OUTPUT_STR)
 
 ###########################
 

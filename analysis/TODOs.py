@@ -1,9 +1,9 @@
 # TODO: This file is a placeholder for the TODOs that need to be addressed in the analysis/added to peyes
 
 ######################
-# Documentation:
-# add example usage in the `docs` directory
-# add documentation for keyword arguments + licensing of each dataset + detector
+# Documentation + Guides
+# example usage of visualization functions in peyes.visualize
+# readme in the docs folder
 
 ######################
 # New Detectors:
@@ -15,8 +15,3 @@
 ######################
 # Dataset Loaders:
 # Add support for EEGEyeNet dataset (require premature downloading and enable only loading from disk)?
-
-######################
-# Analysis:
-# Permutation Tests between "similar" detectors?
-# Bayesian analysis?

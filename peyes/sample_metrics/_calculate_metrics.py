@@ -15,7 +15,6 @@ from peyes._utils.metric_utils import dprime_and_criterion as _dprime_and_criter
 
 _GLOBAL_METRICS = {
     cnst.ACCURACY_STR, cnst.BALANCED_ACCURACY_STR, cnst.COHENS_KAPPA_STR, cnst.MCC_STR, cnst.COMPLEMENT_NLD_STR,
-    "mathew's_correlation", "cohen_kappa", "1_nld",
 }
 _SDT_METRICS = {
     cnst.RECALL_STR, cnst.PRECISION_STR, cnst.F1_STR, cnst.D_PRIME_STR, cnst.CRITERION_STR
@@ -39,8 +38,8 @@ def calculate(
         - "accuracy"
         - "balanced_accuracy"
         - "cohen's_kappa"
-        - "mcc" or "mathew's_correlation"
-        - "1_nld" or "complement_nld" - computed the complement to normalized Levenshtein distance
+        - "mcc" - mathew's correlation coefficient
+        - "complement_nld" - computed the complement to normalized Levenshtein distance
         - "recall"
         - "precision"
         - "f1"

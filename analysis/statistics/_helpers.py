@@ -102,7 +102,7 @@ def kruskal_wallis_dunns(
             gt_series = data.xs(gt_col, level=u.GT_STR, axis=1).loc[met]
             if pd.isna(gt_series).all():
                 continue
-            gt_df = gt_series.unstack().drop(columns=gt_cols, errors='ignore')
+            gt_df = gt_series.unstack().drop(columns=gt_cols, errors='ignore')  # drop other GT labelers
             detectors = sorted(
                 gt_df.columns, key=lambda det: u.LABELERS_CONFIG[det.removesuffix("Detector").lower()][1]
             )
@@ -173,7 +173,7 @@ def distributions_figure(
         r, c = (i, 0) if ncols == 1 else divmod(i, ncols)
         for j, gt_col in enumerate(gt_cols):
             gt_series = data.xs(gt_col, level=u.GT_STR, axis=1).loc[idx]
-            gt_df = gt_series.unstack().drop(columns=gt_cols, errors='ignore')
+            gt_df = gt_series.unstack().drop(columns=gt_cols, errors='ignore')  # drop other GT labelers
             detectors = sorted(
                 gt_df.columns, key=lambda det: u.LABELERS_CONFIG[det.removesuffix("Detector").lower()][1]
             )

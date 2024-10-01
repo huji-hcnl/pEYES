@@ -34,6 +34,7 @@ def gaze_trajectory(
     :keyword bg_image: the background image to overlay on, defaults to None.
     :keyword bg_image_format: the color format of the background image (if provided), defaults to "BGR".
     :keyword bg_color: the background color if no image is provided, defaults to white.
+    :keyword bg_alpha: the alpha value of the background image (range [0, 1]). defaults to 1.
     :keyword marker_size: the size of the markers, defaults to 5.
     :keyword opacity: the opacity of the markers, defaults to 1 if no background image is provided, else 0.5.
     :keyword colorscale: the colorscale to use for displaying time (if `t` is provided), defaults to "Jet".
@@ -45,9 +46,10 @@ def gaze_trajectory(
     bg_image = kwargs.get("bg_image", None)
     bg = vis_utils.create_image(
         resolution,
-        bg_image=bg_image,
+        image=bg_image,
+        alpha=kwargs.get("bg_alpha", 1),
         color_format=kwargs.get("bg_image_format", "BGR"),
-        bg_color=kwargs.get("bg_color", "#ffffff")  # default background color is white
+        default_color=kwargs.get("bg_color", "#ffffff"),
     )
     fig = go.Figure(
         data=go.Image(z=bg),
@@ -74,6 +76,8 @@ def gaze_trajectory(
         title=title,
         xaxis=dict(visible=False, showticklabels=False, showgrid=False, showline=False, zeroline=False),
         yaxis=dict(visible=False, showticklabels=False, showgrid=False, showline=False, zeroline=False),
+        paper_bgcolor='rgba(0, 0, 0, 0)', plot_bgcolor='rgba(0, 0, 0, 0)',  # transparent background
+        title_y=0.98, title_yanchor='top',
     )
     return fig
 
@@ -94,6 +98,7 @@ def gaze_heatmap(
     :keyword bg_image: the background image to overlay on, defaults to None.
     :keyword bg_image_format: the color format of the background image (if provided), defaults to "BGR".
     :keyword bg_color: the background color if no image is provided, defaults to white.
+    :keyword bg_alpha: the alpha value of the background image (range [0, 1]), defaults to 1.
     :keyword sigma: standard deviation of the Gaussian filter that smooths the heatmap, defaults to 10.0
     :keyword colorscale: name of the color scale to use. Must be one of the named color scales in plotly.express.colors
     :keyword opacity: opacity of the heatmap (0-1). Default is 0.5
@@ -103,27 +108,33 @@ def gaze_heatmap(
     x, y, _, _ = __verify_arrays(x=x, y=y)
     bg = vis_utils.create_image(
         resolution,
-        bg_image=kwargs.get("bg_image", None),
+        image=kwargs.get("bg_image", None),
+        alpha=kwargs.get("bg_alpha", 1),
         color_format=kwargs.get("bg_image_format", "BGR"),
-        bg_color=kwargs.get("bg_color", "#ffffff")  # default background color is white
+        default_color=kwargs.get("bg_color", "#ffffff"),
     )
     fig = go.Figure(
         data=go.Image(z=bg),
         layout=dict(width=resolution[0], height=resolution[1], margin=dict(l=0, r=0, b=0, t=0)),
     )
     counts = __pixel_counts(x, y, resolution)
-    normalized_counts = normalize(gaussian_filter(counts, kwargs.get("sigma", 10.0)))
+    filtered_counts = gaussian_filter(counts, sigma=kwargs.get("sigma", 10.0))
+    heatmap = (filtered_counts - np.nanmin(filtered_counts)) / (np.nanmax(filtered_counts) - np.nanmin(filtered_counts))
+    heatmap[(~np.isfinite(heatmap)) | (heatmap <= np.nanmedian(heatmap))] = np.nan    # remove low values
     fig.add_trace(go.Heatmap(
-        z=normalized_counts,
+        z=heatmap,
         colorscale=kwargs.get("colorscale", "Jet"),
         opacity=kwargs.get("opacity", 0.5),
         showscale=False,
     ))
     fig.update_xaxes(
-        range=[0, resolution[0]], visible=False, showticklabels=False, showgrid=False, showline=False, zeroline=False
+        visible=False, showticklabels=False, showgrid=False, showline=False, zeroline=False
     )
     fig.update_yaxes(
-        range=[0, resolution[1]], visible=False, showticklabels=False, showgrid=False, showline=False, zeroline=False
+        visible=False, showticklabels=False, showgrid=False, showline=False, zeroline=False
+    )
+    fig.update_layout(
+        paper_bgcolor='rgba(0, 0, 0, 0)', plot_bgcolor='rgba(0, 0, 0, 0)',  # transparent background
     )
     return fig
 
@@ -144,7 +155,8 @@ def gaze_over_time(
     :param x: gaze x-coordinates.
     :param y: gaze y-coordinates.
     :param t: the time axis.
-    :param v: gaze velocity, optional.
+    :param v: gaze velocity, optional. If provided, will be plotted on a secondary y-axis. Note the units of the
+        velocity are px/s by default, see `v_measure`.
     :param vert_lines: time points to add vertical lines at, optional.
     :param title: the title of the figure.
 
@@ -152,7 +164,7 @@ def gaze_over_time(
     :keyword x_color: the color of the x-coordinates, defaults to red.
     :keyword y_color: the color of the y-coordinates, defaults to blue.
     :keyword v_color: the color of the velocity, defaults to light gray.
-    :keyword v_measure: the measure of the velocity, defaults to "deg/s".
+    :keyword v_measure: the measure of the velocity, defaults to "px/s".
     :keyword vert_line_colors: the colors of the vertical lines, should either be a single color or a list of colors the
         same length as `vert_lines`. Defaults to black.
     :keyword vert_line_width: the width of the vertical lines, defaults to 1.
@@ -174,11 +186,12 @@ def gaze_over_time(
     )
 
     if v is not None:
-        v_measure = kwargs.get("v_measure", "deg/s")
+        v_measure = kwargs.get("v_measure", "px/s")
         y_axis2_title = f"{cnst.VELOCITY_STR} ({v_measure})"
         fig.add_trace(
             go.Scatter(
-                x=t, y=v, mode="markers", name="v", marker=dict(color=kwargs.get("v_color", "#dddddd"), size=marker_size)
+                x=t, y=v, mode="markers", name="v",
+                marker=dict(color=kwargs.get("v_color", "#bbbbbb"), size=marker_size)
             ), secondary_y=True,
         )
     else:
@@ -235,5 +248,7 @@ def __pixel_counts(
     x_int, y_int = cast_to_integers(x, y)
     counter = Counter(zip(y_int, x_int))
     for (y_, x_), count in counter.items():
-        counts[y_, x_] = count
+        if not np.isfinite(x_) or not np.isfinite(y_):
+            continue
+        counts[int(y_), int(x_)] = count
     return counts

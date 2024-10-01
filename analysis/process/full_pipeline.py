@@ -16,7 +16,7 @@ import analysis.process.samples_channel as channel_metrics
 import analysis.process.match_metrics as match_metrics
 
 
-def run(
+def full_pipeline(
         output_dir: str,
         dataset_name: str,
         detectors: List[BaseDetector] = None,

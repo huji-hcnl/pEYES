@@ -54,31 +54,49 @@ def save_figure(
 
 def create_image(
         resolution: Tuple[int, int],
-        bg_image: np.ndarray = None,
+        image: np.ndarray = None,
+        alpha: float = 1,
         color_format: str = "BGR",
-        bg_color: ColorType = (0, 0, 0),
+        default_color: ColorType = (0, 0, 0),
 ):
     """
     Creates an image in BGR format with the specified resolution. If a background image is not provided, an image with
     the specified background color will be created.
 
     :param resolution: tuple of (width, height) in pixels
-    :param bg_image: background image (numpy array)
+    :param image: background image (numpy array)
+    :param alpha: alpha (opacity) value of the background image, range [0, 1]. Only used if input image doesn't have
+    an alpha channel (i.e. `color_format` is not RGBA or BGRA). Default is 1 (opaque).
     :param color_format: color format of the background image (RGB/GRAY/BGR). Default is BGR.
-    :param bg_color: background color (RGB tuple)
+    :param default_color: background color (RGB tuple or hex string). Default is black.
 
     :return: numpy array of the image
     """
     if not resolution or len(resolution) != 2 or resolution[0] <= 0 or resolution[1] <= 0:
         raise ValueError("resolution must be a tuple of two positive integers")
-    if bg_image is None or not bg_image or bg_image.size == 0:
-        return np.full((resolution[1], resolution[0], 3), bg_color, dtype=np.uint8)
-    if color_format.upper() == "RGB":
-        bg = cv2.cvtColor(bg_image, cv2.COLOR_RGB2BGR)
-    elif color_format.upper() == "GRAY" or color_format.upper() == "GREY":
-        bg = cv2.cvtColor(bg_image, cv2.COLOR_GRAY2BGR)
+    if image.ndim != 4 and (alpha < 0 or alpha > 1):
+        raise ValueError("bg_alpha must be in the range [0, 1]")
+
+    # If bg_image is not provided or invalid, create an image with the specified RGB background color
+    if image is None or image.size == 0 or image.ndim not in (2, 3, 4):
+        default_color = to_rgb(default_color)
+        image = np.full((resolution[1], resolution[0], 3), default_color, dtype=np.uint8)
+        color_format = "RGB"
+
+    # Convert the background image to BGRA format
+    if color_format.upper() == "BGRA":
+        bg = image
     elif color_format.upper() == "BGR":
-        bg = bg_image
+        bg = cv2.cvtColor(image, cv2.COLOR_BGR2BGRA)
+        bg[:, :, 3] = round(alpha * 255)
+    elif color_format.upper() == "RGBA":
+        bg = cv2.cvtColor(image, cv2.COLOR_RGBA2BGRA)
+    elif color_format.upper() == "RGB":
+        bg = cv2.cvtColor(image, cv2.COLOR_RGB2BGRA)
+        bg[:, :, 3] = round(alpha * 255)
+    elif color_format.upper() == "GRAY" or color_format.upper() == "GREY":
+        bg = cv2.cvtColor(image, cv2.COLOR_GRAY2BGRA)
+        bg[:, :, 3] = round(alpha * 255)
     else:
         raise ValueError(f"Invalid color format: {color_format}")
     return cv2.resize(bg, resolution)

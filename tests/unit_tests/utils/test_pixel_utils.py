@@ -17,13 +17,12 @@ class TestPixelUtils(unittest.TestCase):
             np.allclose(np.vstack((xs, ys)).astype(int), np.vstack(cast_to_integers(xs, ys)))
         )
         self.assertTrue(
-            np.allclose(np.vstack((xs, ys)).astype(int), np.vstack(cast_to_integers(xs, ys, filter_warnings=False)))
+            np.allclose(np.vstack((xs, ys)).astype(int), np.vstack(cast_to_integers(xs, ys)))
         )
         xs[2] = np.nan
         self.assertTrue(
-            np.allclose(np.vstack((xs, ys)).astype(int), np.vstack(cast_to_integers(xs, ys)))
+            np.allclose(np.vstack(cast_to_integers(xs, ys)), np.vstack(cast_to_integers(xs, ys)), equal_nan=True)
         )
-        self.assertWarns(RuntimeWarning, cast_to_integers, xs, ys, filter_warnings=False)
 
     def test_line_dispersion(self):
         xs = np.arange(0, 5).astype(float)

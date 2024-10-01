@@ -84,7 +84,7 @@ def feature_comparison(
 
 def main_sequence(
         saccades: EventSequenceType,
-        y_feature: str = "duration",
+        y_feature: str = cnst.DURATION_STR,
         include_outliers: bool = True,
 ) -> (go.Figure, pd.DataFrame):
     """
@@ -100,22 +100,22 @@ def main_sequence(
         - stat_results: pd.DataFrame; statistics of the inlier (and outlier) trendline(s)
     """
     saccades = [s for s in saccades if s.label == EventLabelEnum.SACCADE]
-    if y_feature.lower() == "duration":
+    if y_feature.lower() == cnst.DURATION_STR.lower():
         params = dict(
-            y_feature="duration", title="Main Sequence: Duration vs. Amplitude",
-            y_feature_units="ms", trendline_log_x=False,
+            title="Main Sequence: Duration vs. Amplitude",
+            trendline_log_x=False, x_feature_units="deg", y_feature_units="ms",
         )
-    elif y_feature.lower() == "peak_velocity":
+    elif y_feature.lower() == cnst.PEAK_VELOCITY_STR.lower():
         params = dict(
-            y_feature="peak_velocity", title="Main Sequence: Peak Velocity vs. Amplitude",
-            y_feature_units="deg/s", trendline_log_x=True,
+            title="Main Sequence: Peak Velocity vs. Amplitude",
+            trendline_log_x=True, x_feature_units="$log_2$" + "(deg)", y_feature_units="deg/s",
         )
     else:
-        raise KeyError(f"Invalid `y_feature` argument: {y_feature}. Must be `duration` or `peak_velocity`.")
+        raise KeyError(f"Invalid `y_feature` argument: {y_feature}. Must be `{cnst.DURATION_STR}` or `{cnst.PEAK_VELOCITY_STR}`.")
     fig, stat_results = feature_relationship(
-        events=saccades, x_feature="amplitude", x_feature_units="deg",
-        include_outliers=include_outliers, trendline="trace", marginal_x='box',
-        marginal_y='box', **params
+        events=saccades, include_outliers=include_outliers, trendline="trace" if include_outliers else "overall",
+        x_feature="amplitude", y_feature=y_feature.lower().replace("_", " "),
+        marginal_x='box', marginal_y='box', **params
     )
     return fig, stat_results
 
