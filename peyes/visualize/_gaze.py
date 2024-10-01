@@ -52,7 +52,7 @@ def gaze_trajectory(
         default_color=kwargs.get("bg_color", "#ffffff"),
     )
     fig = go.Figure(
-        data=go.Image(z=bg),
+        data=go.Image(z=bg, colormodel='rgba256'),
         layout=dict(width=resolution[0], height=resolution[1], margin=dict(l=0, r=0, b=0, t=0)),
     )
     marker_size = kwargs.get("marker_size", 5)
