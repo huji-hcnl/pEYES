@@ -31,13 +31,16 @@ def transition_matrix(seq: Sequence, normalize_rows: bool = False) -> pd.DataFra
     return counts
 
 
-def complement_normalized_levenshtein_distance(
-        gt: Sequence, pred: Sequence,
-) -> float:
-    """ Calculates the complement of the normalized Levenshtein distance between two sequences. """
+def normalized_levenshtein_distance(gt: Sequence, pred: Sequence) -> float:
+    """
+    Calculates the normalized Levenshtein distance between two sequences. Normalization is with respect to the size of
+    the GT, which may result in a value exceeding 1 if the predicted sequence is longer than the GT sequence.
+    This is the same as the Word Error Rate (WER) used in speech recognition.
+    For more information on using 1-NLD in eye-tracking, see https://doi.org/10.3758/s13428-021-01763-7
+    """
     d = Levenshtein.distance(gt, pred)
-    normalized_d = d / max(len(gt), len(pred))
-    return 1 - normalized_d
+    normalized_d = d / len(gt)
+    return normalized_d
 
 
 def dprime_and_criterion(p: int, n: float, pp: int, tp: int, correction: Optional[str]) -> (float, float):

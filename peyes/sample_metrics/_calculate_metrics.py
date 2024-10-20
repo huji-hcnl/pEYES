@@ -10,7 +10,7 @@ from peyes._DataModels.UnparsedEventLabel import UnparsedEventLabelType, Unparse
 
 import peyes._utils.constants as cnst
 from peyes._utils.event_utils import parse_label
-from peyes._utils.metric_utils import complement_normalized_levenshtein_distance as _comp_nld
+from peyes._utils.metric_utils import normalized_levenshtein_distance as _nld
 from peyes._utils.metric_utils import dprime_and_criterion as _dprime_and_criterion
 
 _GLOBAL_METRICS = {
@@ -39,7 +39,7 @@ def calculate(
         - "balanced_accuracy"
         - "cohen's_kappa"
         - "mcc" - mathew's correlation coefficient
-        - "complement_nld" - computed the complement to normalized Levenshtein distance
+        - "complement_nld" - computed the complement to normalized Levenshtein distance (1 - WER)
         - "recall"
         - "precision"
         - "f1"
@@ -89,7 +89,8 @@ def _calculate_global_metrics(
     if metric == cnst.COHENS_KAPPA_STR or metric == "cohen_kappa":
         return met.cohen_kappa_score(ground_truth, prediction)
     if metric == cnst.COMPLEMENT_NLD_STR or metric == "1_nld":
-        return _comp_nld(ground_truth, prediction)
+        nld = _nld(ground_truth, prediction)
+        return 1 - nld
     raise NotImplementedError(f"Unknown metric:\t{metric}")
 
 
