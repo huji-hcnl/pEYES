@@ -176,7 +176,10 @@ class BaseEvent(ABC):
         Calculates the l2-norm between the onset- and offset-differences of this event and another event.
         See Kothari et al. (2020) for more details.
         """
-        return np.linalg.norm([self.start_time - other.start_time, self.end_time - other.end_time])
+        start_diff = self.start_time - other.start_time
+        end_diff = self.end_time - other.end_time
+        l2 = np.linalg.norm([start_diff, end_diff])
+        return float(l2)
 
     @final
     def center_distance(self, other: "BaseEvent") -> float:
