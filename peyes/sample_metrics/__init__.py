@@ -71,4 +71,6 @@ def criterion(
         pos_labels: Union[_UnparsedEventLabelType, _UnparsedEventLabelSequenceType],
         correction: str = "loglinear",
 ) -> float:
-    return calculate(ground_truth, prediction, _cnst.CRITERION_STR, pos_labels=pos_labels, correction=correction)
+    return calculate(
+        ground_truth, prediction, _cnst.CRITERION_STR, pos_labels=pos_labels, correction=correction
+    )
