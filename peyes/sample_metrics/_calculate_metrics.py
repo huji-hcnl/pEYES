@@ -26,9 +26,8 @@ def calculate(
         prediction: UnparsedEventLabelSequenceType,
         *metrics: str,
         pos_labels: Optional[Union[UnparsedEventLabelType, UnparsedEventLabelSequenceType]] = None,
-        average: str = "weighted",
-        correction: str = "loglinear",
         verbose: bool = False,
+        **kwargs,
 ) -> Union[float, Dict[str, float]]:
     """
     Calculate the specified metrics between the ground truth and prediction sequences.
@@ -46,11 +45,13 @@ def calculate(
         - "d_prime" or "d'"
         - "criterion"
     :param pos_labels: the positive labels to consider for recall, precision, f1-score, d-prime, and criterion
-    :param average: the averaging strategy for recall, precision, and f1-score
-    :param correction: the correction strategy for d-prime and criterion.
+    :param verbose: if True, display a progress bar
+
+    :keyword average: the averaging strategy for recall, precision, and f1-score. default is "weighted"
+    :keyword correction: the correction strategy for d-prime and criterion. default is "loglinear"
         See information on correction methods at https://stats.stackexchange.com/a/134802/288290.
         See implementation details at https://lindeloev.net/calculating-d-in-python-and-php/.
-    :param verbose: if True, display a progress bar
+
     :return: the calculated metric(s) as a single float (if only one metric is specified) or a dictionary of metric
         names to values
     """
@@ -65,6 +66,8 @@ def calculate(
             if metric_lower in _GLOBAL_METRICS:
                 results[metric] = _calculate_global_metrics(ground_truth, prediction, metric_lower)
             elif metric_lower in _SDT_METRICS:
+                average = kwargs.get("average", "weighted").lower().strip()
+                correction = kwargs.get("correction", "loglinear").lower().strip()
                 results[metric] = _calculate_sdt_metrics(
                     ground_truth, prediction, metric_lower, pos_labels, average, correction
                 )
