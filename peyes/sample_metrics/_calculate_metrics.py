@@ -124,7 +124,5 @@ def _calculate_sdt_metrics(
         pp = np.sum([1 for label in prediction if label in pos_labels])
         tp = np.sum([1 for gt, pred in zip(ground_truth, prediction) if pred == gt and gt in pos_labels])
         dprime, crit = _dprime_and_criterion(p, n, pp, tp, correction)
-        if metric == cnst.CRITERION_STR:
-            return crit
-        return dprime
+        return dprime if metric == cnst.D_PRIME_STR else crit
     raise NotImplementedError(f"Unknown metric:\t{metric}")
