@@ -162,11 +162,13 @@ class BaseEvent(ABC):
         Calculates the intersection-over-union (IoU) between times of this event and another event (unitless).
         See Startsev & Zemblys (2023) for more information.
         """
-        total_overlap = self.time_overlap(other, normalize=False)
-        total_union = self.duration + other.duration - total_overlap
-        if total_union == 0:
+        min_start, max_start = min(self.start_time, other.start_time), max(self.start_time, other.start_time)
+        min_end, max_end = min(self.end_time, other.end_time), max(self.end_time, other.end_time)
+        min_duration = max([0, min_end - max_start])
+        max_duration = max([0, max_end - min_start])
+        if max_duration == 0:
             return np.nan
-        return total_overlap / total_union
+        return min_duration / max_duration
 
     @final
     def time_l2(self, other: "BaseEvent") -> float:
