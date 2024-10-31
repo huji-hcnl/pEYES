@@ -321,9 +321,13 @@ class IVTDetector(BaseDetector, IThresholdDetector):
 class IVVTDetector(IVTDetector):
     """
     Implements the I-VVT (dual velocity threshold) gaze event detection algorithm, which builds on the I-VT algorithm
-    by adding a second velocity threshold for smooth pursuit detection. The I-VT algorithm is described in:
+    by adding a second velocity threshold for smooth pursuit detection.
+    The I-VT algorithm is described in:
         Salvucci, D. D., & Goldberg, J. H. (2000). Identifying fixations and saccades in eye-tracking protocols.
         In Proceedings of the Symposium on Eye Tracking Research & Applications (pp. 71-78).
+    The I-VVT algorithm is described in:
+        Komogortsev, O. V., & Karpov, A. (2013). Automated classification and scoring of smooth pursuit eye movements in
+        the presence of fixations and saccades. Behavior research methods, 45, 203-215.
 
     General algorithm:
     1. Calculate the angular velocity of the gaze data
