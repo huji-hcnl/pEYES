@@ -57,8 +57,12 @@ def ellipse_dispersion(xs: np.ndarray, ys: np.ndarray) -> float:
 
 def calculate_pixel_size(width: float, height: float, resolution: Tuple[int, int]) -> float:
     """ Calculates the approximate length of one pixel in centimeters (assuming square pixels): cm/px """
-    diagonal_length = np.sqrt(np.power(width, 2) + np.power(height, 2))  # size of diagonal in centimeters
-    diagonal_pixels = np.sqrt(np.power(resolution[0], 2) + np.power(resolution[1], 2))  # size of diagonal in pixels
+    diagonal_length = np.sqrt(  # size of diagonal in centimeters
+        np.power(width, 2) + np.power(height, 2)
+    )
+    diagonal_pixels = np.sqrt(  # size of diagonal in pixels
+        np.power(round(resolution[0]), 2) + np.power(round(resolution[1]), 2)
+    )
     return diagonal_length / diagonal_pixels
 
 
