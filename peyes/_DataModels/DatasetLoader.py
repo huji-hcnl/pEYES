@@ -167,8 +167,6 @@ class Lund2013DatasetLoader(BaseDatasetLoader):
         "Andersson, R., Larsson, L., Holmqvist, K., Stridh, M., & Nyström, M. (2017): One algorithm to rule them " +
         "all? An evaluation and discussion of ten eye movement event-detection algorithms. Behavior Research " +
         "Methods, 49(2), 616-637.",
-        "Zemblys, R., Niehorster, D. C., Komogortsev, O., & Holmqvist, K. (2018). Using machine learning to detect " +
-        "events in eye-tracking data. Behavior Research Methods, 50(1), 160–181."
     ]
 
     __PREFIX = 'EyeMovementDetectorEvaluation-master/annotated_data/originally uploaded data/'
@@ -371,10 +369,6 @@ class HFCDatasetLoader(BaseDatasetLoader):
     _ARTICLES = [
         "Hooge, I.T.C., Niehorster, D.C., Nyström, M., Andersson, R. & Hessels, R.S. (2018). Is human classification " +
         "by experienced untrained observers a gold standard in fixation detection?",
-        "Hessels, R.S., Hooge, I.T.C., & Kemner, C. (2016). An in-depth look at saccadic search in infancy. " +
-        "Journal of Vision, 16(8), 10.",
-        "Startsev, M., Zemblys, R. Evaluating Eye Movement Event Detection: A Review of the State of the Art. " +
-        "Behav Res 55, 1653–1714 (2023)"
     ]
 
     __PREFIX = 'humanFixationClassification-master/data'
@@ -486,9 +480,6 @@ class GazeComDatasetLoader(BaseDatasetLoader):
         "Michael Dorr, Thomas Martinetz, Karl Gegenfurtner, and Erhardt Barth. Variability of eye movements when " +
         "viewing dynamic natural scenes. Journal of Vision, 10(10):1-17, 2010.",
         "Startsev, M., Agtzidis, I., & Dorr, M. (2016). Smooth pursuit. http://michaeldorr.de/smoothpursuit/",
-
-        "Startsev, M., Zemblys, R. Evaluating Eye Movement Event Detection: A Review of the State of the Art. " +
-        "Behav Res 55, 1653–1714 (2023)"
     ]
 
     __PREFIX = psx.join('gazecom_annotations', 'ground_truth')
