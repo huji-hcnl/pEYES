@@ -315,6 +315,7 @@ class IRFDatasetLoader(BaseDatasetLoader):
         df.rename(
             columns={"t": cnst.T, "evt": cls.__RATER_NAME, "x": cnst.X, "y": cnst.Y}, inplace=True
         )
+        df[cnst.T] = df[cnst.T] * cnst.MILLISECONDS_PER_SECOND  # convert seconds to milliseconds
         df = cls.__correct_coordinates(df)
         return df
 
