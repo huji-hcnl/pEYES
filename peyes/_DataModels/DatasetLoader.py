@@ -148,10 +148,15 @@ class Lund2013DatasetLoader(BaseDatasetLoader):
     """
     Loads the dataset from article: "One algorithm to rule them all? An evaluation and discussion of ten eye movement
     event-detection algorithms.", Andersson et al. (2017).
-    This implementation is based on a code implemented for the article "Using machine learning to detect events in
-    eye-tracking data.", Zemblys et al. (2018).
 
-    Note two files had to be replaced due to errors in the original dataset. The corrected files are included in the
+    This loader is based on a previous implementation, see article:
+    Startsev, M., Zemblys, R. Evaluating Eye Movement Event Detection: A Review of the State of the Art. Behav Res 55, 1653–1714 (2023)
+    See their implementation: https://github.com/r-zemblys/EM-event-detection-evaluation/blob/main/misc/data_parsers/lund2013.py
+    
+    ** Important Notes: **
+    (1) The dataset used in Andersson et al. (2017) is a subset of the complete dataset, available through this loader.
+    The subset of the dataset used in the article is available at: 'EyeMovementDetectorEvaluation-master/annotated_data/data used in the article/'
+    (2) Two files had to be replaced due to errors in the original dataset. The corrected files are included in the
     dataset and used instead of the erroneous ones.
     """
 
@@ -167,6 +172,7 @@ class Lund2013DatasetLoader(BaseDatasetLoader):
     ]
 
     __PREFIX = 'EyeMovementDetectorEvaluation-master/annotated_data/originally uploaded data/'
+    # note: the article contained only a subset of the full dataset. article data is in directory 'annotated_data/data used in the article/'
     __ERRONEOUS_FILES = ['UH29_img_Europe_labelled_MN.mat']
     __CORRECTION_FILES = [
         'EyeMovementDetectorEvaluation-master/annotated_data/fix_by_Zemblys2018/UH29_img_Europe_labelled_FIX_MN.mat'
