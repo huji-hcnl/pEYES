@@ -558,6 +558,7 @@ class GazeComDatasetLoader(BaseDatasetLoader):
             invalid_idxs = np.where(np.all(df[["x", "y"]] == 0, axis=1) | (df["confidence"] < 0.5))[0]
             df.iloc[invalid_idxs, df.columns.get_indexer(["x", "y"])] = np.nan
             df['time'] = df['time'] / cnst.MILLISECONDS_PER_SECOND
+            df['time'] = df['time'] - df['time'].min()  # start timestamps from 0
             df.drop(columns=['confidence'], inplace=True)
             df.rename(columns=cls.__COLUMN_MAP, inplace=True)
             for col in df.columns:
