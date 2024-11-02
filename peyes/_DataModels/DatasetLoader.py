@@ -178,12 +178,21 @@ class Lund2013DatasetLoader(BaseDatasetLoader):
 
     @classmethod
     def _parse_response(cls, response: req.Response, verbose: bool = False) -> pd.DataFrame:
-        zip_file = zp.ZipFile(io.BytesIO(response.content))
 
-        # list all files in the zip archive that are relevant to this dataset
-        # replaces erroneously labelled files with the corrected ones (see readme.md for more info)
-        is_valid_file = lambda f: f.startswith(cls.__PREFIX) and f.endswith('.mat') and f not in cls.__ERRONEOUS_FILES
-        file_names = [f for f in zip_file.namelist() if is_valid_file(f)]
+        def is_valid_filename(name: str) -> bool:
+            # check if the file is a valid mat file containing gaze data
+            if not name.startswith(cls.__PREFIX):
+                return False
+            if not name.endswith('.mat'):
+                return False
+            if any(name.endswith(errs) for errs in cls.__ERRONEOUS_FILES):
+                # skip erroneous files, see readme.md for more info
+                return False
+            return True
+
+        # extract the zip file and list all files that contain gaze data
+        zip_file = zp.ZipFile(io.BytesIO(response.content))
+        file_names = [f for f in zip_file.namelist() if is_valid_filename(f)]
         file_names.extend(cls.__CORRECTION_FILES)
 
         # read all files into a list of dataframes
@@ -250,14 +259,21 @@ class Lund2013DatasetLoader(BaseDatasetLoader):
         file_name = file_name.replace(".mat", "")  # remove extension
         split_name = file_name.split("_")
         subject_id = split_name[0]  # subject id is always 1st in the file name
-        stimulus_type = split_name[1]  # stimulus type is always 2nd in the file name
         rater = split_name[-1].upper()  # rater is always last in the file name
-        stimulus_name = "_".join(split_name[2:-2]).removesuffix("_labelled")  # everything between stim type and rater
-        if stimulus_type.startswith("trial"):
-            stimulus_type = cnst.MOVING_DOT_STR  # moving-dot stimulus is labelled as "trial1", "trial2", etc.
+        stimulus_type = split_name[1]  # stimulus type is always 2nd in the file name
+        if stimulus_type == cnst.VIDEO_STR:
+            stimulus_name = "_".join(split_name[2:-2]).removesuffix("_labelled")  # between stim type and rater
+            return subject_id, stimulus_type, stimulus_name, rater
         if stimulus_type == "img":
-            stimulus_type = cnst.IMAGE_STR
-        return subject_id, stimulus_type, stimulus_name, rater
+            stimulus_name = "_".join(split_name[2:-2]).removesuffix("_labelled")  # between stim type and rater
+            stimulus_type = cnst.IMAGE_STR  # rename stimulus type to match peyes constants
+            return subject_id, stimulus_type, stimulus_name, rater
+        if stimulus_type.startswith(cnst.TRIAL_STR):
+            # moving-dot stimulus is labelled as "trial1", "trial2", etc.
+            stimulus_name = int(stimulus_type.removeprefix(cnst.TRIAL_STR))
+            stimulus_type = cnst.MOVING_DOT_STR
+            return subject_id, stimulus_type, stimulus_name, rater
+        raise ValueError(f"Unknown stimulus type: {stimulus_type}")
 
 
 class IRFDatasetLoader(BaseDatasetLoader):
