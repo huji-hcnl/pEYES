@@ -269,7 +269,7 @@ class Lund2013DatasetLoader(BaseDatasetLoader):
             stimulus_type = cnst.IMAGE_STR  # rename stimulus type to match peyes constants
             return subject_id, stimulus_type, stimulus_name, rater
         if stimulus_type.startswith(cnst.TRIAL_STR):
-            # moving-dot stimulus is labelled as "trial1", "trial2", etc.
+            # moving-dot stimulus is labelled as "trial1" or "trial17"
             stimulus_name = int(stimulus_type.removeprefix(cnst.TRIAL_STR))
             stimulus_type = cnst.MOVING_DOT_STR
             return subject_id, stimulus_type, stimulus_name, rater
