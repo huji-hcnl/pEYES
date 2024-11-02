@@ -414,9 +414,7 @@ class IDTDetector(BaseDetector, IThresholdDetector):
     :param missing_value: the value that indicates missing data in the gaze data.
     :param min_event_duration: the minimum duration of a gaze event, in milliseconds.
     :param pad_blinks_ms: the duration to pad around detected blinks, in milliseconds.
-    :param dispersion_threshold: the threshold for dispersion, in degrees. Default is 0.5 degrees, as suggested in the
-        paper "One algorithm to rule them all? An evaluation and discussion of ten eye movement event-detection
-        algorithms" (2016), Andersson et al.
+    :param dispersion_threshold: the threshold for dispersion, in degrees. Default is 0.5 degrees
     :param window_duration: the duration of the window in milliseconds. Default is 100 ms, as suggested in the paper
         "One algorithm to rule them all? An evaluation and discussion of ten eye movement event-detection algorithms"
         (2016), Andersson et al.
@@ -427,7 +425,7 @@ class IDTDetector(BaseDetector, IThresholdDetector):
         "In Proceedings of the Symposium on Eye Tracking Research & Applications (pp. 71-78)",
     ]
 
-    _DEFAULT_DISPERSION_THRESHOLD = 0.5  # visual degrees
+    _DEFAULT_DISPERSION_THRESHOLD = 0.5  # degrees visual angle
     _DEFAULT_WINDOW_DURATION = 100  # ms
     __DISPERSION_THRESHOLD_STR = "dispersion_threshold"
     __DEFAULT_WINDOW_DURATION_STR = "window_duration"
