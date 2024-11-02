@@ -18,7 +18,7 @@ EVENT_MAPPING = {
         cnst.LABEL_STR: EventLabelEnum.UNDEFINED.name,
         cnst.COLOR_STR: "#dddddd",
         cnst.MIN_DURATION_STR: 0,   # ms
-        cnst.MAX_DURATION_STR: 1e6  # ms
+        cnst.MAX_DURATION_STR: 1e9  # ms
     },
     EventLabelEnum.FIXATION: {
         cnst.LABEL_STR: EventLabelEnum.FIXATION.name,
