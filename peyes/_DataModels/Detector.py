@@ -34,10 +34,6 @@ class BaseDetector(ABC):
 
     _MINIMUM_SAMPLES_IN_EVENT = 2   # minimum number of samples in an event
 
-    __MISSING_VALUE_STR = "missing_value"
-    __MIN_EVENT_DURATION_STR = "min_event_duration"
-    __PAD_BLINKS_MS_STR = "pad_blinks_ms"
-
     def __init__(
             self,
             missing_value: float,
