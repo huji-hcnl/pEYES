@@ -29,13 +29,13 @@ EVENT_MAPPING = {
     EventLabelEnum.SACCADE: {
         cnst.LABEL_STR: EventLabelEnum.SACCADE.name,
         cnst.COLOR_STR: "#33a02c",
-        cnst.MIN_DURATION_STR: 10,
+        cnst.MIN_DURATION_STR: 6,
         cnst.MAX_DURATION_STR: 200
     },
     EventLabelEnum.PSO: {
         cnst.LABEL_STR: EventLabelEnum.PSO.name,
         cnst.COLOR_STR: "#b2df8a",
-        cnst.MIN_DURATION_STR: 10,
+        cnst.MIN_DURATION_STR: 6,
         cnst.MAX_DURATION_STR: 80
     },
     EventLabelEnum.SMOOTH_PURSUIT: {
