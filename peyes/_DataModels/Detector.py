@@ -2,6 +2,7 @@ import time
 from abc import ABC, abstractmethod
 from typing import final, Dict
 
+import numpy as np
 import remodnav
 from overrides import override
 from scipy.signal import savgol_filter
@@ -583,8 +584,8 @@ class EngbertDetector(BaseDetector):
             pixel_size_cm: float,
     ) -> np.ndarray:
         labels = np.asarray(copy.deepcopy(labels), dtype=EventLabelEnum)
-        x_velocity = self._axial_velocities_px(x)
-        y_velocity = self._axial_velocities_px(y)
+        x_velocity = self._axial_velocities_px(x, self.sr, self.deriv_window_size)
+        y_velocity = self._axial_velocities_px(y, self.sr, self.deriv_window_size)
         x_thresh = self._median_standard_deviation(x_velocity) * self.lambda_param
         y_thresh = self._median_standard_deviation(y_velocity) * self.lambda_param
         ellipse = (x_velocity / x_thresh) ** 2 + (y_velocity / y_thresh) ** 2
@@ -604,7 +605,10 @@ class EngbertDetector(BaseDetector):
     def deriv_window_size(self) -> int:
         return self._deriv_window_size
 
-    def _axial_velocities_px(self, arr: np.ndarray) -> np.ndarray:
+    @staticmethod
+    def _axial_velocities_px(
+            arr: np.ndarray, sr: float, window_size: int
+    ) -> np.ndarray:
         """
         Calculates the velocity (px/sec) along a single axis, based on the algorithm described in the original paper:
         1. Sum values in a window of size window_size//2, *before* the current sample:
@@ -616,14 +620,22 @@ class EngbertDetector(BaseDetector):
         4. Calculate the velocity as the difference multiplied by sampling rate and divided by the window size:
             velocity = diff * sr / ws
         5. The first and last ws//2 samples are filled with np.NaN
+
+        :param arr: the array of values to calculate the velocity for
+        :param sr: the sampling rate
+        :param window_size: the window size
+
+        :return: velocity array
         """
-        half_ws = self.deriv_window_size // 2 if self.deriv_window_size % 2 == 0 else self.deriv_window_size // 2 + 1
+        assert sr > 0 and np.isfinite(sr), "Sampling rate must be a positive finite number"
+        assert window_size > 0, "Window size must be positive"
+        half_ws = window_size // 2 if window_size % 2 == 0 else window_size // 2 + 1
         velocities = np.full_like(arr, np.nan, dtype=float)
         for idx in range(half_ws, len(arr) - half_ws):
             sum_before = np.sum(arr[idx - half_ws:idx])
             sum_after = np.sum(arr[idx + 1:idx + half_ws + 1])
             diff = sum_after - sum_before
-            velocities[idx] = diff * self.sr / self.deriv_window_size
+            velocities[idx] = diff * sr / window_size
         return velocities
 
     @staticmethod
