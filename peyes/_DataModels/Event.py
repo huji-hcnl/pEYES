@@ -137,7 +137,7 @@ class BaseEvent(ABC):
             cnst.LABEL_STR: self.label,
             cnst.START_TIME_STR: self.start_time, cnst.END_TIME_STR: self.end_time, cnst.DURATION_STR: self.duration,
             cnst.DISTANCE_STR: self.distance, cnst.AMPLITUDE_STR: self.amplitude, cnst.AZIMUTH_STR: self.azimuth,
-            cnst.PEAK_VELOCITY_STR: self.peak_velocity, cnst.MEDIAN_VELOCITY_STR: self.median_velocity,
+            cnst.PEAK_VELOCITY_STR: self.peak_velocity, cnst.MEDIAN_VELOCITY_STR: self.median_velocity, cnst.MIN_VELOCITY_STR: self.min_velocity,
             cnst.CUMULATIVE_DISTANCE_STR: self.cumulative_distance, cnst.CUMULATIVE_AMPLITUDE_STR: self.cumulative_amplitude,
             cnst.CENTER_PIXEL_STR: self.center_pixel, cnst.PIXEL_STD_STR: self.pixel_std,
             cnst.DISPERSION_STR: self.dispersion, cnst.ELLIPSE_AREA_STR: self.ellipse_area,
@@ -382,6 +382,12 @@ class BaseEvent(ABC):
     def median_velocity(self) -> float:
         """  Returns the median velocity during the event (visual degree / second)  """
         return np.nanmedian(self.velocities(unit='deg'))
+
+    @final
+    @property
+    def min_velocity(self) -> float:
+        """  Returns the minimum velocity during the event (visual degree / second)  """
+        return np.nanmin(self.velocities(unit='deg'))
 
     def __hash__(self):
         return hash((
