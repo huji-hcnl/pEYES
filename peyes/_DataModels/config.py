@@ -36,7 +36,7 @@ EVENT_MAPPING = {
         cnst.LABEL_STR: EventLabelEnum.PSO.name,
         cnst.COLOR_STR: "#b2df8a",
         cnst.MIN_DURATION_STR: 6,
-        cnst.MAX_DURATION_STR: 60,
+        cnst.MAX_DURATION_STR: 80,
     },
     EventLabelEnum.SMOOTH_PURSUIT: {
         cnst.LABEL_STR: EventLabelEnum.SMOOTH_PURSUIT.name,
