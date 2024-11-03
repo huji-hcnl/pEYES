@@ -415,11 +415,11 @@ class IDTDetector(BaseDetector, IThresholdDetector):
     :param missing_value: the value that indicates missing data in the gaze data.
     :param min_event_duration: the minimum duration of a gaze event, in milliseconds.
     :param pad_blinks_ms: the duration to pad around detected blinks, in milliseconds.
-    :param dispersion_threshold: the threshold for dispersion, in degrees. Default is 0.5 degrees, as suggested in the
-        original paper by Salvucci and Goldberg (2000).
-    :param window_duration: the duration of the window in milliseconds. The original Salvucci and Goldberg (2000) paper
-        suggests a window duration of 100 ms, but here we use the minimal fixation duration set in the configuration
-        file, namely 50 ms.
+    :param dispersion_threshold: the threshold for dispersion, in degrees. Default is 2.7 DVA, as used in the article
+        by Andersson et al. (2016). The original paper by Salvucci and Goldberg (2000) suggests a threshold of 0.5 DVA.
+    :param window_duration: the duration of the window in milliseconds. Default is the minimal fixation duration from
+        the configuration file. We set the default to 50 ms, based on the manual labels provided in the article by
+        Andersson et al. (2016). The original Salvucci and Goldberg (2000) paper suggests a window duration of 100 ms.
     """
 
     _ARTICLES = [
@@ -427,8 +427,8 @@ class IDTDetector(BaseDetector, IThresholdDetector):
         "In Proceedings of the Symposium on Eye Tracking Research & Applications (pp. 71-78)",
     ]
 
-    _DEFAULT_DISPERSION_THRESHOLD = 0.5  # degrees visual angle
-    _DEFAULT_WINDOW_DURATION = cnfg.EVENT_MAPPING[EventLabelEnum.FIXATION][cnst.MIN_DURATION_STR]  # 50 ms, instead of 100
+    _DEFAULT_DISPERSION_THRESHOLD = 2.7  # DVA; original paper suggests 0.5 DVA
+    _DEFAULT_WINDOW_DURATION = cnfg.EVENT_MAPPING[EventLabelEnum.FIXATION][cnst.MIN_DURATION_STR]  # 50 ms; original paper suggests 100 ms
     __DISPERSION_THRESHOLD_STR = "dispersion_threshold"
     __DEFAULT_WINDOW_DURATION_STR = "window_duration"
 
