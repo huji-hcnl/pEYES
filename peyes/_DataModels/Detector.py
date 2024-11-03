@@ -340,7 +340,7 @@ class IVVTDetector(IVTDetector):
         per-second, as suggested in the paper "One algorithm to rule them all? An evaluation and discussion of ten eye
         movement event-detection algorithms" (2016), Andersson et al.
     :param smooth_pursuit_velocity_threshold: the threshold for angular velocity, in degrees per second, that separates
-        smooth pursuit from fixations. Default is 5 degrees per-second.
+        smooth pursuit from fixations. Default is 26 degrees per-second, as used in Komogortsev & Karpov (2013).
     """
 
     _ARTICLES = [
@@ -348,7 +348,7 @@ class IVVTDetector(IVTDetector):
         "In Proceedings of the Symposium on Eye Tracking Research & Applications (pp. 71-78)",
     ]
 
-    _DEFAULT_SMOOTH_PURSUIT_VELOCITY_THRESHOLD = 20  # deg/s
+    _DEFAULT_SMOOTH_PURSUIT_VELOCITY_THRESHOLD = 26  # deg/s
     _SMOOTH_PURSUIT_VELOCITY_THRESHOLD_STR = "smooth_pursuit_velocity_threshold"
 
     def __init__(
