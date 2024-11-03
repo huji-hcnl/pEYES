@@ -44,6 +44,7 @@ class TestEvent(unittest.TestCase):
         self.assertEqual(f.cumulative_amplitude, pixels_to_visual_angle(100, self._VD, self._PS))
         self.assertEqual(f.x_dispersion, 0.0)
         self.assertEqual(f.y_dispersion, pixels_to_visual_angle(50, self._VD, self._PS))
+        self.assertEqual(f.dispersion, pixels_to_visual_angle(50, self._VD, self._PS))
 
     def test_velocity(self):
         t, x, y = np.arange(21), np.full(21, 40), np.hstack([np.arange(50, 0, -5), np.arange(0, 51, 5)])

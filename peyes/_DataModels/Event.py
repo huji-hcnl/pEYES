@@ -139,7 +139,8 @@ class BaseEvent(ABC):
             cnst.DISTANCE_STR: self.distance, cnst.AMPLITUDE_STR: self.amplitude, cnst.AZIMUTH_STR: self.azimuth,
             cnst.PEAK_VELOCITY_STR: self.peak_velocity, cnst.MEDIAN_VELOCITY_STR: self.median_velocity,
             cnst.CUMULATIVE_DISTANCE_STR: self.cumulative_distance, cnst.CUMULATIVE_AMPLITUDE_STR: self.cumulative_amplitude,
-            cnst.CENTER_PIXEL_STR: self.center_pixel, cnst.PIXEL_STD_STR: self.pixel_std, cnst.ELLIPSE_AREA_STR: self.ellipse_area,
+            cnst.CENTER_PIXEL_STR: self.center_pixel, cnst.PIXEL_STD_STR: self.pixel_std,
+            cnst.DISPERSION_STR: self.dispersion, cnst.ELLIPSE_AREA_STR: self.ellipse_area,
             cnst.IS_OUTLIER_STR: self.is_outlier, self._OUTLIER_REASONS_STR: self.get_outlier_reasons()
         }
         return pd.Series(d)
@@ -355,6 +356,12 @@ class BaseEvent(ABC):
     def y_dispersion(self) -> float:
         """  Returns the vertical dispersion of the event (visual degree units)  """
         return pixels_to_visual_angle(np.nanmax(self._y) - np.nanmin(self._y), self._viewer_distance, self._pixel_size)
+
+    @final
+    @property
+    def dispersion(self) -> float:
+        """  Returns the dispersion of the event - sum of horizontal and vertical dispersion (visual degree units)  """
+        return self.x_dispersion + self.y_dispersion
 
     @final
     @property

@@ -90,6 +90,7 @@ CUMULATIVE_AMPLITUDE_STR = f"cumulative_{AMPLITUDE_STR}"
 PEAK_VELOCITY_STR, MEDIAN_VELOCITY_STR = f"peak_{VELOCITY_STR}", f"median_{VELOCITY_STR}"
 CENTER_PIXEL_STR = f"center_{PIXEL_STR}"
 PIXEL_STD_STR = f"{PIXEL_STR}_std"
+DISPERSION_STR = "dispersion"
 ELLIPSE_AREA_STR = f"ellipse_{AREA_STR}"
 
 ####  Metrics  ####
