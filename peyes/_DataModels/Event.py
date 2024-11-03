@@ -135,13 +135,23 @@ class BaseEvent(ABC):
     def summary(self) -> pd.Series:
         d = {
             cnst.LABEL_STR: self.label,
-            cnst.START_TIME_STR: self.start_time, cnst.END_TIME_STR: self.end_time, cnst.DURATION_STR: self.duration,
-            cnst.DISTANCE_STR: self.distance, cnst.AMPLITUDE_STR: self.amplitude, cnst.AZIMUTH_STR: self.azimuth,
-            cnst.PEAK_VELOCITY_STR: self.peak_velocity, cnst.MEDIAN_VELOCITY_STR: self.median_velocity, cnst.MIN_VELOCITY_STR: self.min_velocity,
-            cnst.CUMULATIVE_DISTANCE_STR: self.cumulative_distance, cnst.CUMULATIVE_AMPLITUDE_STR: self.cumulative_amplitude,
-            cnst.CENTER_PIXEL_STR: self.center_pixel, cnst.PIXEL_STD_STR: self.pixel_std,
-            cnst.DISPERSION_STR: self.dispersion, cnst.ELLIPSE_AREA_STR: self.ellipse_area,
-            cnst.IS_OUTLIER_STR: self.is_outlier, self._OUTLIER_REASONS_STR: self.get_outlier_reasons()
+            cnst.START_TIME_STR: self.start_time,
+            cnst.END_TIME_STR: self.end_time,
+            cnst.DURATION_STR: self.duration,
+            cnst.DISTANCE_STR: self.distance,
+            cnst.AMPLITUDE_STR: self.amplitude,
+            cnst.AZIMUTH_STR: self.azimuth,
+            cnst.PEAK_VELOCITY_STR: self.peak_velocity,
+            cnst.MEDIAN_VELOCITY_STR: self.median_velocity,
+            cnst.MIN_VELOCITY_STR: self.min_velocity,
+            cnst.CUMULATIVE_DISTANCE_STR: self.cumulative_distance,
+            cnst.CUMULATIVE_AMPLITUDE_STR: self.cumulative_amplitude,
+            cnst.CENTER_PIXEL_STR: self.center_pixel,
+            cnst.PIXEL_STD_STR: self.pixel_std,
+            cnst.DISPERSION_STR: self.dispersion,
+            cnst.ELLIPSE_AREA_STR: self.ellipse_area,
+            cnst.IS_OUTLIER_STR: self.is_outlier,
+            self._OUTLIER_REASONS_STR: self.get_outlier_reasons()
         }
         return pd.Series(d)
 
