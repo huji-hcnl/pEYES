@@ -197,7 +197,7 @@ class BaseEvent(ABC):
         """  Calculates the Euclidean distance between the center pixel of this event and another event (px units).  """
         x1, y1 = self.center_pixel
         x2, y2 = other.center_pixel
-        return np.linalg.norm([x1 - x2, y1 - y2])
+        return float(np.linalg.norm([x1 - x2, y1 - y2]))
 
     @classmethod
     @final
@@ -281,7 +281,7 @@ class BaseEvent(ABC):
         """  Euclidean distance between the start and end pixels of the event (pixel units)  """
         start_x, start_y = self.start_pixel
         end_x, end_y = self.end_pixel
-        return np.linalg.norm([end_x - start_x, end_y - start_y])
+        return float(np.linalg.norm([end_x - start_x, end_y - start_y]))
 
     @final
     @property
@@ -391,7 +391,7 @@ class BaseEvent(ABC):
     @property
     def median_velocity(self) -> float:
         """  Returns the median velocity during the event (visual degree / second)  """
-        return np.nanmedian(self.velocities(unit='deg'))
+        return float(np.nanmedian(self.velocities(unit='deg')))
 
     @final
     @property
