@@ -418,7 +418,7 @@ class IDTDetector(BaseDetector, IThresholdDetector):
     :param min_event_duration: the minimum duration of a gaze event, in milliseconds.
     :param pad_blinks_ms: the duration to pad around detected blinks, in milliseconds.
     :param dispersion_threshold: the threshold for dispersion, in degrees. Default is 0.5 DVA, as used in the original
-        paper by Salvucci and Goldberg (2000). In the  Andersson et al. (2016), the suggests threshold is 2.7 DVA.
+        paper by Salvucci and Goldberg (2000). In the  Andersson et al. (2016), the suggested threshold is 2.7 DVA.
     :param window_duration: the duration of the window in milliseconds. Default is the minimal fixation duration from
         the configuration file. The original Salvucci and Goldberg (2000) paper suggests a window duration of 100 ms.
     """
