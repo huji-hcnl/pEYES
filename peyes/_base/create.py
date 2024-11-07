@@ -37,6 +37,10 @@ def create_detector(
     - IDT:
         :keyword dispersion_threshold: dispersion threshold that separates saccades from fixations (visual angle degrees), default: 0.5
         :keyword window_duration: the duration of the window used to calculate the dispersion threshold (ms), default: 100
+    - IDVT:
+        :keyword dispersion_threshold: dispersion threshold that separates fixations from smooth pursuits (visual angle degrees), default: 2.0
+        :keyword window_duration: the duration of the window used to calculate the dispersion threshold (ms), default: 100
+        :keyword saccade_velocity_threshold: float; velocity threshold to separates smooth pursuits from saccades (deg/s), default: 45
     - Engbert:
         :keyword lambda_param: float; multiplication coefficient used for calculating saccade threshold, default: 5
         :keyword deriv_window_size: int; number of samples used to compute axial velocity, default: 5
@@ -85,6 +89,12 @@ def create_detector(
             **{k: kwargs.get(k, default_params[k]) for k in default_params.keys()}
         )
     elif detector_name_lower == 'idt':
+        default_params = IDTDetector.get_default_params()
+        return IDTDetector(
+            missing_value=missing_value, min_event_duration=min_event_duration, pad_blinks_ms=pad_blinks_time,
+            **{k: kwargs.get(k, default_params[k]) for k in default_params.keys()}
+        )
+    elif detector_name_lower == 'idvt':
         default_params = IDTDetector.get_default_params()
         return IDTDetector(
             missing_value=missing_value, min_event_duration=min_event_duration, pad_blinks_ms=pad_blinks_time,

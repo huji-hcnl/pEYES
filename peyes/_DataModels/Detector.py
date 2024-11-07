@@ -513,6 +513,101 @@ class IDTDetector(BaseDetector, IThresholdDetector):
         return max(xs) - min(xs) + max(ys) - min(ys)
 
 
+class IDVTDetector(IDTDetector, IVTDetector):
+    """
+    Implements the I-DVT (dispersion and velocity thresholds) gaze event detection algorithm, which combines the
+    velocity threshold and dispersion threshold algorithms, to detect fixations, saccades and smooth pursuits.
+    The I-VT algorithm is described in:
+        Salvucci, D. D., & Goldberg, J. H. (2000). Identifying fixations and saccades in eye-tracking protocols.
+        In Proceedings of the Symposium on Eye Tracking Research & Applications (pp. 71-78).
+    The I-DT algorithm is described in:
+        Salvucci, D. D., & Goldberg, J. H. (2000). Identifying fixations and saccades in eye-tracking protocols.
+        In Proceedings of the Symposium on Eye Tracking Research & Applications (pp. 71-78).
+    The I-DVT algorithm is described in:
+        Komogortsev, O. V., & Karpov, A. (2013). Automated classification and scoring of smooth pursuit eye movements
+        in the presence of fixations and saccades. Behavior research methods, 45, 203-215.
+
+    General algorithm:
+    1. Identify fixations using the dispersion-threshold algorithm:
+        1.A. Initialize a window spanning the first `window_duration` milliseconds
+        1.B. Calculate the dispersion of the gaze data in the window
+        1.C. If the dispersion is below the threshold, label all samples in the window as fixation and expand the window
+            by a single sample. Otherwise, label the current sample as saccade and start a new window in the next sample
+        1.D. Repeat until the end of the gaze data
+    2. Identify saccades using the velocity-threshold algorithm:
+        2.A. Calculate the angular velocity of the gaze data
+        2.B. Identify saccade candidates as samples with angular velocity greater than the saccade threshold
+    3. The remaining samples have lower velocity than the saccade threshold, and higher dispersion than the fixation
+        threshold. These are classified as smooth pursuits.
+
+    :param missing_value: the value that indicates missing data in the gaze data.
+    :param min_event_duration: the minimum duration of a gaze event, in milliseconds.
+    :param pad_blinks_ms: the duration to pad around detected blinks, in milliseconds.
+    :param saccade_velocity_threshold: the threshold for angular velocity, in degrees per second. Default is 45 degrees
+        per-second, as suggested in the paper "One algorithm to rule them all? An evaluation and discussion of ten eye
+        movement event-detection algorithms" (2016), Andersson et al.
+    :param smooth_pursuit_velocity_threshold: the threshold for angular velocity, in degrees per second, that separates
+        smooth pursuit from fixations. Default is 26 degrees per-second, as used in Komogortsev & Karpov (2013).
+    :param dispersion_threshold: the threshold for dispersion, in degrees. Default is 2.0 DVA, as used in the original
+        paper by Komogortsev & Karpov (2013). In the  Andersson et al. (2016), they suggested threshold is 2.7 DVA.
+    :param window_duration: the duration of the window in milliseconds. Default is the minimal fixation duration from
+        the configuration file. The original Komogortsev & Karpov (2013) paper suggest a threshold of 110-150 ms.
+    """
+
+    _ARTICLES = [
+        "Salvucci, D. D., & Goldberg, J. H. (2000). Identifying fixations and saccades in eye-tracking protocols. " +
+        "In Proceedings of the Symposium on Eye Tracking Research & Applications (pp. 71-78)",
+        "Komogortsev, O. V., & Karpov, A. (2013). Automated classification and scoring of smooth pursuit eye " +
+        "movements in the presence of fixations and saccades. Behavior research methods, 45, 203-215."
+    ]
+
+    def __init__(
+            self,
+            missing_value: float,
+            min_event_duration: float,
+            pad_blinks_ms: float,
+            dispersion_threshold: float = IDTDetector._DEFAULT_DISPERSION_THRESHOLD,
+            window_duration: float = IDTDetector._DEFAULT_WINDOW_DURATION,
+            saccade_velocity_threshold: float = IVTDetector._DEFAULT_SACCADE_VELOCITY_THRESHOLD,
+    ):
+        super(IDVTDetector, self).__init__(
+            missing_value, min_event_duration, pad_blinks_ms, dispersion_threshold, window_duration
+        )
+        self._saccade_velocity_threshold = saccade_velocity_threshold
+
+    @classmethod
+    def get_default_params(cls) -> Dict[str, float]:
+        return {
+            **IDTDetector.get_default_params(),
+            **IVTDetector.get_default_params(),
+        }
+
+    def _detect_impl(
+            self,
+            t: np.ndarray,
+            x: np.ndarray,
+            y: np.ndarray,
+            labels: np.ndarray,
+            viewer_distance_cm: float,
+            pixel_size_cm: float,
+    ) -> np.ndarray:
+        idt_labels = IDTDetector._detect_impl(
+            self, t, x, y, labels, viewer_distance_cm, pixel_size_cm
+        )
+        is_fixation = idt_labels == EventLabelEnum.FIXATION
+        ivt_labels = IVTDetector._detect_impl(
+            self, t, x, y, labels, viewer_distance_cm, pixel_size_cm
+        )
+        is_saccade = (ivt_labels == EventLabelEnum.SACCADE) & ~is_fixation
+        is_smooth_pursuit = ~is_fixation & ~is_saccade
+
+        labels = np.asarray(copy.deepcopy(labels), dtype=EventLabelEnum)
+        labels[(labels == EventLabelEnum.UNDEFINED) & is_fixation] = EventLabelEnum.FIXATION
+        labels[(labels == EventLabelEnum.UNDEFINED) & is_saccade] = EventLabelEnum.SACCADE
+        labels[(labels == EventLabelEnum.UNDEFINED) & is_smooth_pursuit] = EventLabelEnum.SMOOTH_PURSUIT
+        return labels
+
+
 class EngbertDetector(BaseDetector):
     """
     Implements the algorithm described by Engbert, Kliegl, and Mergenthaler in
