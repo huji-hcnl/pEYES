@@ -415,11 +415,10 @@ class IDTDetector(BaseDetector, IThresholdDetector):
     :param missing_value: the value that indicates missing data in the gaze data.
     :param min_event_duration: the minimum duration of a gaze event, in milliseconds.
     :param pad_blinks_ms: the duration to pad around detected blinks, in milliseconds.
-    :param dispersion_threshold: the threshold for dispersion, in degrees. Default is 2.7 DVA, as used in the article
-        by Andersson et al. (2016). The original paper by Salvucci and Goldberg (2000) suggests a threshold of 0.5 DVA.
+    :param dispersion_threshold: the threshold for dispersion, in degrees. Default is 0.5 DVA, as used in the original
+        paper by Salvucci and Goldberg (2000). In the  Andersson et al. (2016), the suggests threshold is 2.7 DVA.
     :param window_duration: the duration of the window in milliseconds. Default is the minimal fixation duration from
-        the configuration file. We set the default to 50 ms, based on the manual labels provided in the article by
-        Andersson et al. (2016). The original Salvucci and Goldberg (2000) paper suggests a window duration of 100 ms.
+        the configuration file. The original Salvucci and Goldberg (2000) paper suggests a window duration of 100 ms.
     """
 
     _ARTICLES = [
@@ -427,8 +426,8 @@ class IDTDetector(BaseDetector, IThresholdDetector):
         "In Proceedings of the Symposium on Eye Tracking Research & Applications (pp. 71-78)",
     ]
 
-    _DEFAULT_DISPERSION_THRESHOLD = 2.7  # DVA; original paper suggests 0.5 DVA
-    _DEFAULT_WINDOW_DURATION = cnfg.EVENT_MAPPING[EventLabelEnum.FIXATION][cnst.MIN_DURATION_STR]  # 50 ms; original paper suggests 100 ms
+    _DEFAULT_DISPERSION_THRESHOLD = 0.5  # DVA
+    _DEFAULT_WINDOW_DURATION = cnfg.EVENT_MAPPING[EventLabelEnum.FIXATION][cnst.MIN_DURATION_STR]  # ms; original paper suggests 100 ms
     __DISPERSION_THRESHOLD_STR = "dispersion_threshold"
     __DEFAULT_WINDOW_DURATION_STR = "window_duration"
 
@@ -533,7 +532,7 @@ class EngbertDetector(BaseDetector):
     :param min_event_duration: the minimum duration of a gaze event, in milliseconds.
     :param pad_blinks_ms: the duration to pad around detected blinks, in milliseconds.
     :param lambda_param: the multiplication coefficient used for calculating saccade threshold. Default is 5, as
-        suggested in the original paper
+        suggested in the original paper by Engbert & Mergethaler (2006) (note Engbert & Klielgl 2003 use lambda=6).
     :param deriv_window_size: number of samples (including the middle sample) used to calculate the velocity, meaning
         the velocity at time t is the difference between the sum of the `ws//2` samples after and before t, divided by
         the window size. Default is 5, as suggested in the original paper
@@ -703,13 +702,13 @@ class NHDetector(BaseDetector):
         "Journal of vision, 15(15), 11-11",
     ]
 
-    _DEFAULT_FILTER_DURATION_MS = 2 * cnfg.EVENT_MAPPING[EventLabelEnum.SACCADE][cnst.MIN_DURATION_STR]     # 20ms
+    _DEFAULT_FILTER_DURATION_MS = 2 * cnfg.EVENT_MAPPING[EventLabelEnum.SACCADE][cnst.MIN_DURATION_STR]      # ms
     _DEFAULT_FILTER_POLYORDER = 2                                                                           # unitless
     _DEFAULT_SACCADE_MAX_VELOCITY = 1000                                                                    # deg/s
     _DEFAULT_SACCADE_MAX_ACCELERATION = 100000                                                              # deg/s^2
-    _DEFAULT_MIN_SACCADE_DURATION_MS = cnfg.EVENT_MAPPING[EventLabelEnum.SACCADE][cnst.MIN_DURATION_STR]    # 10ms
-    _DEFAULT_MIN_FIXATION_DURATION_MS = cnfg.EVENT_MAPPING[EventLabelEnum.FIXATION][cnst.MIN_DURATION_STR]  # 50ms
-    _DEFAULT_MAX_PSO_DURATION_MS = cnfg.EVENT_MAPPING[EventLabelEnum.PSO][cnst.MAX_DURATION_STR]            # 80ms
+    _DEFAULT_MIN_SACCADE_DURATION_MS = cnfg.EVENT_MAPPING[EventLabelEnum.SACCADE][cnst.MIN_DURATION_STR]    # ms
+    _DEFAULT_MIN_FIXATION_DURATION_MS = cnfg.EVENT_MAPPING[EventLabelEnum.FIXATION][cnst.MIN_DURATION_STR]  # ms
+    _DEFAULT_MAX_PSO_DURATION_MS = cnfg.EVENT_MAPPING[EventLabelEnum.PSO][cnst.MAX_DURATION_STR]            # ms
     _DEFAULT_ALPHA_PARAM = 0.7                                                                              # unitless
 
     __FILTER_DURATION_MS_STR = "filter_duration_ms"
@@ -1179,21 +1178,23 @@ class REMoDNaVDetector(BaseDetector):
     :param missing_value: the value that indicates missing data in the gaze data.
     :param min_event_duration: the minimum duration of a gaze event, in milliseconds.
     :param pad_blinks_ms: the duration to pad around detected blinks, in milliseconds.
-    :param min_saccade_duration: the minimum duration of a saccade (ms), default is 4 ms
+    :param median_filter_duration_ms: the duration of the median filter (ms), default is 50 ms
+    :param savgol_filter_polyorder: the polynomial order for the Savitzky-Golay filter, default is 2
+    :param savgol_filter_duration_ms: the duration of the Savitzky-Golay filter (ms), default is 19 ms
+    :param max_velocity: the maximum velocity of the gaze data (deg/s), default is 1500
+    :param min_saccade_duration: the minimum duration of a saccade (ms), default is 6 ms
     :param saccade_initial_velocity_threshold: the initial velocity threshold for saccade detection (deg/s), default is 300
     :param saccade_context_window_duration: the duration of the context window for saccade detection (ms), default is 1000
     :param saccade_initial_max_freq: the initial maximum frequency for saccade detection (Hz), default is 2.0
     :param saccade_onset_threshold_noise_factor: the noise factor for saccade onset threshold, default is 5.0
-    :param min_smooth_pursuit_duration: the minimum duration of a smooth pursuit (ms), default is 4 ms
+    :param min_smooth_pursuit_duration: the minimum duration of a smooth pursuit (ms), default is 40 ms
     :param smooth_pursuits_lowpass_cutoff_freq: the lowpass cutoff frequency for smooth pursuit detection (Hz), default is 4.0
     :param smooth_pursuit_drift_velocity_threshold: the drift velocity threshold for smooth pursuit detection (deg/s), default is 2.0
-    :param min_fixation_duration: the minimum duration of a fixation (ms), default is 50 ms
+    :param min_fixation_duration: the minimum duration of a fixation (ms), default is 55 ms, used in the article by
+        Andersson et al. (2017). The original REMoDNaV article (Dar et al. 2021) uses 50ms threshold.
     :param min_blink_duration: the minimum duration of a blink (ms), default is 20 ms
-    :param max_pso_duration: the maximum duration of a PSO (ms), default is 80 ms
-    :param savgol_filter_polyorder: the polynomial order for the Savitzky-Golay filter, default is 2
-    :param savgol_filter_duration_ms: the duration of the Savitzky-Golay filter (ms), default is 19 ms
-    :param median_filter_duration_ms: the duration of the median filter (ms), default is 50 ms
-    :param max_velocity: the maximum velocity of the gaze data (deg/s), default is 1500
+    :param max_pso_duration: the maximum duration of a PSO (ms), default is 80 ms. Original REMoDNaV article (Dar et al.
+        2021) uses 40ms threshold.
     """
 
     _ARTICLES = [
@@ -1201,22 +1202,26 @@ class REMoDNaVDetector(BaseDetector):
         "Res Methods. 2021 Feb;53(1):399-414. doi: 10.3758/s13428-020-01428-x",
     ]
 
-    _DEFAULT_MIN_SACCADE_DURATION_MS = cnfg.EVENT_MAPPING[EventLabelEnum.SACCADE][cnst.MIN_DURATION_STR]
-    _DEFAULT_MIN_SMOOTH_PURSUIT_DURATION_MS = cnfg.EVENT_MAPPING[EventLabelEnum.SMOOTH_PURSUIT][cnst.MIN_DURATION_STR]
+    ## Default Parameters
+
+    _DEFAULT_MEDIAN_FILTER_DURATION_MS = 50                 # ms
+    _DEFAULT_SAVGOL_POLYORDER = 2                           # unitless
+    _DEFAULT_SAVGOL_DURATION_MS = 19                        # ms
+    _DEFAULT_MAX_VELOCITY_DEG = 1500                        # deg/s
+
     _DEFAULT_MIN_FIXATION_DURATION_MS = cnfg.EVENT_MAPPING[EventLabelEnum.FIXATION][cnst.MIN_DURATION_STR]
     _DEFAULT_MIN_BLINK_DURATION_MS = cnfg.EVENT_MAPPING[EventLabelEnum.BLINK][cnst.MIN_DURATION_STR]
     _DEFAULT_MAX_PSO_DURATION_MS = cnfg.EVENT_MAPPING[EventLabelEnum.PSO][cnst.MAX_DURATION_STR]
 
+    _DEFAULT_MIN_SACCADE_DURATION_MS = cnfg.EVENT_MAPPING[EventLabelEnum.SACCADE][cnst.MIN_DURATION_STR]
     _DEFAULT_SACCADE_INITIAL_VELOCITY_THRESHOLD = 300       # deg/s
     _DEFAULT_SACCADE_CONTEXT_WINDOW_DURATION_MS = 1000      # ms
     _DEFAULT_SACCADE_INITIAL_MAX_FREQ = 2.0                 # Hz
     _DEFAULT_SACCADE_ONSET_THRESHOLD_NOISE_FACTOR = 5.0     # unitless
+
+    _DEFAULT_MIN_SMOOTH_PURSUIT_DURATION_MS = cnfg.EVENT_MAPPING[EventLabelEnum.SMOOTH_PURSUIT][cnst.MIN_DURATION_STR]
     _DEFAULT_SMOOTH_PURSUIT_LOWPASS_CUTOFF_FREQ = 4.0       # Hz
     _DEFAULT_SMOOTH_PURSUIT_DRIFT_VELOCITY_THRESHOLD = 2.0  # deg/s
-    _DEFAULT_SAVGOL_POLYORDER = 2                           # unitless
-    _DEFAULT_SAVGOL_DURATION_MS = 19                        # ms
-    _DEFAULT_MEDIAN_FILTER_DURATION_MS = 50                 # ms
-    _DEFAULT_MAX_VELOCITY_DEG = 1500                        # deg/s
 
     __LABEL_MAPPING = {
         'FIXA': EventLabelEnum.FIXATION, 'SACC': EventLabelEnum.SACCADE, 'ISAC': EventLabelEnum.SACCADE,
@@ -1224,27 +1229,36 @@ class REMoDNaVDetector(BaseDetector):
         'ILPS': EventLabelEnum.PSO, 'PURS': EventLabelEnum.SMOOTH_PURSUIT, 'BLNK': EventLabelEnum.BLINK
     }
 
+    ## Parameter Names
+
+    __MEDIAN_FILTER_DURATION_MS_STR = "median_filter_duration_ms"
+    __SAVGOL_POLYORDER_STR = "savgol_filter_polyorder"
+    __SAVGOL_DURATION_MS_STR = "savgol_filter_duration_ms"
+    __MAX_VELOCITY_STR = "max_velocity"
+
+    __MIN_FIXATION_DURATION_STR = "min_fixation_duration"
+    __MIN_BLINK_DURATION_STR = "min_blink_duration"
+    __MAX_PSO_DURATION_STR = "max_pso_duration"
+
     __MIN_SACCADE_DURATION_STR = "min_saccade_duration"
     __SACCADE_INITIAL_VELOCITY_THRESHOLD_STR = "saccade_initial_velocity_threshold"
     __SACCADE_CONTEXT_WINDOW_DURATION_STR = "saccade_context_window_duration"
     __SACCADE_INITIAL_MAX_FREQ_STR = "saccade_initial_max_freq"
     __SACCADE_ONSET_THRESHOLD_NOISE_FACTOR_STR = "saccade_onset_threshold_noise_factor"
+
     __MIN_SMOOTH_PURSUIT_DURATION_STR = "min_smooth_pursuit_duration"
     __SMOOTH_PURSUIT_LOWPASS_CUTOFF_FREQ_STR = "smooth_pursuits_lowpass_cutoff_freq"
     __SMOOTH_PURSUIT_DRIFT_VELOCITY_THRESHOLD_STR = "smooth_pursuit_drift_velocity_threshold"
-    __MIN_FIXATION_DURATION_STR = "min_fixation_duration"
-    __MIN_BLINK_DURATION_STR = "min_blink_duration"
-    __MAX_PSO_DURATION_STR = "max_pso_duration"
-    __SAVGOL_POLYORDER_STR = "savgol_filter_polyorder"
-    __SAVGOL_DURATION_MS_STR = "savgol_filter_duration_ms"
-    __MEDIAN_FILTER_DURATION_MS_STR = "median_filter_duration_ms"
-    __MAX_VELOCITY_STR = "max_velocity"
 
     def __init__(
             self,
             missing_value: float,
             min_event_duration: float,
             pad_blinks_ms: float,
+            median_filter_duration_ms: float = _DEFAULT_MEDIAN_FILTER_DURATION_MS,
+            savgol_filter_polyorder: int = _DEFAULT_SAVGOL_POLYORDER,
+            savgol_filter_duration_ms: float = _DEFAULT_SAVGOL_DURATION_MS,
+            max_velocity: float = _DEFAULT_MAX_VELOCITY_DEG,
             min_saccade_duration: float = _DEFAULT_MIN_SACCADE_DURATION_MS,
             saccade_initial_velocity_threshold: float = _DEFAULT_SACCADE_INITIAL_VELOCITY_THRESHOLD,
             saccade_context_window_duration: float = _DEFAULT_SACCADE_CONTEXT_WINDOW_DURATION_MS,
@@ -1256,12 +1270,9 @@ class REMoDNaVDetector(BaseDetector):
             min_fixation_duration: float = _DEFAULT_MIN_FIXATION_DURATION_MS,
             min_blink_duration: float = _DEFAULT_MIN_BLINK_DURATION_MS,
             max_pso_duration: float = _DEFAULT_MAX_PSO_DURATION_MS,
-            savgol_filter_polyorder: int = _DEFAULT_SAVGOL_POLYORDER,
-            savgol_filter_duration_ms: float = _DEFAULT_SAVGOL_DURATION_MS,
-            median_filter_duration_ms: float = _DEFAULT_MEDIAN_FILTER_DURATION_MS,
-            max_velocity: float = _DEFAULT_MAX_VELOCITY_DEG,
     ):
         super().__init__(missing_value, min_event_duration, pad_blinks_ms)
+        self._median_filter_length = median_filter_duration_ms
         self._min_saccade_duration_ms = max(min_saccade_duration, self._min_event_duration)
         self._saccade_initial_velocity_threshold = saccade_initial_velocity_threshold
         self._saccade_context_window_duration = saccade_context_window_duration
@@ -1275,7 +1286,6 @@ class REMoDNaVDetector(BaseDetector):
         self._max_pso_duration_ms = max(max_pso_duration, self._min_event_duration)
         self._savgol_polyorder = savgol_filter_polyorder
         self._savgol_duration_ms = savgol_filter_duration_ms
-        self._median_filter_length = median_filter_duration_ms
         self._max_velocity = max_velocity
 
     @classmethod
