@@ -346,6 +346,8 @@ class IVVTDetector(IVTDetector):
     _ARTICLES = [
         "Salvucci, D. D., & Goldberg, J. H. (2000). Identifying fixations and saccades in eye-tracking protocols. " +
         "In Proceedings of the Symposium on Eye Tracking Research & Applications (pp. 71-78)",
+        "Komogortsev, O. V., & Karpov, A. (2013). Automated classification and scoring of smooth pursuit eye " +
+        "movements in the presence of fixations and saccades. Behavior research methods, 45, 203-215."
     ]
 
     _DEFAULT_SMOOTH_PURSUIT_VELOCITY_THRESHOLD = 26  # deg/s
