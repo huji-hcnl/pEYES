@@ -799,7 +799,7 @@ class NHDetector(BaseDetector):
         "Journal of vision, 15(15), 11-11",
     ]
 
-    _DEFAULT_FILTER_DURATION_MS = 2 * cnfg.EVENT_MAPPING[EventLabelEnum.SACCADE][cnst.MIN_DURATION_STR]      # ms
+    _DEFAULT_FILTER_DURATION_MS = 2 * cnfg.EVENT_MAPPING[EventLabelEnum.SACCADE][cnst.MIN_DURATION_STR]     # ms
     _DEFAULT_FILTER_POLYORDER = 2                                                                           # unitless
     _DEFAULT_SACCADE_MAX_VELOCITY = 1000                                                                    # deg/s
     _DEFAULT_SACCADE_MAX_ACCELERATION = 100000                                                              # deg/s^2
