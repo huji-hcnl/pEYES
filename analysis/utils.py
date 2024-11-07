@@ -43,9 +43,10 @@ LABELERS_CONFIG = {
     "ivt": (peyes.create_detector("ivt", **_default_detector_params), 2, DEFAULT_DISCRETE_COLORMAP[2]),
     "ivvt": (peyes.create_detector("ivvt", **_default_detector_params), 3, DEFAULT_DISCRETE_COLORMAP[3]),
     "idt": (peyes.create_detector("idt", **_default_detector_params), 4, DEFAULT_DISCRETE_COLORMAP[4]),
-    "engbert": (peyes.create_detector("engbert", **_default_detector_params), 5, DEFAULT_DISCRETE_COLORMAP[5]),
-    "nh": (peyes.create_detector("nh", **_default_detector_params), 6, DEFAULT_DISCRETE_COLORMAP[6]),
-    "remodnav": (peyes.create_detector("remodnav", **_default_detector_params), 7, DEFAULT_DISCRETE_COLORMAP[7]),
+    "idvt": (peyes.create_detector("idvt", **_default_detector_params), 5, DEFAULT_DISCRETE_COLORMAP[5]),
+    "engbert": (peyes.create_detector("engbert", **_default_detector_params), 6, DEFAULT_DISCRETE_COLORMAP[6]),
+    "nh": (peyes.create_detector("nh", **_default_detector_params), 7, DEFAULT_DISCRETE_COLORMAP[7]),
+    "remodnav": (peyes.create_detector("remodnav", **_default_detector_params), 8, DEFAULT_DISCRETE_COLORMAP[8]),
 }
 
 METRICS_CONFIG = {
