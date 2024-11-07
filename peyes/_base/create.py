@@ -30,47 +30,48 @@ def create_detector(
 
     Additional keyword arguments required for detector initialization:
     - IVT:
-        :keyword saccade_velocity_threshold: float; velocity threshold to separates saccades from fixations (deg/s), default: 45
+        :keyword saccade_velocity_threshold: float; velocity threshold to separates saccades from fixations (deg/s)
     - IVVT:
-        :keyword saccade_velocity_threshold: float; velocity threshold to separates saccades from smooth pursuits (deg/s), default: 45
-        :keyword smooth_pursuit_velocity_threshold: float; the velocity threshold that separates smooth pursuits from fixations (deg/s), default: 5
+        :keyword saccade_velocity_threshold: float; velocity threshold to separates saccades from smooth pursuits (deg/s)
+        :keyword smooth_pursuit_velocity_threshold: float; the velocity threshold that separates smooth pursuits from fixations (deg/s)
     - IDT:
-        :keyword dispersion_threshold: dispersion threshold that separates saccades from fixations (visual angle degrees), default: 0.5
-        :keyword window_duration: the duration of the window used to calculate the dispersion threshold (ms), default: 100
+        :keyword dispersion_threshold: dispersion threshold that separates saccades from fixations (visual angle degrees)
+        :keyword window_duration: the duration of the window used to calculate the dispersion threshold (ms)
     - IDVT:
-        :keyword dispersion_threshold: dispersion threshold that separates fixations from smooth pursuits (visual angle degrees), default: 2.0
-        :keyword window_duration: the duration of the window used to calculate the dispersion threshold (ms), default: 100
-        :keyword saccade_velocity_threshold: float; velocity threshold to separates smooth pursuits from saccades (deg/s), default: 45
+        :keyword dispersion_threshold: dispersion threshold that separates fixations from smooth pursuits (visual angle degrees)
+        :keyword window_duration: the duration of the window used to calculate the dispersion threshold (ms)
+        :keyword saccade_velocity_threshold: float; velocity threshold to separates smooth pursuits from saccades (deg/s)
     - Engbert:
-        :keyword lambda_param: float; multiplication coefficient used for calculating saccade threshold, default: 5
-        :keyword deriv_window_size: int; number of samples used to compute axial velocity, default: 5
+        :keyword lambda_param: float; multiplication coefficient used for calculating saccade threshold
+        :keyword deriv_window_size: int; number of samples used to compute axial velocity
     - NH:
-        :keyword filter_duration_ms: int; Savitzky-Golay filter's duration (ms), default: 20
+        :keyword filter_duration_ms: int; Savitzky-Golay filter's duration (ms), default: 2×min saccade duration
         :keyword filter_polyorder: int; Savitzky-Golay filter's polynomial order, default: 2
         :keyword saccade_max_velocity: maximum saccade velocity (deg/s), default: 1000
         :keyword saccade_max_acceleration: maximum saccade acceleration (deg/s^2), default: 100000
-        :keyword min_saccade_duration: minimum saccade duration (ms), default: 10
-        :keyword min_fixation_duration: minimum fixation duration (ms), default: 50
-        :keyword max_pso_duration: maximum PSO duration (ms), default: 80
+        :keyword min_saccade_duration: minimum saccade duration (ms)
+        :keyword min_fixation_duration: minimum fixation duration (ms)
+        :keyword max_pso_duration: maximum PSO duration (ms)
         :keyword alpha_param: weight of saccade onset threshold when detecting saccade offset, default: 0.7
         :keyword ignore_short_peak_durations: if True, excludes sporadic occurrences of peak velocity when detecting
             saccade peaks, default: True
-        :keyword allow_high_psos: if True, includes "high" PSOs, i.e., PSOs with max velocity exceeding saccades' peak threshold but lower than the preceding saccade, default: True
+        :keyword allow_high_psos: if True, includes "high" PSOs, i.e., PSOs with max velocity exceeding saccades' peak
+            threshold but lower than the preceding saccade, default: True
     - REMoDNaV:
-        :keyword min_saccade_duration: int; the minimum duration of a saccade (ms), default: 10
+        :keyword min_saccade_duration: int; the minimum duration of a saccade (ms)
         :keyword saccade_initial_velocity_threshold: float; the initial velocity threshold for saccade detection (deg/s), default: 300
         :keyword saccade_context_window_duration: int; the duration of the context window for saccade detection (ms), default: 1000
         :keyword saccade_initial_max_freq: float; the initial maximum frequency for saccade detection (Hz), default: 2.0
         :keyword saccade_onset_threshold_noise_factor: float; the noise factor for saccade onset threshold, default: 5.0
-        :keyword min_smooth_pursuit_duration: int; the minimum duration of a smooth pursuit (ms), default: 40
+        :keyword min_smooth_pursuit_duration: int; the minimum duration of a smooth pursuit (ms)
         :keyword smooth_pursuits_lowpass_cutoff_freq: float; the lowpass cutoff frequency for smooth pursuit detection (Hz), default: 4.0
         :keyword smooth_pursuit_drift_velocity_threshold: float; the drift velocity threshold for smooth pursuit detection (deg/s), default: 2.0
-        :keyword min_fixation_duration: int; the minimum duration of a fixation (ms), default: 50
-        :keyword min_blink_duration: int; the minimum duration of a blink (ms), default: 20
-        :keyword max_pso_duration: int; the maximum duration of a PSO (ms), default: 80
+        :keyword min_fixation_duration: int; the minimum duration of a fixation (ms)
+        :keyword min_blink_duration: int; the minimum duration of a blink (ms)
+        :keyword max_pso_duration: int; the maximum duration of a PSO (ms)
         :keyword savgol_filter_polyorder: int; the polynomial order for the Savitzky-Golay filter, default: 2
         :keyword savgol_filter_duration_ms: int; the duration of the Savitzky-Golay filter (ms), default: 19
-        :keyword median_filter_duration_ms: int; the duration of the median filter (ms), default: 50
+        :keyword median_filter_duration_ms: int; the duration of the median filter (ms)
         :keyword max_velocity: float; the maximum velocity of the gaze data (deg/s), default: 1500
 
     :return: a detector object
