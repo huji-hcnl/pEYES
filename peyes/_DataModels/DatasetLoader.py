@@ -3,7 +3,7 @@ import io
 import itertools
 import zipfile as zp
 import posixpath as psx
-from typing import final, List, Tuple, Dict
+from typing import final, List, Tuple, Dict, Union
 from abc import ABC, abstractmethod
 
 
@@ -250,7 +250,7 @@ class Lund2013DatasetLoader(BaseDatasetLoader):
         })
 
     @staticmethod
-    def __extract_metadata(file) -> Tuple[str, str, str, str]:
+    def __extract_metadata(file) -> Tuple[str, str, Union[str, int], str]:
         file_name = os.path.basename(file.name)  # remove path
         if not file_name.endswith(".mat"):
             raise ValueError(f"Expected a `.mat` file, got: {file_name}")
