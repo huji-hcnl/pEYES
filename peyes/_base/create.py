@@ -15,7 +15,7 @@ from peyes._DataModels.Detector import (
 
 
 def create_detector(
-        detector_name: str,
+        algorithm: str,
         missing_value: float,
         min_event_duration: float,
         pad_blinks_time: float,
@@ -23,7 +23,7 @@ def create_detector(
 ) -> BaseDetector:
     """
     Creates a gaze event detector with the specified parameters.
-    :param detector_name: name of the detection algorithm to use
+    :param algorithm: name of the detection algorithm to use
     :param missing_value: value indicating missing data in the gaze data
     :param min_event_duration: minimum duration of a gaze event (ms)
     :param pad_blinks_time: duration to pad before and after each detected blink event (ms)
@@ -76,51 +76,51 @@ def create_detector(
 
     :return: a detector object
     """
-    detector_name_lower = detector_name.lower().strip().replace('-', '').removesuffix('detector')
-    if detector_name_lower == 'ivt':
+    algorithm_lower = algorithm.lower().strip().replace('-', '').removesuffix('detector')
+    if algorithm_lower == 'ivt':
         default_params = IVTDetector.get_default_params()
         return IVTDetector(
             missing_value=missing_value, min_event_duration=min_event_duration, pad_blinks_ms=pad_blinks_time,
             **{k: kwargs.get(k, default_params[k]) for k in default_params.keys()}
         )
-    elif detector_name_lower == 'ivvt':
+    elif algorithm_lower == 'ivvt':
         default_params = IVVTDetector.get_default_params()
         return IVVTDetector(
             missing_value=missing_value, min_event_duration=min_event_duration, pad_blinks_ms=pad_blinks_time,
             **{k: kwargs.get(k, default_params[k]) for k in default_params.keys()}
         )
-    elif detector_name_lower == 'idt':
+    elif algorithm_lower == 'idt':
         default_params = IDTDetector.get_default_params()
         return IDTDetector(
             missing_value=missing_value, min_event_duration=min_event_duration, pad_blinks_ms=pad_blinks_time,
             **{k: kwargs.get(k, default_params[k]) for k in default_params.keys()}
         )
-    elif detector_name_lower == 'idvt':
+    elif algorithm_lower == 'idvt':
         default_params = IDTDetector.get_default_params()
         return IDTDetector(
             missing_value=missing_value, min_event_duration=min_event_duration, pad_blinks_ms=pad_blinks_time,
             **{k: kwargs.get(k, default_params[k]) for k in default_params.keys()}
         )
-    elif detector_name_lower == 'engbert':
+    elif algorithm_lower == 'engbert':
         default_params = EngbertDetector.get_default_params()
         return EngbertDetector(
             missing_value=missing_value, min_event_duration=min_event_duration, pad_blinks_ms=pad_blinks_time,
             **{k: kwargs.get(k, default_params[k]) for k in default_params.keys()}
         )
-    elif detector_name_lower == 'nh':
+    elif algorithm_lower == 'nh':
         default_params = NHDetector.get_default_params()
         return NHDetector(
             missing_value=missing_value, min_event_duration=min_event_duration, pad_blinks_ms=pad_blinks_time,
             **{k: kwargs.get(k, default_params[k]) for k in default_params.keys()}
         )
-    elif detector_name_lower == 'remodnav':
+    elif algorithm_lower == 'remodnav':
         default_params = REMoDNaVDetector.get_default_params()
         return REMoDNaVDetector(
             missing_value=missing_value, min_event_duration=min_event_duration, pad_blinks_ms=pad_blinks_time,
             **{k: kwargs.get(k, default_params[k]) for k in default_params.keys()}
         )
     else:
-        raise NotImplementedError(f'Detector `{detector_name}` is not implemented.')
+        raise NotImplementedError(f'Detector `{algorithm}` is not implemented.')
 
 
 def create_events(
