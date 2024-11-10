@@ -16,7 +16,7 @@ pio.renderers.default = "browser"
 
 ######################
 
-OUTPUT_DIR = r'Z:\jonathan.nir\ISTRC Scholarship'
+OUTPUT_DIR = r'S:\jonathan.nir\ISTRC Scholarship'
 
 LABEL = 1
 STIMULUS_TYPE = peyes.constants.IMAGE_STR

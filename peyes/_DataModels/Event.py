@@ -135,12 +135,23 @@ class BaseEvent(ABC):
     def summary(self) -> pd.Series:
         d = {
             cnst.LABEL_STR: self.label,
-            cnst.START_TIME_STR: self.start_time, cnst.END_TIME_STR: self.end_time, cnst.DURATION_STR: self.duration,
-            cnst.DISTANCE_STR: self.distance, cnst.AMPLITUDE_STR: self.amplitude, cnst.AZIMUTH_STR: self.azimuth,
-            cnst.PEAK_VELOCITY_STR: self.peak_velocity, cnst.MEDIAN_VELOCITY_STR: self.median_velocity,
-            cnst.CUMULATIVE_DISTANCE_STR: self.cumulative_distance, cnst.CUMULATIVE_AMPLITUDE_STR: self.cumulative_amplitude,
-            cnst.CENTER_PIXEL_STR: self.center_pixel, cnst.PIXEL_STD_STR: self.pixel_std, cnst.ELLIPSE_AREA_STR: self.ellipse_area,
-            cnst.IS_OUTLIER_STR: self.is_outlier, self._OUTLIER_REASONS_STR: self.get_outlier_reasons()
+            cnst.START_TIME_STR: self.start_time,
+            cnst.END_TIME_STR: self.end_time,
+            cnst.DURATION_STR: self.duration,
+            cnst.DISTANCE_STR: self.distance,
+            cnst.AMPLITUDE_STR: self.amplitude,
+            cnst.AZIMUTH_STR: self.azimuth,
+            cnst.PEAK_VELOCITY_STR: self.peak_velocity,
+            cnst.MEDIAN_VELOCITY_STR: self.median_velocity,
+            cnst.MIN_VELOCITY_STR: self.min_velocity,
+            cnst.CUMULATIVE_DISTANCE_STR: self.cumulative_distance,
+            cnst.CUMULATIVE_AMPLITUDE_STR: self.cumulative_amplitude,
+            cnst.CENTER_PIXEL_STR: self.center_pixel,
+            cnst.PIXEL_STD_STR: self.pixel_std,
+            cnst.DISPERSION_STR: self.dispersion,
+            cnst.ELLIPSE_AREA_STR: self.ellipse_area,
+            cnst.IS_OUTLIER_STR: self.is_outlier,
+            self._OUTLIER_REASONS_STR: self.get_outlier_reasons()
         }
         return pd.Series(d)
 
@@ -162,11 +173,13 @@ class BaseEvent(ABC):
         Calculates the intersection-over-union (IoU) between times of this event and another event (unitless).
         See Startsev & Zemblys (2023) for more information.
         """
-        total_overlap = self.time_overlap(other, normalize=False)
-        total_union = self.duration + other.duration - total_overlap
-        if total_union == 0:
+        min_start, max_start = min(self.start_time, other.start_time), max(self.start_time, other.start_time)
+        min_end, max_end = min(self.end_time, other.end_time), max(self.end_time, other.end_time)
+        min_duration = max([0, min_end - max_start])
+        max_duration = max([0, max_end - min_start])
+        if max_duration == 0:
             return np.nan
-        return total_overlap / total_union
+        return min_duration / max_duration
 
     @final
     def time_l2(self, other: "BaseEvent") -> float:
@@ -174,14 +187,17 @@ class BaseEvent(ABC):
         Calculates the l2-norm between the onset- and offset-differences of this event and another event.
         See Kothari et al. (2020) for more details.
         """
-        return np.linalg.norm([self.start_time - other.start_time, self.end_time - other.end_time])
+        start_diff = self.start_time - other.start_time
+        end_diff = self.end_time - other.end_time
+        l2 = np.linalg.norm([start_diff, end_diff])
+        return float(l2)
 
     @final
     def center_distance(self, other: "BaseEvent") -> float:
         """  Calculates the Euclidean distance between the center pixel of this event and another event (px units).  """
         x1, y1 = self.center_pixel
         x2, y2 = other.center_pixel
-        return np.linalg.norm([x1 - x2, y1 - y2])
+        return float(np.linalg.norm([x1 - x2, y1 - y2]))
 
     @classmethod
     @final
@@ -265,7 +281,7 @@ class BaseEvent(ABC):
         """  Euclidean distance between the start and end pixels of the event (pixel units)  """
         start_x, start_y = self.start_pixel
         end_x, end_y = self.end_pixel
-        return np.linalg.norm([end_x - start_x, end_y - start_y])
+        return float(np.linalg.norm([end_x - start_x, end_y - start_y]))
 
     @final
     @property
@@ -353,6 +369,12 @@ class BaseEvent(ABC):
 
     @final
     @property
+    def dispersion(self) -> float:
+        """  Returns the dispersion of the event - sum of horizontal and vertical dispersion (visual degree units)  """
+        return self.x_dispersion + self.y_dispersion
+
+    @final
+    @property
     def ellipse_area(self) -> float:
         """  Returns the area of the ellipse that encloses the event (visual degree units)  """
         x_radius = self.x_dispersion / 2
@@ -369,7 +391,13 @@ class BaseEvent(ABC):
     @property
     def median_velocity(self) -> float:
         """  Returns the median velocity during the event (visual degree / second)  """
-        return np.nanmedian(self.velocities(unit='deg'))
+        return float(np.nanmedian(self.velocities(unit='deg')))
+
+    @final
+    @property
+    def min_velocity(self) -> float:
+        """  Returns the minimum velocity during the event (visual degree / second)  """
+        return np.nanmin(self.velocities(unit='deg'))
 
     def __hash__(self):
         return hash((

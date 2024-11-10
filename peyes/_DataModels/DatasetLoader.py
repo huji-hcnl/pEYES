@@ -3,7 +3,7 @@ import io
 import itertools
 import zipfile as zp
 import posixpath as psx
-from typing import final, List, Tuple, Dict
+from typing import final, List, Tuple, Dict, Union
 from abc import ABC, abstractmethod
 
 
@@ -46,7 +46,9 @@ class BaseDatasetLoader(ABC):
             dataset = pd.read_pickle(os.path.join(directory, f"{cls.name()}.pkl"))
         except (FileNotFoundError, TypeError) as _e:
             if verbose:
-                print(f"Dataset {cls.name()} not found in directory {directory}.\nDownloading...")
+                if directory:
+                    print(f"Dataset {cls.name()} not found in directory {directory}.")
+                print("Downloading...")
             dataset = cls.download(verbose)
             if save:
                 os.makedirs(directory, exist_ok=True)
@@ -148,10 +150,15 @@ class Lund2013DatasetLoader(BaseDatasetLoader):
     """
     Loads the dataset from article: "One algorithm to rule them all? An evaluation and discussion of ten eye movement
     event-detection algorithms.", Andersson et al. (2017).
-    This implementation is based on a code implemented for the article "Using machine learning to detect events in
-    eye-tracking data.", Zemblys et al. (2018).
 
-    Note two files had to be replaced due to errors in the original dataset. The corrected files are included in the
+    This loader is based on a previous implementation, see article:
+    Startsev, M., Zemblys, R. Evaluating Eye Movement Event Detection: A Review of the State of the Art. Behav Res 55, 1653–1714 (2023)
+    See their implementation: https://github.com/r-zemblys/EM-event-detection-evaluation/blob/main/misc/data_parsers/lund2013.py
+    
+    ** Important Notes: **
+    (1) The dataset used in Andersson et al. (2017) is a subset of the complete dataset, available through this loader.
+    The subset of the dataset used in the article is available at: 'EyeMovementDetectorEvaluation-master/annotated_data/data used in the article/'
+    (2) Two files had to be replaced due to errors in the original dataset. The corrected files are included in the
     dataset and used instead of the erroneous ones.
     """
 
@@ -162,11 +169,10 @@ class Lund2013DatasetLoader(BaseDatasetLoader):
         "Andersson, R., Larsson, L., Holmqvist, K., Stridh, M., & Nyström, M. (2017): One algorithm to rule them " +
         "all? An evaluation and discussion of ten eye movement event-detection algorithms. Behavior Research " +
         "Methods, 49(2), 616-637.",
-        "Zemblys, R., Niehorster, D. C., Komogortsev, O., & Holmqvist, K. (2018). Using machine learning to detect " +
-        "events in eye-tracking data. Behavior Research Methods, 50(1), 160–181."
     ]
 
     __PREFIX = 'EyeMovementDetectorEvaluation-master/annotated_data/originally uploaded data/'
+    # note: the article contained only a subset of the full dataset. article data is in directory 'annotated_data/data used in the article/'
     __ERRONEOUS_FILES = ['UH29_img_Europe_labelled_MN.mat']
     __CORRECTION_FILES = [
         'EyeMovementDetectorEvaluation-master/annotated_data/fix_by_Zemblys2018/UH29_img_Europe_labelled_FIX_MN.mat'
@@ -174,12 +180,21 @@ class Lund2013DatasetLoader(BaseDatasetLoader):
 
     @classmethod
     def _parse_response(cls, response: req.Response, verbose: bool = False) -> pd.DataFrame:
-        zip_file = zp.ZipFile(io.BytesIO(response.content))
 
-        # list all files in the zip archive that are relevant to this dataset
-        # replaces erroneously labelled files with the corrected ones (see readme.md for more info)
-        is_valid_file = lambda f: f.startswith(cls.__PREFIX) and f.endswith('.mat') and f not in cls.__ERRONEOUS_FILES
-        file_names = [f for f in zip_file.namelist() if is_valid_file(f)]
+        def is_valid_filename(name: str) -> bool:
+            # check if the file is a valid mat file containing gaze data
+            if not name.startswith(cls.__PREFIX):
+                return False
+            if not name.endswith('.mat'):
+                return False
+            if any(name.endswith(errs) for errs in cls.__ERRONEOUS_FILES):
+                # skip erroneous files, see readme.md for more info
+                return False
+            return True
+
+        # extract the zip file and list all files that contain gaze data
+        zip_file = zp.ZipFile(io.BytesIO(response.content))
+        file_names = [f for f in zip_file.namelist() if is_valid_filename(f)]
         file_names.extend(cls.__CORRECTION_FILES)
 
         # read all files into a list of dataframes
@@ -237,7 +252,7 @@ class Lund2013DatasetLoader(BaseDatasetLoader):
         })
 
     @staticmethod
-    def __extract_metadata(file) -> Tuple[str, str, str, str]:
+    def __extract_metadata(file) -> Tuple[str, str, Union[str, int], str]:
         file_name = os.path.basename(file.name)  # remove path
         if not file_name.endswith(".mat"):
             raise ValueError(f"Expected a `.mat` file, got: {file_name}")
@@ -246,14 +261,21 @@ class Lund2013DatasetLoader(BaseDatasetLoader):
         file_name = file_name.replace(".mat", "")  # remove extension
         split_name = file_name.split("_")
         subject_id = split_name[0]  # subject id is always 1st in the file name
-        stimulus_type = split_name[1]  # stimulus type is always 2nd in the file name
         rater = split_name[-1].upper()  # rater is always last in the file name
-        stimulus_name = "_".join(split_name[2:-2]).removesuffix("_labelled")  # everything between stim type and rater
-        if stimulus_type.startswith("trial"):
-            stimulus_type = cnst.MOVING_DOT_STR  # moving-dot stimulus is labelled as "trial1", "trial2", etc.
+        stimulus_type = split_name[1]  # stimulus type is always 2nd in the file name
+        if stimulus_type == cnst.VIDEO_STR:
+            stimulus_name = "_".join(split_name[2:-2]).removesuffix("_labelled")  # between stim type and rater
+            return subject_id, stimulus_type, stimulus_name, rater
         if stimulus_type == "img":
-            stimulus_type = cnst.IMAGE_STR
-        return subject_id, stimulus_type, stimulus_name, rater
+            stimulus_name = "_".join(split_name[2:-2]).removesuffix("_labelled")  # between stim type and rater
+            stimulus_type = cnst.IMAGE_STR  # rename stimulus type to match peyes constants
+            return subject_id, stimulus_type, stimulus_name, rater
+        if stimulus_type.startswith(cnst.TRIAL_STR):
+            # moving-dot stimulus is labelled as "trial1" or "trial17"
+            stimulus_name = int(stimulus_type.removeprefix(cnst.TRIAL_STR))
+            stimulus_type = cnst.MOVING_DOT_STR
+            return subject_id, stimulus_type, stimulus_name, rater
+        raise ValueError(f"Unknown stimulus type: {stimulus_type}")
 
 
 class IRFDatasetLoader(BaseDatasetLoader):
@@ -315,6 +337,7 @@ class IRFDatasetLoader(BaseDatasetLoader):
         df.rename(
             columns={"t": cnst.T, "evt": cls.__RATER_NAME, "x": cnst.X, "y": cnst.Y}, inplace=True
         )
+        df[cnst.T] = df[cnst.T] * cnst.MILLISECONDS_PER_SECOND  # convert seconds to milliseconds
         df = cls.__correct_coordinates(df)
         return df
 
@@ -364,10 +387,6 @@ class HFCDatasetLoader(BaseDatasetLoader):
     _ARTICLES = [
         "Hooge, I.T.C., Niehorster, D.C., Nyström, M., Andersson, R. & Hessels, R.S. (2018). Is human classification " +
         "by experienced untrained observers a gold standard in fixation detection?",
-        "Hessels, R.S., Hooge, I.T.C., & Kemner, C. (2016). An in-depth look at saccadic search in infancy. " +
-        "Journal of Vision, 16(8), 10.",
-        "Startsev, M., Zemblys, R. Evaluating Eye Movement Event Detection: A Review of the State of the Art. " +
-        "Behav Res 55, 1653–1714 (2023)"
     ]
 
     __PREFIX = 'humanFixationClassification-master/data'
@@ -479,9 +498,6 @@ class GazeComDatasetLoader(BaseDatasetLoader):
         "Michael Dorr, Thomas Martinetz, Karl Gegenfurtner, and Erhardt Barth. Variability of eye movements when " +
         "viewing dynamic natural scenes. Journal of Vision, 10(10):1-17, 2010.",
         "Startsev, M., Agtzidis, I., & Dorr, M. (2016). Smooth pursuit. http://michaeldorr.de/smoothpursuit/",
-
-        "Startsev, M., Zemblys, R. Evaluating Eye Movement Event Detection: A Review of the State of the Art. " +
-        "Behav Res 55, 1653–1714 (2023)"
     ]
 
     __PREFIX = psx.join('gazecom_annotations', 'ground_truth')
@@ -557,6 +573,7 @@ class GazeComDatasetLoader(BaseDatasetLoader):
             invalid_idxs = np.where(np.all(df[["x", "y"]] == 0, axis=1) | (df["confidence"] < 0.5))[0]
             df.iloc[invalid_idxs, df.columns.get_indexer(["x", "y"])] = np.nan
             df['time'] = df['time'] / cnst.MILLISECONDS_PER_SECOND
+            df['time'] = df['time'] - df['time'].min()  # start timestamps from 0
             df.drop(columns=['confidence'], inplace=True)
             df.rename(columns=cls.__COLUMN_MAP, inplace=True)
             for col in df.columns:

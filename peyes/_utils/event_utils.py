@@ -18,7 +18,7 @@ def calculate_sampling_rate(ms: np.ndarray) -> float:
     sr = cnst.MILLISECONDS_PER_SECOND / np.median(np.diff(ms))
     if not np.isfinite(sr):
         raise RuntimeError("Error calculating sampling rate")
-    return sr
+    return float(sr)
 
 
 def calculate_num_samples(

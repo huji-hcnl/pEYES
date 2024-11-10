@@ -5,7 +5,7 @@ import Levenshtein
 from scipy.stats import norm
 
 from peyes._utils.metric_utils import transition_matrix, dprime_and_criterion, _dprime_rates
-from peyes._utils.metric_utils import complement_normalized_levenshtein_distance as comp_nld
+from peyes._utils.metric_utils import normalized_levenshtein_distance as nld
 
 
 class TestMetricUtils(unittest.TestCase):
@@ -21,10 +21,10 @@ class TestMetricUtils(unittest.TestCase):
                            np.array([[1, 0, 0], [0, 1, 0], [0, 1/3, 2/3], [0, 1, 0]]))
         )
 
-    def test_complement_nld(self):
+    def test_nld(self):
         gt = "kitten"
         pred = "sitting"
-        self.assertEqual(1 - Levenshtein.distance(gt, pred) / max(len(gt), len(pred)), comp_nld(gt, pred))
+        self.assertEqual(Levenshtein.distance(gt, pred) / len(gt), nld(gt, pred))
 
     def test_dprime_rates(self):
         p, n, pp, tp = 10, 20, 15, 5
