@@ -44,7 +44,10 @@ labels_df = labels_df.dropna(how="all", axis=0)   # Drop rows with all NaNs
 
 labeler_names = sorted(
     labels_df.columns.get_level_values(peyes.constants.LABELER_STR).unique(),
-    key=lambda d: u.LABELERS_CONFIG[d.strip().lower().removesuffix("detector")][1]
+    key=lambda d: u.get_labeler_index(
+        d.strip().lower().removesuffix("detector"),
+        labels_df.columns.get_level_values(peyes.constants.LABELER_STR).unique()
+    )
 )
 
 ######################

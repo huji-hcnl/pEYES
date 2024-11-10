@@ -34,23 +34,6 @@ DATASET_ANNOTATORS = {
     "hfc": ['DN', 'IH', 'JB', 'JF', 'JV', 'KH', 'MN', 'MS', 'PZ', 'RA', 'RH', 'TC']
 }
 
-_default_detector_params = dict(missing_value=np.nan, min_event_duration=4, pad_blinks_time=0)
-LABELERS_CONFIG = {
-    # detector name -> (detector object, order, color)
-    "ra": (None, 0.1, DEFAULT_DISCRETE_COLORMAP[0]),
-    "rz": (None, 0.1, DEFAULT_DISCRETE_COLORMAP[0]),
-    "mn": (None, 0.2, DEFAULT_DISCRETE_COLORMAP[1]),
-    "ivt": (peyes.create_detector("ivt", **_default_detector_params), 2, DEFAULT_DISCRETE_COLORMAP[2]),
-    "ivvt": (peyes.create_detector("ivvt", **_default_detector_params), 3, DEFAULT_DISCRETE_COLORMAP[3]),
-    "idt": (peyes.create_detector("idt", **_default_detector_params), 4, DEFAULT_DISCRETE_COLORMAP[4]),
-    "idvt": (peyes.create_detector("idvt", **_default_detector_params), 5, DEFAULT_DISCRETE_COLORMAP[5]),
-    "engbert": (peyes.create_detector("engbert", **_default_detector_params), 6, DEFAULT_DISCRETE_COLORMAP[6]),
-    "nh": (peyes.create_detector("nh", **_default_detector_params), 7, DEFAULT_DISCRETE_COLORMAP[7]),
-    "remodnav": (peyes.create_detector(
-        "remodnav", show_warnings=False, **_default_detector_params
-    ), 8, DEFAULT_DISCRETE_COLORMAP[8]),
-}
-
 METRICS_CONFIG = {
     # metric -> (name, order, value range)
 
@@ -137,3 +120,17 @@ def get_trials_for_stimulus_type(
     is_stimulus_type = dataset[peyes.constants.STIMULUS_TYPE_STR].str.lower().isin(stimulus_type)
     trials = dataset.loc[is_stimulus_type, peyes.constants.TRIAL_ID_STR].unique()
     return trials
+
+
+def get_labeler_index(labeler_name: str, detectors_names: Sequence[str]) -> int:
+    all_labelers = [
+        *detectors_names,
+        *[annot for annotators in DATASET_ANNOTATORS.values() for annot in annotators],
+    ]
+    return all_labelers.index(labeler_name)
+
+
+def get_labeler_color(detector_name: str, det_idx: int, colors: Optional[Sequence[str]] = None) -> str:
+    colors = colors or DEFAULT_DISCRETE_COLORMAP
+    c = colors.get(detector_name, colors[det_idx % len(colors)])
+    return c

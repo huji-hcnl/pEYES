@@ -35,35 +35,34 @@ DEFAULT_MATCHING_SCHEMES = {
 
 
 def run_default(
-        dataset_name: str, verbose: bool = True
+        dataset_name: str, detectors: List[BaseDetector], verbose: bool = True
 ) -> (pd.DataFrame, pd.DataFrame, pd.DataFrame, pd.DataFrame, pd.DataFrame):
     start = time.time()
+    if verbose:
+        print(f"Running full pipeline on {dataset_name}...")
     dataset = u.load_dataset(dataset_name, verbose=True)
     default_output_dir = h.get_default_output_dir(dataset_name)
-    try:
-        labels = pd.read_pickle(os.path.join(default_output_dir, f"{peyes.constants.LABELS_STR}.pkl"))
-        metadata = pd.read_pickle(os.path.join(default_output_dir, f"{peyes.constants.METADATA_STR}.pkl"))
-        events = pd.read_pickle(os.path.join(default_output_dir, f"{peyes.constants.EVENTS_STR}.pkl"))
-    except FileNotFoundError:
-        default_detectors = [v[0] for v in u.LABELERS_CONFIG.values()]
-        default_annotators = u.DATASET_ANNOTATORS[dataset_name]
-        labels, metadata, events = detect_labels_and_events(
-            dataset, default_detectors, default_annotators, verbose=verbose
-        )
-        if verbose:
-            print(f"Saving labels & events to {default_output_dir}...")
-        labels.to_pickle(os.path.join(default_output_dir, f"{peyes.constants.LABELS_STR}.pkl"))
-        metadata.to_pickle(os.path.join(default_output_dir, f"{peyes.constants.METADATA_STR}.pkl"))
-        events.to_pickle(os.path.join(default_output_dir, f"{peyes.constants.EVENTS_STR}.pkl"))
-    try:
-        matches = pd.read_pickle(os.path.join(default_output_dir, f"{peyes.constants.MATCHES_STR}.pkl"))
-    except FileNotFoundError:
-        matches = match_events(
-            events, u.DATASET_ANNOTATORS[dataset_name], matching_schemes=None, allow_xmatch=False
-        )
-        if verbose:
-            print(f"Saving matches to {default_output_dir}...")
-        matches.to_pickle(os.path.join(default_output_dir, f"{peyes.constants.MATCHES_STR}.pkl"))
+    annotators = u.DATASET_ANNOTATORS[dataset_name]
+
+    if verbose:
+        print(f"Detecting labels & events...")
+    labels, metadata, events = detect_labels_and_events(
+        dataset, detectors, annotators, verbose=verbose
+    )
+    if verbose:
+        print(f"Saving labels & events to {default_output_dir}...")
+    labels.to_pickle(os.path.join(default_output_dir, f"{peyes.constants.LABELS_STR}.pkl"))
+    metadata.to_pickle(os.path.join(default_output_dir, f"{peyes.constants.METADATA_STR}.pkl"))
+    events.to_pickle(os.path.join(default_output_dir, f"{peyes.constants.EVENTS_STR}.pkl"))
+
+    if verbose:
+        print(f"Matching events...")
+    matches = match_events(
+        events, annotators, matching_schemes=None, allow_xmatch=False
+    )
+    if verbose:
+        print(f"Saving matches to {default_output_dir}...")
+    matches.to_pickle(os.path.join(default_output_dir, f"{peyes.constants.MATCHES_STR}.pkl"))
     elapsed = time.time() - start
     if verbose:
         print(f"### PREPROCESS TIME:\t{elapsed:.2f} seconds ###")

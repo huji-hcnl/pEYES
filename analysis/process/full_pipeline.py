@@ -19,7 +19,7 @@ import analysis.process.match_metrics as match_metrics
 def full_pipeline(
         output_dir: str,
         dataset_name: str,
-        detectors: List[BaseDetector] = None,
+        detectors: List[BaseDetector],
         annotators: List[str] = None,
         num_iterations: int = 4,
         iterations_overwrite_label: Union[UnparsedEventLabelType, UnparsedEventLabelSequenceType] = 2,
@@ -36,10 +36,7 @@ def full_pipeline(
     dataset = u.load_dataset(dataset_name, verbose=verbose)
     output_dir = os.path.join(output_dir, dataset_name)
     os.makedirs(output_dir, exist_ok=True)
-
-    ## default detectors & annotators ##
-    detectors = detectors or [v[0] for v in u.LABELERS_CONFIG.values() if v[0] is not None]
-    annotators = annotators or u.DATASET_ANNOTATORS[dataset_name]
+    annotators = annotators or u.DATASET_ANNOTATORS[dataset_name]   # dataset's human annotators
 
     ## labels, metadata, events, matches ##
     try:

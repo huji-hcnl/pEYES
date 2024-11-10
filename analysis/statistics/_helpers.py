@@ -104,7 +104,11 @@ def kruskal_wallis_dunns(
                 continue
             gt_df = gt_series.unstack().drop(columns=gt_cols, errors='ignore')  # drop other GT labelers
             detectors = sorted(
-                gt_df.columns, key=lambda det: u.LABELERS_CONFIG[det.removesuffix("Detector").lower()][1]
+                gt_df.columns,
+                key=lambda det: u.get_labeler_index(
+                    det.strip().lower().removesuffix("detector"),
+                    gt_df.columns.get_level_values(u.PRED_STR).unique()
+                )
             )
             detector_values = {}
             for det in detectors:
@@ -141,6 +145,7 @@ def distributions_figure(
         title: str,
         gt2: Optional[str] = None,
         only_box: bool = False,
+        colors: Optional[Sequence[str]] = None,
 ) -> go.Figure:
     """
     Creates a violin/box subplot for each unique value in the input DataFrame's index. Each subplot (index value)
@@ -156,6 +161,7 @@ def distributions_figure(
     :param title: optional; title for the plot.
     :param gt2: optional; name of the second GT labeler to compare.
     :param only_box: if True, only box plots will be shown.
+    :param colors: optional; list of hex colors to mark different labelers in the violins/boxes.
 
     :return: Plotly figure with the violin/box plot.
     """
@@ -175,11 +181,15 @@ def distributions_figure(
             gt_series = data.xs(gt_col, level=u.GT_STR, axis=1).loc[idx]
             gt_df = gt_series.unstack().drop(columns=gt_cols, errors='ignore')  # drop other GT labelers
             detectors = sorted(
-                gt_df.columns, key=lambda det: u.LABELERS_CONFIG[det.removesuffix("Detector").lower()][1]
+                gt_df.columns,
+                key=lambda d: u.get_labeler_index(
+                    d.strip().lower().removesuffix("detector"),
+                    gt_df.columns.get_level_values(u.PRED_STR).unique()
+                )
             )
             for k, det in enumerate(detectors):
                 det_name = det.removesuffix("Detector")
-                det_color = u.LABELERS_CONFIG[det_name.lower()][2]
+                det_color = u.get_labeler_color(det_name, k, colors)
                 if len(gt_cols) == 1:
                     violin_side = None
                     opacity = 0.75

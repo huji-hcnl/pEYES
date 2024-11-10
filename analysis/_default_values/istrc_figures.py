@@ -103,7 +103,10 @@ for i, gt in enumerate([GT1, GT2]):
         ch_gt_data = gt_data.xs(ch_type, level=peyes.constants.CHANNEL_TYPE_STR, axis=0)
         detectors = sorted(
             ch_gt_data.columns.get_level_values(u.PRED_STR).unique(),
-            key=lambda d: u.LABELERS_CONFIG[d.strip().lower().removesuffix("detector")][1]
+            key=lambda d: u.get_labeler_index(
+                d.strip().lower().removesuffix("detector"),
+                ch_gt_data.columns.get_level_values(u.PRED_STR).unique()
+            )
         )
         for k, det in enumerate(detectors):
             data = ch_gt_data.xs(det, level=u.PRED_STR, axis=1)
@@ -116,7 +119,7 @@ for i, gt in enumerate([GT1, GT2]):
                 dash = "dot"
             else:
                 det_name = det.strip().removesuffix("Detector")
-                det_color = u.LABELERS_CONFIG[det_name.lower()][2]
+                det_color = u.get_labeler_color(det_name, k)
                 dash = None
             fig3.add_trace(
                 row=j + 1, col=i + 1, trace=go.Scatter(

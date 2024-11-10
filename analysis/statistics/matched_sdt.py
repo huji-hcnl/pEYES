@@ -88,7 +88,8 @@ def multi_threshold_figures(
         metrics: Union[str, Sequence[str]] = None,
         title: str = "",
         show_other_gt: bool = True,
-        show_err_bands: bool = False
+        show_err_bands: bool = False,
+        colors: Optional[Dict[str, str]] = None,
 ) -> Dict[str, go.Figure]:
     all_schemes = sorted(
         [ms for ms in matches_sdt.index.get_level_values(u.MATCHING_SCHEME_STR).unique() if ms.startswith(matching_scheme)],
@@ -121,9 +122,10 @@ def multi_threshold_figures(
         for i, met in enumerate(subframe_metrics):
             r, c = (i, 0) if ncols == 1 else divmod(i, ncols)
             met_frame = gt_subframe.xs(met, level=peyes.constants.METRIC_STR, axis=0, drop_level=True)
+            detectors = [d for d in met_frame.columns.get_level_values(u.PRED_STR).unique()]
             detectors = sorted(
-                [d for d in met_frame.columns.get_level_values(u.PRED_STR).unique()],
-                key=lambda d: u.LABELERS_CONFIG[d.removesuffix("Detector").lower()][1]
+                detectors,
+                key=lambda d: u.get_labeler_index(d.strip().lower().removesuffix("detector"), detectors)
             )
             for j, det in enumerate(detectors):
                 if det in gt_cols:
@@ -138,7 +140,7 @@ def multi_threshold_figures(
                 else:
                     # current detector is a prediction labeler (detection algorithm)
                     det_name = det.strip().removesuffix("Detector")
-                    det_color = u.LABELERS_CONFIG[det_name.lower()][2]
+                    det_color = u.get_labeler_color(det_name, j, colors)
                     dash = None
                 met_det_frame = met_frame.xs(det, level=u.PRED_STR, axis=1, drop_level=True)
                 # TODO: the following line is the only difference between this func & the similar one in channel_sdt.py,
@@ -185,6 +187,7 @@ def multi_metric_figure(
         title: str = "",
         show_other_gt: bool = True,
         show_err_bands: bool = False,
+        colors: Optional[Sequence[str]] = None,
 ) -> go.Figure:
     all_schemes = sorted(
         [ms for ms in matches_sdt.index.get_level_values(u.MATCHING_SCHEME_STR).unique() if
@@ -216,9 +219,10 @@ def multi_metric_figure(
                 met, level=peyes.constants.METRIC_STR, axis=0, drop_level=True).xs(
                 gt, level=u.GT_STR, axis=1, drop_level=True
             )
+            detectors = [d for d in data.columns.get_level_values(u.PRED_STR).unique()]
             detectors = sorted(
-                [d for d in data.columns.get_level_values(u.PRED_STR).unique()],
-                key=lambda d: u.LABELERS_CONFIG[d.removesuffix("Detector").lower()][1]
+                detectors,
+                key=lambda d: u.get_labeler_index(d.strip().lower().removesuffix("detector"), detectors)
             )
             for k, det in enumerate(detectors):
                 if det in gt_cols:
@@ -233,7 +237,7 @@ def multi_metric_figure(
                 else:
                     # current detector is a prediction labeler (detection algorithm)
                     det_name = det.strip().removesuffix("Detector")
-                    det_color = u.LABELERS_CONFIG[det_name.lower()][2]
+                    det_color = u.get_labeler_color(det_name, k, colors)
                     dash = None
 
                 det_data = data.xs(det, level=u.PRED_STR, axis=1)
