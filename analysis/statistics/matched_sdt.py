@@ -3,6 +3,7 @@ from typing import Optional, Union, Sequence, Tuple, Dict
 import numpy as np
 import pandas as pd
 import plotly.graph_objects as go
+from charset_normalizer import detect
 from plotly.subplots import make_subplots
 
 import peyes
@@ -87,9 +88,9 @@ def multi_threshold_figures(
         matching_scheme: str,
         metrics: Union[str, Sequence[str]] = None,
         title: str = "",
+        colors: u.COLORMAP_TYPE = None,
         show_other_gt: bool = True,
         show_err_bands: bool = False,
-        colors: Optional[Dict[str, str]] = None,
 ) -> Dict[str, go.Figure]:
     all_schemes = sorted(
         [ms for ms in matches_sdt.index.get_level_values(u.MATCHING_SCHEME_STR).unique() if ms.startswith(matching_scheme)],
@@ -122,11 +123,7 @@ def multi_threshold_figures(
         for i, met in enumerate(subframe_metrics):
             r, c = (i, 0) if ncols == 1 else divmod(i, ncols)
             met_frame = gt_subframe.xs(met, level=peyes.constants.METRIC_STR, axis=0, drop_level=True)
-            detectors = [d for d in met_frame.columns.get_level_values(u.PRED_STR).unique()]
-            detectors = sorted(
-                detectors,
-                key=lambda d: u.get_labeler_index(d.strip().lower().removesuffix("detector"), detectors)
-            )
+            detectors = u.sort_labelers(met_frame.columns.get_level_values(u.PRED_STR).unique())
             for j, det in enumerate(detectors):
                 if det in gt_cols:
                     if show_other_gt:
@@ -185,9 +182,9 @@ def multi_metric_figure(
         matching_scheme: str,
         metrics: Union[str, Sequence[str]] = None,
         title: str = "",
+        colors: u.COLORMAP_TYPE = None,
         show_other_gt: bool = True,
         show_err_bands: bool = False,
-        colors: Optional[Sequence[str]] = None,
 ) -> go.Figure:
     all_schemes = sorted(
         [ms for ms in matches_sdt.index.get_level_values(u.MATCHING_SCHEME_STR).unique() if
@@ -219,11 +216,7 @@ def multi_metric_figure(
                 met, level=peyes.constants.METRIC_STR, axis=0, drop_level=True).xs(
                 gt, level=u.GT_STR, axis=1, drop_level=True
             )
-            detectors = [d for d in data.columns.get_level_values(u.PRED_STR).unique()]
-            detectors = sorted(
-                detectors,
-                key=lambda d: u.get_labeler_index(d.strip().lower().removesuffix("detector"), detectors)
-            )
+            detectors = u.sort_labelers(data.columns.get_level_values(u.PRED_STR).unique())
             for k, det in enumerate(detectors):
                 if det in gt_cols:
                     if show_other_gt:

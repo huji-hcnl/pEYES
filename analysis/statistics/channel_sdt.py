@@ -96,9 +96,9 @@ def multi_threshold_figures(
         channel_type: str,
         metrics: Union[str, Sequence[str]] = None,
         title: str = "",
+        colors: u.COLORMAP_TYPE = None,
         show_other_gt: bool = True,
         show_err_bands: bool = False,
-        colors: Optional[Sequence[str]] = None,
 ) -> Dict[str, go.Figure]:
     if metrics is None:
         metrics = [
@@ -124,11 +124,7 @@ def multi_threshold_figures(
         for i, met in enumerate(subframe_metrics):
             r, c = (i, 0) if ncols == 1 else divmod(i, ncols)
             met_frame = gt_subframe.xs(met, level=peyes.constants.METRIC_STR, axis=0, drop_level=True)
-            detectors = [d for d in met_frame.columns.get_level_values(u.PRED_STR).unique()]
-            detectors = sorted(
-                detectors,
-                key=lambda d: u.get_labeler_index(d.strip().lower().removesuffix("detector"), detectors)
-            )
+            detectors = u.sort_labelers(met_frame.columns.get_level_values(u.PRED_STR).unique())
             for j, det in enumerate(detectors):
                 if det in gt_cols:
                     if show_other_gt:
@@ -184,9 +180,9 @@ def multi_channel_figure(
         metric: str,
         title: str = "",
         yaxis_title: str = "",
+        colors: u.COLORMAP_TYPE = None,
         show_other_gt: bool = True,
         show_err_bands: bool = False,
-        colors: Optional[Sequence[str]] = None,
 ) -> go.Figure:
     subframe = _extract_sdt_subframe(sdt_metrics, metrics=metric, channel_type=None, threshold=None)
     subframe = subframe.droplevel(peyes.constants.METRIC_STR, axis=0)  # remove single-value levels from index
@@ -202,11 +198,7 @@ def multi_channel_figure(
     for r, ch_type in enumerate(channel_types):
         for c, gt in enumerate(gt_cols):
             data = subframe.xs(ch_type, level=peyes.constants.CHANNEL_TYPE_STR, axis=0).xs(gt, level=u.GT_STR, axis=1)
-            detectors = [d for d in data.columns.get_level_values(u.PRED_STR).unique()]
-            detectors = sorted(
-                detectors,
-                key=lambda d: u.get_labeler_index(d.strip().lower().removesuffix("detector"), detectors)
-            )
+            detectors = u.sort_labelers(data.columns.get_level_values(u.PRED_STR).unique())
             for k, det in enumerate(detectors):
                 if det in gt_cols:
                     if show_other_gt:

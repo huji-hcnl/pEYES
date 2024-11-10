@@ -1,5 +1,5 @@
 import os
-from typing import List, Optional, Union, Tuple, Sequence
+from typing import List, Optional, Union, Tuple, Sequence, Dict
 
 import pandas as pd
 import scipy.stats as stats
@@ -102,13 +102,7 @@ def kruskal_wallis_dunns(
             if pd.isna(gt_series).all():
                 continue
             gt_df = gt_series.unstack().drop(columns=gt_cols, errors='ignore')  # drop other GT labelers
-            detectors = sorted(
-                gt_df.columns,
-                key=lambda det: u.get_labeler_index(
-                    det.strip().lower().removesuffix("detector"),
-                    gt_df.columns.get_level_values(u.PRED_STR).unique()
-                )
-            )
+            detectors = u.sort_labelers(gt_df.columns.get_level_values(u.PRED_STR).unique())
             detector_values = {}
             for det in detectors:
                 vals = gt_df[det].explode().dropna().values.astype(float)
@@ -142,9 +136,9 @@ def distributions_figure(
         data: pd.DataFrame,
         gt1: str,
         title: str,
+        colors: u.COLORMAP_TYPE = None,
         gt2: Optional[str] = None,
         only_box: bool = False,
-        colors: Optional[Sequence[str]] = None,
 ) -> go.Figure:
     """
     Creates a violin/box subplot for each unique value in the input DataFrame's index. Each subplot (index value)
@@ -179,13 +173,7 @@ def distributions_figure(
         for j, gt_col in enumerate(gt_cols):
             gt_series = data.xs(gt_col, level=u.GT_STR, axis=1).loc[idx]
             gt_df = gt_series.unstack().drop(columns=gt_cols, errors='ignore')  # drop other GT labelers
-            detectors = sorted(
-                gt_df.columns,
-                key=lambda d: u.get_labeler_index(
-                    d.strip().lower().removesuffix("detector"),
-                    gt_df.columns.get_level_values(u.PRED_STR).unique()
-                )
-            )
+            detectors = u.sort_labelers(gt_df.columns.get_level_values(u.PRED_STR).unique())
             for k, det in enumerate(detectors):
                 det_name = det.removesuffix("Detector")
                 det_color = u.get_labeler_color(det_name, k, colors)

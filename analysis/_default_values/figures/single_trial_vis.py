@@ -42,13 +42,7 @@ labels_df = labels_df.xs(1, level=peyes.constants.ITERATION_STR, axis=1)  # Only
 labels_df = labels_df.xs(img_trial_id, level=peyes.constants.TRIAL_ID_STR, axis=1)    # Only use the relevant trial
 labels_df = labels_df.dropna(how="all", axis=0)   # Drop rows with all NaNs
 
-labeler_names = sorted(
-    labels_df.columns.get_level_values(peyes.constants.LABELER_STR).unique(),
-    key=lambda d: u.get_labeler_index(
-        d.strip().lower().removesuffix("detector"),
-        labels_df.columns.get_level_values(peyes.constants.LABELER_STR).unique()
-    )
-)
+labeler_names = u.sort_labelers(labels_df.columns.get_level_values(peyes.constants.LABELER_STR).unique())
 
 ######################
 

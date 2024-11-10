@@ -1,5 +1,5 @@
 import os
-from typing import Optional, Union, Sequence, List
+from typing import Optional, Union, Sequence, List, Dict
 
 import numpy as np
 import pandas as pd
@@ -23,6 +23,7 @@ MATCHING_SCHEME_STR = "matching_scheme"
 
 ###########################
 
+COLORMAP_TYPE = Union[Dict[str, str], Sequence[str]]
 DEFAULT_DISCRETE_COLORMAP = px.colors.qualitative.Dark24
 DEFAULT_CONTINUOUS_COLORMAP = px.colors.sequential.Viridis
 
@@ -33,6 +34,7 @@ DATASET_ANNOTATORS = {
     "irf": ['RZ'],
     "hfc": ['DN', 'IH', 'JB', 'JF', 'JV', 'KH', 'MN', 'MS', 'PZ', 'RA', 'RH', 'TC']
 }
+_ALL_ANNOTATORS = [annot for annotators in DATASET_ANNOTATORS.values() for annot in annotators]
 
 METRICS_CONFIG = {
     # metric -> (name, order, value range)
@@ -122,15 +124,43 @@ def get_trials_for_stimulus_type(
     return trials
 
 
-def get_labeler_index(labeler_name: str, detectors_names: Sequence[str]) -> int:
-    all_labelers = [
-        *detectors_names,
-        *[annot for annotators in DATASET_ANNOTATORS.values() for annot in annotators],
-    ]
-    return all_labelers.index(labeler_name)
-
-
-def get_labeler_color(detector_name: str, det_idx: int, colors: Optional[Sequence[str]] = None) -> str:
+def get_labeler_color(labeler: str, idx: int, colors) -> str:
     colors = colors or DEFAULT_DISCRETE_COLORMAP
-    c = colors.get(detector_name, colors[det_idx % len(colors)])
-    return c
+    if isinstance(colors, list):
+        return colors[idx % len(colors)]
+    elif isinstance(colors, dict):
+        possibilities = [
+            labeler, labeler.strip().lower(), labeler.strip().lower().removesuffix("detector"),
+        ]
+        for p in possibilities:
+            if p in colors:
+                return colors[p]
+        return colors[idx % len(colors)]
+    else:
+        raise TypeError(f"Unknown colors type: {type(colors)}")
+
+
+def sort_labelers(labelers: Sequence[str]) -> List[str]:
+    labelers = list(set(labelers))
+    return sorted(labelers, key=lambda l: _get_labeler_index(l, labelers))
+
+
+def _get_labeler_index(labeler_name: str, detectors_names: Sequence[str]) -> float:
+    if labeler_name in _ALL_ANNOTATORS:
+        return _ALL_ANNOTATORS.index(labeler_name) / 10
+    det_idx = detectors_names.index(labeler_name)
+    if "ivt" in labeler_name.strip().lower():
+        return det_idx + 10
+    if "ivvt" in labeler_name.strip().lower():
+        return det_idx + 20
+    if "idt" in labeler_name.strip().lower():
+        return det_idx + 30
+    if "idvt" in labeler_name.strip().lower():
+        return det_idx + 40
+    if "engbert" in labeler_name.strip().lower():
+        return det_idx + 50
+    if "nh" in labeler_name.strip().lower():
+        return det_idx + 60
+    if "remodnav" in labeler_name.strip().lower():
+        return det_idx + 70
+    return det_idx + 100
