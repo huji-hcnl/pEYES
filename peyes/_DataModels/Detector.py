@@ -546,8 +546,6 @@ class IDVTDetector(IDTDetector, IVTDetector):
     :param saccade_velocity_threshold: the threshold for angular velocity, in degrees per second. Default is 45 degrees
         per-second, as suggested in the paper "One algorithm to rule them all? An evaluation and discussion of ten eye
         movement event-detection algorithms" (2016), Andersson et al.
-    :param smooth_pursuit_velocity_threshold: the threshold for angular velocity, in degrees per second, that separates
-        smooth pursuit from fixations. Default is 26 degrees per-second, as used in Komogortsev & Karpov (2013).
     :param dispersion_threshold: the threshold for dispersion, in degrees. Default is 2.0 DVA, as used in the original
         paper by Komogortsev & Karpov (2013). In the  Andersson et al. (2016), they suggested threshold is 2.7 DVA.
     :param window_duration: the duration of the window in milliseconds. Default is the minimal fixation duration from
