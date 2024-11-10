@@ -4,11 +4,24 @@ from analysis.process.full_pipeline import full_pipeline
 ###################
 
 results = full_pipeline(
-    output_dir=PROCESSED_DATA_DIR, dataset_name=DATASET_NAME, detectors=DEFAULTS_DETECTORS, verbose=False
+    output_dir=PROCESSED_DATA_DIR,
+    dataset_name=DATASET_NAME,
+    detectors=DEFAULTS_DETECTORS.values(),
+    verbose=False
 )
+
 fix_results = full_pipeline(
-    output_dir=PROCESSED_DATA_DIR, dataset_name=DATASET_NAME, detectors=DEFAULTS_DETECTORS, pos_labels=1, verbose=False
+    output_dir=PROCESSED_DATA_DIR,
+    dataset_name=DATASET_NAME,
+    detectors=DEFAULTS_DETECTORS.values(),
+    pos_labels=1,
+    verbose=False
 )
+
 sac_results = full_pipeline(
-    output_dir=PROCESSED_DATA_DIR, dataset_name=DATASET_NAME, detectors=DEFAULTS_DETECTORS, pos_labels=2, verbose=False
+    output_dir=PROCESSED_DATA_DIR,
+    dataset_name=DATASET_NAME,
+    detectors=DEFAULTS_DETECTORS.values(),
+    pos_labels=2,
+    verbose=False
 )
