@@ -1,8 +1,8 @@
 import time
 from abc import ABC, abstractmethod
 from typing import final, Dict
+import logging
 
-import numpy as np
 import remodnav
 from overrides import override
 from scipy.signal import savgol_filter
@@ -1346,6 +1346,7 @@ class REMoDNaVDetector(BaseDetector):
     __MIN_SMOOTH_PURSUIT_DURATION_STR = "min_smooth_pursuit_duration"
     __SMOOTH_PURSUIT_LOWPASS_CUTOFF_FREQ_STR = "smooth_pursuits_lowpass_cutoff_freq"
     __SMOOTH_PURSUIT_DRIFT_VELOCITY_THRESHOLD_STR = "smooth_pursuit_drift_velocity_threshold"
+    __SHOW_WARNINGS_STR = "show_warnings"
 
     def __init__(
             self,
@@ -1367,6 +1368,7 @@ class REMoDNaVDetector(BaseDetector):
             min_fixation_duration: float = _DEFAULT_MIN_FIXATION_DURATION_MS,
             min_blink_duration: float = _DEFAULT_MIN_BLINK_DURATION_MS,
             max_pso_duration: float = _DEFAULT_MAX_PSO_DURATION_MS,
+            show_warnings: bool = True,
     ):
         super().__init__(missing_value, min_event_duration, pad_blinks_ms)
         self._median_filter_length = median_filter_duration_ms
@@ -1384,6 +1386,7 @@ class REMoDNaVDetector(BaseDetector):
         self._savgol_polyorder = savgol_filter_polyorder
         self._savgol_duration_ms = savgol_filter_duration_ms
         self._max_velocity = max_velocity
+        self.show_warnings = show_warnings
 
     @classmethod
     def get_default_params(cls) -> Dict[str, float]:
@@ -1403,6 +1406,7 @@ class REMoDNaVDetector(BaseDetector):
             cls.__SAVGOL_DURATION_MS_STR: cls._DEFAULT_SAVGOL_DURATION_MS,
             cls.__MEDIAN_FILTER_DURATION_MS_STR: cls._DEFAULT_MEDIAN_FILTER_DURATION_MS,
             cls.__MAX_VELOCITY_STR: cls._DEFAULT_MAX_VELOCITY_DEG,
+            cls.__SHOW_WARNINGS_STR: True,
         }
 
     def _detect_impl(
@@ -1413,8 +1417,10 @@ class REMoDNaVDetector(BaseDetector):
             labels: np.ndarray,
             viewer_distance_cm: float,
             pixel_size_cm: float,
-            **kwargs,
     ) -> np.ndarray:
+        if not self.show_warnings:
+            lgr = logging.getLogger('remodnav.clf')
+            lgr.setLevel(logging.WARNING + 1)   # ignore warnings from the REMoDNaV library
         classifier = remodnav.EyegazeClassifier(
             px2deg=pixels_to_visual_angle(1, viewer_distance_cm, pixel_size_cm, use_radians=False),
             sampling_rate=self.sr,
