@@ -1,11 +1,10 @@
 import os
-from typing import List, Optional, Union, Any, Tuple, Sequence
+from typing import List, Optional, Union, Tuple, Sequence
 
 import pandas as pd
 import scipy.stats as stats
 import scikit_posthocs as sp
 import plotly.graph_objects as go
-from plotly.subplots import make_subplots
 
 import peyes
 
