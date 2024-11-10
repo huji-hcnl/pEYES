@@ -19,6 +19,7 @@ def create_detector(
         missing_value: float,
         min_event_duration: float,
         pad_blinks_time: float,
+        name: str = None,
         **kwargs
 ) -> BaseDetector:
     """
@@ -27,6 +28,7 @@ def create_detector(
     :param missing_value: value indicating missing data in the gaze data
     :param min_event_duration: minimum duration of a gaze event (ms)
     :param pad_blinks_time: duration to pad before and after each detected blink event (ms)
+    :param name: name of the detector. If None, the detector's class name is used.
 
     Additional keyword arguments required for detector initialization:
     - IVT:
@@ -80,43 +82,64 @@ def create_detector(
     if algorithm_lower == 'ivt':
         default_params = IVTDetector.get_default_params()
         return IVTDetector(
-            missing_value=missing_value, min_event_duration=min_event_duration, pad_blinks_ms=pad_blinks_time,
+            missing_value=missing_value,
+            min_event_duration=min_event_duration,
+            pad_blinks_ms=pad_blinks_time,
+            name=name,
             **{k: kwargs.get(k, default_params[k]) for k in default_params.keys()}
         )
     elif algorithm_lower == 'ivvt':
         default_params = IVVTDetector.get_default_params()
         return IVVTDetector(
-            missing_value=missing_value, min_event_duration=min_event_duration, pad_blinks_ms=pad_blinks_time,
+            missing_value=missing_value,
+            min_event_duration=min_event_duration,
+            pad_blinks_ms=pad_blinks_time,
+            name=name,
             **{k: kwargs.get(k, default_params[k]) for k in default_params.keys()}
         )
     elif algorithm_lower == 'idt':
         default_params = IDTDetector.get_default_params()
         return IDTDetector(
-            missing_value=missing_value, min_event_duration=min_event_duration, pad_blinks_ms=pad_blinks_time,
+            missing_value=missing_value,
+            min_event_duration=min_event_duration,
+            pad_blinks_ms=pad_blinks_time,
+            name=name,
             **{k: kwargs.get(k, default_params[k]) for k in default_params.keys()}
         )
     elif algorithm_lower == 'idvt':
         default_params = IDTDetector.get_default_params()
         return IDTDetector(
-            missing_value=missing_value, min_event_duration=min_event_duration, pad_blinks_ms=pad_blinks_time,
+            missing_value=missing_value,
+            min_event_duration=min_event_duration,
+            pad_blinks_ms=pad_blinks_time,
+            name=name,
             **{k: kwargs.get(k, default_params[k]) for k in default_params.keys()}
         )
     elif algorithm_lower == 'engbert':
         default_params = EngbertDetector.get_default_params()
         return EngbertDetector(
-            missing_value=missing_value, min_event_duration=min_event_duration, pad_blinks_ms=pad_blinks_time,
+            missing_value=missing_value,
+            min_event_duration=min_event_duration,
+            pad_blinks_ms=pad_blinks_time,
+            name=name,
             **{k: kwargs.get(k, default_params[k]) for k in default_params.keys()}
         )
     elif algorithm_lower == 'nh':
         default_params = NHDetector.get_default_params()
         return NHDetector(
-            missing_value=missing_value, min_event_duration=min_event_duration, pad_blinks_ms=pad_blinks_time,
+            missing_value=missing_value,
+            min_event_duration=min_event_duration,
+            pad_blinks_ms=pad_blinks_time,
+            name=name,
             **{k: kwargs.get(k, default_params[k]) for k in default_params.keys()}
         )
     elif algorithm_lower == 'remodnav':
         default_params = REMoDNaVDetector.get_default_params()
         return REMoDNaVDetector(
-            missing_value=missing_value, min_event_duration=min_event_duration, pad_blinks_ms=pad_blinks_time,
+            missing_value=missing_value,
+            min_event_duration=min_event_duration,
+            pad_blinks_ms=pad_blinks_time,
+            name=name,
             **{k: kwargs.get(k, default_params[k]) for k in default_params.keys()}
         )
     else:
