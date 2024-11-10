@@ -29,7 +29,7 @@ EVENT_MAPPING = {
     EventLabelEnum.SACCADE: {
         cnst.LABEL_STR: EventLabelEnum.SACCADE.name,
         cnst.COLOR_STR: "#33a02c",
-        cnst.MIN_DURATION_STR: 5,
+        cnst.MIN_DURATION_STR: 10,
         cnst.MAX_DURATION_STR: 200,
     },
     EventLabelEnum.PSO: {
