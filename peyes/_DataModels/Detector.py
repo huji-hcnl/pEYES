@@ -50,6 +50,7 @@ class BaseDetector(ABC):
             raise ValueError("Time to pad blinks must be non-negative")
         self._metadata = {}     # additional metadata
         self._sr = np.nan       # sampling rate calculated in the detect method
+        self._name = self.__class__.__name__
 
     @classmethod
     @abstractmethod
@@ -105,7 +106,13 @@ class BaseDetector(ABC):
 
     @property
     def name(self) -> str:
-        return self.__class__.__name__
+        return self._name
+
+    @name.setter
+    def name(self, value: str):
+        if not value:
+            raise ValueError("Name must be a non-empty string")
+        self._name = value
 
     @final
     @property
