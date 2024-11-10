@@ -46,7 +46,9 @@ class BaseDatasetLoader(ABC):
             dataset = pd.read_pickle(os.path.join(directory, f"{cls.name()}.pkl"))
         except (FileNotFoundError, TypeError) as _e:
             if verbose:
-                print(f"Dataset {cls.name()} not found in directory {directory}.\nDownloading...")
+                if directory:
+                    print(f"Dataset {cls.name()} not found in directory {directory}.")
+                print("Downloading...")
             dataset = cls.download(verbose)
             if save:
                 os.makedirs(directory, exist_ok=True)
