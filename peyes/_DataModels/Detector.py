@@ -106,15 +106,22 @@ class BaseDetector(ABC):
     ) -> np.ndarray:
         raise NotImplementedError
 
+    @final
     @property
     def name(self) -> str:
         return self._name
 
+    @final
     @name.setter
     def name(self, value: str):
         if not value:
             raise ValueError("Name must be a non-empty string")
         self._name = value
+
+    @final
+    @property
+    def algorithm_name(self) -> str:
+        return self.__class__.__name__.removesuffix("Detector").lower()
 
     @final
     @property
