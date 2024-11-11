@@ -41,8 +41,28 @@ DETECTORS = {
     "idt_salvucci": peyes.create_detector(
         algorithm="idt", dispersion_threshold=1, window_duration=100, **_default_detector_params
     ),
-    "idvt": peyes.create_detector(
-        algorithm="idvt", **_default_detector_params
+    "idvt_andersson": peyes.create_detector(
+        algorithm="idvt",
+        saccade_velocity_threshold=45,
+        dispersion_threshold=2.7,
+        window_duration=55,
+        **_default_detector_params
+    ),
+    "idvt_komogortsev": peyes.create_detector(
+            # Komogortsev & Karpov (2013)
+        algorithm="idvt",
+        saccade_velocity_threshold=45,
+        dispersion_threshold=2,
+        window_duration=110,
+        **_default_detector_params
+    ),
+    "idvt_komogortsev_birawo": peyes.create_detector(
+            # Komogortsev & Karpov (2013) + Birawo & Kasprowski (2022)
+        algorithm="idvt",
+        saccade_velocity_threshold=16.5,
+        dispersion_threshold=2,
+        window_duration=110,
+        **_default_detector_params
     ),
     "engbert_5": peyes.create_detector(
         algorithm="engbert", lambda_param=5, **_default_detector_params
@@ -50,12 +70,6 @@ DETECTORS = {
     "engbert_6": peyes.create_detector(
         algorithm="engbert", lambda_param=6, **_default_detector_params
     ),
-    # "nh": peyes.create_detector(
-    #     algorithm="nh", **_default_detector_params
-    # ),
-    # "remodnav": peyes.create_detector(
-    #     algorithm="remodnav", show_warnings=False, **_default_detector_params
-    # ),
 }
 for key, detector in DETECTORS.items():
     detector.name = key
