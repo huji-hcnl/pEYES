@@ -59,9 +59,3 @@ DETECTORS = {
 }
 for key, detector in DETECTORS.items():
     detector.name = key
-
-FIGURES_CONFIG = {
-    # labeler -> (color, line-style)
-    'Other Human': ("#bab0ac", 'dot'),
-    **{key: (u.DEFAULT_DISCRETE_COLORMAP[i], None) for i, key in enumerate(DETECTORS.keys())}
-}
