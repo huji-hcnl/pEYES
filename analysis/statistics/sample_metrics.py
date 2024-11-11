@@ -18,12 +18,13 @@ def load_sdt(
         label: Optional[Union[UnparsedEventLabelType, UnparsedEventLabelSequenceType]] = None,
         stimulus_type: Optional[Union[str, List[str]]] = None,
         metric: Optional[Union[str, List[str]]] = None,
+        iteration: int = 1,
 ) -> pd.DataFrame:
     return h.load_data(
         dataset_name=dataset_name, output_dir=output_dir,
         data_dir_name=f"{peyes.constants.SAMPLE_STR}_{peyes.constants.METRICS_STR}",
         filename_suffix=f"{u.SDT_STR}_{peyes.constants.METRICS_STR}", label=label,
-        iteration=1, stimulus_type=stimulus_type, sub_index=metric,
+        iteration=iteration, stimulus_type=stimulus_type, sub_index=metric,
     )
 
 
@@ -32,12 +33,13 @@ def load_global_metrics(
         output_dir: str,
         stimulus_type: Optional[Union[str, List[str]]] = None,
         metric: Optional[Union[str, List[str]]] = None,
+        iteration: int = 1,
 ) -> pd.DataFrame:
     return h.load_data(
         dataset_name=dataset_name, output_dir=output_dir,
         data_dir_name=f"{peyes.constants.SAMPLE_STR}_{peyes.constants.METRICS_STR}",
         filename_suffix=f"{u.GLOBAL_STR}_{peyes.constants.METRICS_STR}", label=None,
-        iteration=1, stimulus_type=stimulus_type, sub_index=metric,
+        iteration=iteration, stimulus_type=stimulus_type, sub_index=metric,
     )
 
 
