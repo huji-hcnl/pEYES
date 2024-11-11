@@ -10,7 +10,7 @@ from peyes._DataModels.UnparsedEventLabel import UnparsedEventLabelType, Unparse
 from peyes._DataModels.EventLabelEnum import EventLabelEnum
 from peyes._DataModels.Detector import BaseDetector
 from peyes._DataModels.Detector import (
-    IVTDetector, IVVTDetector, IDTDetector, EngbertDetector, NHDetector, REMoDNaVDetector
+    IVTDetector, IVVTDetector, IDTDetector, IDVTDetector, EngbertDetector, NHDetector, REMoDNaVDetector
 )
 
 
@@ -107,8 +107,8 @@ def create_detector(
             **{k: kwargs.get(k, default_params[k]) for k in default_params.keys()}
         )
     elif algorithm_lower == 'idvt':
-        default_params = IDTDetector.get_default_params()
-        return IDTDetector(
+        default_params = IDVTDetector.get_default_params()
+        return IDVTDetector(
             missing_value=missing_value,
             min_event_duration=min_event_duration,
             pad_blinks_ms=pad_blinks_time,
