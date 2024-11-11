@@ -1,6 +1,7 @@
 import os
-from typing import List, Optional, Union, Tuple, Sequence, Dict
+from typing import List, Optional, Union, Tuple, Sequence, Callable
 
+import numpy as np
 import pandas as pd
 import scipy.stats as stats
 import scikit_posthocs as sp
@@ -71,74 +72,15 @@ def kruskal_wallis_dunns(
         multi_comp: Optional[str] = "fdr_bh",
 ) -> Tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame, pd.DataFrame]:
     """
-    For each unique value in the input DataFrame's index (metric names) and each of the GT labelers, groups predictors'
-    values across trials (so that we have a list of values for each predictor). Then, we run a Kruskal-Wallis test
-    with post-hoc Dunn's test for multiple comparisons.
-    Returns the KW-statistic, KW-p-value, Dunn's-p-values and number of samples for each (index, GT labeler) pair.
-    Raises a ValueError if there are only two predictors, in which case the correct test would be a Mann-Whitney U test.
-
-    :param data: DataFrame; Should have the following MultiIndex structure:
-        - Index :: single level metric names
-        - Columns :: 1st level: trial id
-        - Columns :: 2nd level: GT labeler
-        - Columns :: 3rd level: Pred labeler (detection algorithm)
-    :param gt_cols: GT labeler(s) to compare against predictors (detection algorithms).
-    :param multi_comp: Method for multiple comparisons correction when performing Dunn's post-hoc test.
-
-    :return: Four DataFrames containing results for the statistical analysis.
-        - statistics: KW statistic; index is metric name, columns are GT labelers.
-        - pvalues: KW p-value; index is metric name, columns are GT labelers.
-        - dunns: DataFrame with Dunn's p-values for pair-wise comparisons; index and columns are Pred labelers.
-        - Ns: Number of data-points (trials) for each (metric, GT labeler, Pred labeler) pair; index is metric name,
-            columns multiindex with pairs of (GT, Pred) labelers.
+    Run the Kruskal-Wallis test with Dunn's post-hoc test for multiple comparisons for each (metric, GT labeler) pair.
+    Returns the KW-statistic, KW-p-value, Dunn's-p-values and number of samples for each pair.
+    Read the docstring for `_statistical_analysis` for more details.
     """
-    predictors = data.columns.get_level_values(u.PRED_STR).unique()
-    if len(predictors) < 2:
-        raise ValueError(f"Not enough predictors for a statistical test: {len(predictors)}")
-    if len(predictors) == 2:
-        raise ValueError(
-            f"You are comparing only 2 predictors. Use the Mann-Whitney U test instead of Kruskal-Wallis."
-        )
-    gt_cols = gt_cols if isinstance(gt_cols, list) else [gt_cols]
-    metrics = sorted(
-        data.index.unique(),
-        key=lambda met: u.METRICS_CONFIG[met][1] if met in u.METRICS_CONFIG else ord(met[0])
-    )
-    statistics, pvalues, dunns, Ns = {}, {}, {}, {}
-    for _i, gt_col in enumerate(gt_cols):
-        for _j, met in enumerate(metrics):
-            gt_series = data.xs(gt_col, level=u.GT_STR, axis=1).loc[met]
-            if pd.isna(gt_series).all():
-                continue
-            gt_df = gt_series.unstack().drop(columns=gt_cols, errors='ignore')  # drop other GT labelers
-            detectors = u.sort_labelers(gt_df.columns.get_level_values(u.PRED_STR).unique())
-            detector_values = {}
-            for det in detectors:
-                vals = gt_df[det].explode().dropna().values.astype(float)
-                n = vals.shape[0]
-                Ns[(met, gt_col, det)] = n
-                if n > 0:
-                    detector_values[det] = vals
-            statistic, pvalue = stats.kruskal(*detector_values.values(), nan_policy='omit')
-            dunn = pd.DataFrame(
-                sp.posthoc_dunn(a=list(detector_values.values()), p_adjust=multi_comp).values,
-                index=list(detector_values.keys()), columns=list(detector_values.keys())
-            )
-            dunn.index.names = dunn.columns.names = [u.PRED_STR]
-            statistics[(met, gt_col)] = statistic
-            pvalues[(met, gt_col)] = pvalue
-            dunns[(met, gt_col)] = dunn
+    kw_test = lambda vals: stats.kruskal(*vals, nan_policy='omit')
+    dunns_test = lambda vals: sp.posthoc_dunn(a=list(vals), p_adjust=multi_comp)
+    h_stat, p_vals, dunn_p_vals, Ns = _statistical_analysis(data, gt_cols, kw_test, dunns_test)
+    return h_stat, p_vals, dunn_p_vals, Ns
 
-    # create outputs
-    statistics = pd.Series(statistics).unstack()
-    pvalues = pd.Series(pvalues).unstack()
-    dunns = pd.Series(dunns).unstack()
-    statistics.index.names = pvalues.index.names = dunns.index.names = [peyes.constants.METRIC_STR]
-    statistics.columns.names = pvalues.columns.names = dunns.columns.names = [u.GT_STR]
-    Ns = pd.Series(Ns)
-    Ns.index.names = [peyes.constants.METRIC_STR, u.GT_STR, u.PRED_STR]
-    Ns = Ns.unstack([u.GT_STR, u.PRED_STR])
-    return statistics, pvalues, dunns, Ns
 
 
 def distributions_figure(
@@ -223,3 +165,96 @@ def distributions_figure(
         boxgap=0,
     )
     return fig
+
+
+def _statistical_analysis(
+        data: pd.DataFrame,
+        gt_cols: Union[str, Sequence[str]],
+        test: Callable[[Sequence[Sequence[float]]], Tuple[float, float]],
+        post_hoc_test: Optional[Callable[[Sequence[Sequence[float]]], pd.DataFrame]] = None,
+) -> Tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame, pd.DataFrame]:
+    """
+    Runs the statistical test and post-hoc test for each (metric, GT labeler) pair in the input DataFrame.
+    For each unique value in the input DataFrame's index (metric names) and each of the GT labelers, we:
+    1. Extract the values for each predictor labeler (detection algorithm) over all trials, so that we have a list of
+        values for each predictor.
+    2. Run the statistical test with the extracted values.
+    3. If a post-hoc test is provided, we run it with the extracted values.
+    4. Store the results in the output DataFrames.
+
+    Raises a ValueError if there are less than 2 predictors.
+    Returns four DataFrames containing results for the statistical analysis:
+    - statistics: index is metric name, columns are GT labelers, values are the test statistic (float).
+    - pvalues: index is metric name, columns are GT labelers, values are the test p-value (float).
+    - post_hoc_res: index is metric name, columns are GT labelers, values are the post-hoc test results: a DataFrame
+        with predictors as index and columns, and p-values as values. If no post-hoc test is provided, this DataFrame
+        will be empty.
+    - Ns: index is metric name, columns are multiindex with pairs of (GT, Pred) labelers, values are the number of
+        measurements (trials) for each pair.
+
+    :param data: DataFrame; Should have the following MultiIndex structure:
+        - Index :: single level metric names
+        - Columns :: 1st level: trial id
+        - Columns :: 2nd level: GT labeler
+        - Columns :: 3rd level: Pred labeler (detection algorithm)
+    :param gt_cols: GT labeler(s) to compare against predictors (detection algorithms).
+    :param test: Statistical test to run with the extracted values.
+    :param post_hoc_test: Optional; post-hoc test to run with the extracted values.
+
+    :return: Four DataFrames - statistics, pvalues, post_hoc_res, Ns.
+    """
+    predictors = data.columns.get_level_values(u.PRED_STR).unique()
+    if len(predictors) < 2:
+        raise ValueError(f"Not enough predictors for a statistical test: {len(predictors)}")
+    if len(predictors) == 2 and post_hoc_test is not None:
+        raise RuntimeError("You don't need a post-hoc test for only 2 predictors.")
+    gt_cols = gt_cols if isinstance(gt_cols, list) else [gt_cols]
+    metrics = sorted(
+        data.index.unique(),
+        key=lambda met: u.METRICS_CONFIG[met][1] if met in u.METRICS_CONFIG else ord(met[0])
+    )
+    Ns = {}                                         # (metric, GT, Pred) -> num_trials
+    statistics, pvalues, post_hoc_res = {}, {}, {}      # (metric, GT) -> value
+    for _i, gt_col in enumerate(gt_cols):
+        for _j, met in enumerate(metrics):
+            gt_series = data.xs(gt_col, level=u.GT_STR, axis=1).loc[met]
+            if pd.isna(gt_series).all():
+                continue
+            gt_df = gt_series.unstack().drop(columns=gt_cols, errors='ignore')  # drop other GT labelers
+
+            # extract per-detector values
+            detectors = u.sort_labelers(gt_df.columns.get_level_values(u.PRED_STR).unique())
+            detector_values = {}
+            for det in detectors:
+                vals = gt_df[det].explode().dropna().values.astype(float)
+                n = vals.shape[0]
+                Ns[(met, gt_col, det)] = n
+                if n > 0:
+                    detector_values[det] = vals
+
+            # calculate statistical test
+            statistic, pvalue = test(list(detector_values.values()))
+            statistics[(met, gt_col)] = statistic
+            pvalues[(met, gt_col)] = pvalue
+
+            # calculate post-hoc test
+            if post_hoc_test is not None:
+                post_result = post_hoc_test(list(detector_values.values())).values
+            else:
+                post_result = np.array([])
+            post_result = pd.DataFrame(
+                post_result, index=list(detector_values.keys()), columns=list(detector_values.keys())
+            )
+            post_result.index.names = post_result.columns.names = [u.PRED_STR]
+            post_hoc_res[(met, gt_col)] = post_result
+
+    # create outputs
+    statistics = pd.Series(statistics).unstack()
+    pvalues = pd.Series(pvalues).unstack()
+    post_hoc_res = pd.Series(post_hoc_res).unstack()
+    statistics.index.names = pvalues.index.names = post_hoc_res.index.names = [peyes.constants.METRIC_STR]
+    statistics.columns.names = pvalues.columns.names = post_hoc_res.columns.names = [u.GT_STR]
+    Ns = pd.Series(Ns)
+    Ns.index.names = [peyes.constants.METRIC_STR, u.GT_STR, u.PRED_STR]
+    Ns = Ns.unstack([u.GT_STR, u.PRED_STR])
+    return statistics, pvalues, post_hoc_res, Ns
