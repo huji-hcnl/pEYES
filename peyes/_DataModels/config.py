@@ -23,7 +23,7 @@ EVENT_MAPPING = {
     EventLabelEnum.FIXATION: {
         cnst.LABEL_STR: EventLabelEnum.FIXATION.name,
         cnst.COLOR_STR: "#1f78b4",
-        cnst.MIN_DURATION_STR: 50,
+        cnst.MIN_DURATION_STR: 55,
         cnst.MAX_DURATION_STR: 2500,
     },
     EventLabelEnum.SACCADE: {
