@@ -19,7 +19,7 @@ import analysis._parameter_exploration._helpers as h
 
 pio.renderers.default = "browser"
 
-COMPARED_DETECTORS = [det for det in h.DETECTORS.keys() if "idt" in det.lower()]
+COMPARED_DETECTORS = [det for det in h.DETECTORS.keys() if "idvt" in det.lower()]
 
 # %%
 # SAMPLE-LEVEL AGREEMENT (GLOBAL MEASURES)
@@ -41,7 +41,7 @@ global_statistics, global_pvalues, global_dunns, global_Ns = sm.kruskal_wallis_d
 global_distribution_figure = sm.global_metrics_distributions_figure(global_metrics, h.GT1, h.GT2,)
 global_distribution_figure.show()
 
-print("????????")
+print("No significant differences in global metrics")
 
 # %%
 # ONSET & OFFSET DETECTION (FIXATIONS)
@@ -76,7 +76,7 @@ fixation_dprime_figure = ch_sdt.multi_channel_figure(
 fixation_dprime_figure.update_layout(width=1400, height=500,)
 fixation_dprime_figure.show()
 
-print("????????")
+print("No significant differences in fixation onset/offset detection")
 
 # %%
 # ONSET & OFFSET DETECTION (SACCADES)
@@ -111,4 +111,7 @@ saccade_dprime_figure = ch_sdt.multi_channel_figure(
 saccade_dprime_figure.update_layout(width=1400, height=500,)
 saccade_dprime_figure.show()
 
-print("????????")
+print(
+    "saccade onset using I-DVT with Andersson params is *significantly* worse than with Komogorob & "
+    "Komogorov-Birawo params (which are the same)"
+)
