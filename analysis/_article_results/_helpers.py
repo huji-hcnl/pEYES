@@ -1,0 +1,57 @@
+import os
+
+import numpy as np
+import peyes
+
+import analysis.utils as u
+
+DATASET_NAME = "lund2013"
+STIMULUS_TYPE = peyes.constants.IMAGE_STR
+GT1, GT2 = "RA", "MN"
+MULTI_COMP = "bonferroni"   # method for multiple comparisons correction: bonferroni, fdr_bh, holm, etc.
+ALPHA = 0.05
+
+
+_ARTICLE_RESULTS_STR = "article_results"
+_FIGURES_STR = "figures"
+PROCESSED_DATA_DIR = os.path.join(u.OUTPUT_DIR, _ARTICLE_STR)
+FIGURES_DIR = os.path.join(u.OUTPUT_DIR, _ARTICLE_STR, DATASET_NAME, _FIGURES_STR)
+os.makedirs(FIGURES_DIR, exist_ok=True)
+
+_default_detector_params = dict(missing_value=np.nan, min_event_duration=4, pad_blinks_time=0)
+DETECTORS = {
+    "ivt_andersson": peyes.create_detector(     # Andersson et al. (2017)
+        algorithm="ivt", saccade_velocity_threshold=45, **_default_detector_params
+    ),
+    "ivvt": peyes.create_detector(
+        algorithm="ivvt", saccade_velocity_threshold=45, smooth_pursuit_velocity_threshold=26, **_default_detector_params
+    ),
+    "idt_andersson": peyes.create_detector(
+        algorithm="idt", dispersion_threshold=2.7, **_default_detector_params
+    ),
+    "idt_salvucci": peyes.create_detector(
+        algorithm="idt", dispersion_threshold=1, window_duration=100, **_default_detector_params
+    ),
+    "idvt": peyes.create_detector(
+        algorithm="idvt", **_default_detector_params
+    ),
+    "engbert": peyes.create_detector(
+        algorithm="engbert", lambda_param=6, **_default_detector_params
+    ),
+    "nh": peyes.create_detector(
+        algorithm="nh", **_default_detector_params
+    ),
+    "remodnav": peyes.create_detector(
+        algorithm="remodnav", show_warnings=False, **_default_detector_params
+    ),
+}
+for key, detector in DETECTORS.items():
+    detector.name = key
+
+FIGURE_CONFIG = {
+    # labeler -> (order, color, line-style)
+    'Other Human': (0, "#bab0ac", 'dot'),
+    'RA': (1, "#ff0000", 'dot'),
+    'MN': (2, "#0000ff", 'dot'),
+    **{key: (i+2 ,u.DEFAULT_DISCRETE_COLORMAP[i], None) for i, key in enumerate(DETECTORS.keys())}
+}
