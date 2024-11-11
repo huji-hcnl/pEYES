@@ -65,7 +65,6 @@ fixation_csdt_metrics = pd.concat(
 )
 
 # calc stats
-# calc stats
 fix_onset_u_stat, fix_onset_pvalues, fix_onset_Ns = ch_sdt.mann_whitney(
     fixation_csdt_metrics, "onset", THRESHOLD, [h.GT1, h.GT2], method='exact',
 )
