@@ -48,6 +48,23 @@ def load(
     return _extract_sdt_subframe(sdt_metrics, channel_type, threshold, metrics)
 
 
+def mann_whitney(
+        sdt_metrics: pd.DataFrame,
+        channel_type: str,
+        threshold: int,
+        gt_cols: Union[str, Sequence[str]],
+        metrics: Union[str, Sequence[str]] = None,
+        alternative: str = "two-sided",
+        method: str = "auto",
+) -> Tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame]:
+    sub_frame = _extract_sdt_subframe(sdt_metrics, channel_type, threshold, metrics)
+    sub_frame = sub_frame.droplevel(  # remove single-value levels from index
+        level=[peyes.constants.CHANNEL_TYPE_STR, peyes.constants.THRESHOLD_STR], axis=0
+    )
+    statistics, pvalues, Ns = h.mann_whitney(sub_frame, gt_cols=gt_cols, alternative=alternative, method=method)
+    return statistics, pvalues, Ns
+
+
 def kruskal_wallis_dunns(
         sdt_metrics: pd.DataFrame,
         channel_type: str,
