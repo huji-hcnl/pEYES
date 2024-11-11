@@ -66,6 +66,28 @@ def load_data(
     return data
 
 
+def mann_whitney(
+        data: pd.DataFrame,
+        gt_cols: Union[str, Sequence[str]],
+        alternative: str = "two-sided",
+        method: str = "auto",
+) -> Tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame]:
+    """
+    Run the Mann-Whitney U-test for each (metric, GT labeler) pair.
+    Returns the U-statistic, p-value and number of samples for each pair.
+    Read the docstring for `_statistical_analysis` for more details.
+    """
+    pred = data.columns.get_level_values(u.PRED_STR).unique()
+    if len(pred) > 2:
+        raise ValueError(
+            f"Mann-Whitney's U-test requires exactly 2 predictors, got {len(pred)}. " +
+            "Consider using Kruskal-Wallis test instead."
+        )
+    mw_test = lambda vals: stats.mannwhitneyu(*vals, alternative=alternative, method=method, nan_policy='omit')
+    u_stats, p_vals, _, Ns = _statistical_analysis(data, gt_cols, mw_test)
+    return u_stats, p_vals, Ns
+
+
 def kruskal_wallis_dunns(
         data: pd.DataFrame,
         gt_cols: Union[str, Sequence[str]],
@@ -239,12 +261,12 @@ def _statistical_analysis(
 
             # calculate post-hoc test
             if post_hoc_test is not None:
-                post_result = post_hoc_test(list(detector_values.values())).values
+                post_result = pd.DataFrame(
+                    post_hoc_test(list(detector_values.values())).values,
+                    index=list(detector_values.keys()), columns=list(detector_values.keys())
+                )
             else:
-                post_result = np.array([])
-            post_result = pd.DataFrame(
-                post_result, index=list(detector_values.keys()), columns=list(detector_values.keys())
-            )
+                post_result = pd.DataFrame(np.array([]))
             post_result.index.names = post_result.columns.names = [u.PRED_STR]
             post_hoc_res[(met, gt_col)] = post_result
 
