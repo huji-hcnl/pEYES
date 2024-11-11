@@ -14,27 +14,34 @@ ALPHA = 0.05
 
 _ARTICLE_RESULTS_STR = "article_results"
 _FIGURES_STR = "figures"
-PROCESSED_DATA_DIR = os.path.join(u.OUTPUT_DIR, _ARTICLE_STR)
-FIGURES_DIR = os.path.join(u.OUTPUT_DIR, _ARTICLE_STR, DATASET_NAME, _FIGURES_STR)
+PROCESSED_DATA_DIR = os.path.join(u.OUTPUT_DIR, _ARTICLE_RESULTS_STR)
+FIGURES_DIR = os.path.join(u.OUTPUT_DIR, _ARTICLE_RESULTS_STR, DATASET_NAME, _FIGURES_STR)
 os.makedirs(FIGURES_DIR, exist_ok=True)
 
 _default_detector_params = dict(missing_value=np.nan, min_event_duration=4, pad_blinks_time=0)
 DETECTORS = {
-    "ivt_andersson": peyes.create_detector(     # Andersson et al. (2017)
+    "ivt": peyes.create_detector(
         algorithm="ivt", saccade_velocity_threshold=45, **_default_detector_params
     ),
     "ivvt": peyes.create_detector(
         algorithm="ivvt", saccade_velocity_threshold=45, smooth_pursuit_velocity_threshold=26, **_default_detector_params
     ),
-    "idt_andersson": peyes.create_detector(
+    "idt": peyes.create_detector(
         algorithm="idt", dispersion_threshold=2.7, **_default_detector_params
     ),
-    "idt_salvucci": peyes.create_detector(
-        algorithm="idt", dispersion_threshold=1, window_duration=100, **_default_detector_params
-    ),
+    # "idt_salvucci": peyes.create_detector(        # Salvucci & Goldberg (2000)
+    #     algorithm="idt", dispersion_threshold=1, window_duration=100, **_default_detector_params
+    # ),
     "idvt": peyes.create_detector(
-        algorithm="idvt", **_default_detector_params
+        algorithm="idvt", dispersion_threshold=2.7, **_default_detector_params
     ),
+    # "idvt_komogortsev": peyes.create_detector(    # Komogortsev & Karpov (2013)
+    #     algorithm="idvt",
+    #     saccade_velocity_threshold=45,
+    #     dispersion_threshold=2,
+    #     window_duration=110,
+    #     **_default_detector_params
+    # ),
     "engbert": peyes.create_detector(
         algorithm="engbert", lambda_param=6, **_default_detector_params
     ),
