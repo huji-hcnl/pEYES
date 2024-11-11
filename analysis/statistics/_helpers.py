@@ -71,9 +71,11 @@ def kruskal_wallis_dunns(
         multi_comp: Optional[str] = "fdr_bh",
 ) -> Tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame, pd.DataFrame]:
     """
-    For each unique value in the input DataFrame's index (metric names) and each of the GT labelers, performs
-    Kruskal-Wallis test with post-hoc Dunn's test for multiple comparisons.
+    For each unique value in the input DataFrame's index (metric names) and each of the GT labelers, groups predictors'
+    values across trials (so that we have a list of values for each predictor). Then, we run a Kruskal-Wallis test
+    with post-hoc Dunn's test for multiple comparisons.
     Returns the KW-statistic, KW-p-value, Dunn's-p-values and number of samples for each (index, GT labeler) pair.
+    Raises a ValueError if there are only two predictors, in which case the correct test would be a Mann-Whitney U test.
 
     :param data: DataFrame; Should have the following MultiIndex structure:
         - Index :: single level metric names
@@ -90,6 +92,13 @@ def kruskal_wallis_dunns(
         - Ns: Number of data-points (trials) for each (metric, GT labeler, Pred labeler) pair; index is metric name,
             columns multiindex with pairs of (GT, Pred) labelers.
     """
+    predictors = data.columns.get_level_values(u.PRED_STR).unique()
+    if len(predictors) < 2:
+        raise ValueError(f"Not enough predictors for a statistical test: {len(predictors)}")
+    if len(predictors) == 2:
+        raise ValueError(
+            f"You are comparing only 2 predictors. Use the Mann-Whitney U test instead of Kruskal-Wallis."
+        )
     gt_cols = gt_cols if isinstance(gt_cols, list) else [gt_cols]
     metrics = sorted(
         data.index.unique(),
