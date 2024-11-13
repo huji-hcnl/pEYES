@@ -55,7 +55,8 @@ DETECTORS = {
 for key, detector in DETECTORS.items():
     detector.name = key
 
-FIGURE_CONFIG = {
+## FIGURE CONFIG ##
+LABELER_PLOTTING_CONFIG = {
     # labeler -> (order, color, line-style)
     'Other Human': (0, "#bab0ac", 'dot'),
     'RA': (1, "#ff0000", 'dot'),
