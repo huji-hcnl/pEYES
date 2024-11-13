@@ -160,7 +160,9 @@ def gaze_over_time(
     :param vert_lines: time points to add vertical lines at, optional.
     :param title: the title of the figure.
 
-    :keyword marker_size: the size of the markers, defaults to 5.
+    :keyword mode: 'lines'/'markers'/'lines+markers', defaults to 'lines'.
+    :keyword line_width: width of the plotted lines, if `mode` contains 'lines'. defaults to 2.
+    :keyword marker_size: the size of the markers, if `mode` contains 'markers'. defaults to 4.
     :keyword x_color: the color of the x-coordinates, defaults to red.
     :keyword y_color: the color of the y-coordinates, defaults to blue.
     :keyword v_color: the color of the velocity, defaults to light gray.
@@ -172,16 +174,24 @@ def gaze_over_time(
     :return: the figure.
     """
     x, y, t, v = __verify_arrays(x=x, y=y, t=t, v=v)
-    marker_size = kwargs.get("marker_size", 5)
+    mode = kwargs.get('mode', 'lines')
+    line_width = kwargs.get('line_width', 2)
+    marker_size = kwargs.get("marker_size", 4)
     fig = make_subplots(specs=[[{"secondary_y": True}]])
     fig.add_trace(
         go.Scatter(
-            x=t, y=x, mode="markers", name="x", marker=dict(color=kwargs.get("x_color", "#ff0000"), size=marker_size)
+            x=t, y=x, name="x",
+            mode=mode,
+            line=dict(color=kwargs.get("x_color", "#ff0000"), width=line_width),
+            marker=dict(color=kwargs.get("x_color", "#ff0000"), size=marker_size),
         ), secondary_y=False,
     )
     fig.add_trace(
         go.Scatter(
-            x=t, y=y, mode="markers", name="y", marker=dict(color=kwargs.get("y_color", "#0000ff"), size=marker_size)
+            x=t, y=y, name="y",
+            mode=mode,
+            line=dict(color=kwargs.get("y_color", "#0000ff"), width=line_width),
+            marker=dict(color=kwargs.get("y_color", "#0000ff"), size=marker_size),
         ), secondary_y=False,
     )
 
@@ -190,8 +200,10 @@ def gaze_over_time(
         y_axis2_title = f"{cnst.VELOCITY_STR} ({v_measure})"
         fig.add_trace(
             go.Scatter(
-                x=t, y=v, mode="markers", name="v",
-                marker=dict(color=kwargs.get("v_color", "#bbbbbb"), size=marker_size)
+                x=t, y=v, name="v",
+                mode=mode,
+                line=dict(color=kwargs.get("v_color", "#bbbbbb"), width=line_width),
+                marker=dict(color=kwargs.get("v_color", "#bbbbbb"), size=marker_size),
             ), secondary_y=True,
         )
     else:
