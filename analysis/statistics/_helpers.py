@@ -141,6 +141,26 @@ def kruskal_wallis_dunns(
     return h_stat, p_vals, dunn_p_vals, Ns
 
 
+def friedman_nemenyi(
+        data: pd.DataFrame,
+        gt_cols: Union[str, Sequence[str]],
+) -> Tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame, pd.DataFrame]:
+    """
+    Run the Friedman test with Nemenyi's post-hoc test for multiple comparisons, for each (metric, GT labeler) pair.
+    Friedman is the non-parametric equivalent to repeated measures ANOVA (using ranks instead of means), which assumes
+    paired samples between groups. Nemenyi's test is the common post-hoc test used after a significant Friedman, to
+    determine which pairs of groups are significantly different.
+    Note Nemenyi's test doesn't require correcting for multiple comparisons.
+
+    Returns the Friedman's Q-statistic, p-value, Nemenyi's p-values and number of samples for each pair.
+    Read the docstring for `_statistical_analysis` for implementation details.
+    """
+    friedman_test = lambda vals: stats.friedmanchisquare(*vals, nan_policy='omit')
+    nemenyi_test = lambda vals: sp.posthoc_nemenyi(a=list(vals))
+    q_stat, p_vals, nemenyi_p_vals, Ns = _statistical_analysis(data, gt_cols, friedman_test, nemenyi_test)
+    return q_stat, p_vals, nemenyi_p_vals, Ns
+
+
 
 def distributions_figure(
         data: pd.DataFrame,

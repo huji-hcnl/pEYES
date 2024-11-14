@@ -60,6 +60,13 @@ def kruskal_wallis_dunns(
     return h.kruskal_wallis_dunns(data, gt_cols, multi_comp)
 
 
+def friedman_nemenyi(
+        data: pd.DataFrame,
+        gt_cols: Union[str, Sequence[str]],
+) -> Tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame, pd.DataFrame]:
+    return h.friedman_nemenyi(data, gt_cols)
+
+
 def sdt_distributions_figure(
         data: pd.DataFrame,
         gt1: str,
