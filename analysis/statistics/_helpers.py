@@ -6,6 +6,7 @@ import pandas as pd
 import scipy.stats as stats
 import scikit_posthocs as sp
 import plotly.graph_objects as go
+from pywin.mfc.object import Object
 
 import peyes
 
@@ -199,7 +200,7 @@ def distributions_figure(
 def _statistical_analysis(
         data: pd.DataFrame,
         gt_cols: Union[str, Sequence[str]],
-        test: Callable[[Sequence[Sequence[float]]], Tuple[float, float]],
+        test: Callable[[Sequence[Sequence[float]]], Object],
         post_hoc_test: Optional[Callable[[Sequence[Sequence[float]]], pd.DataFrame]] = None,
 ) -> Tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame, pd.DataFrame]:
     """
@@ -262,7 +263,8 @@ def _statistical_analysis(
                     detector_values[det] = vals
 
             # calculate statistical test
-            statistic, pvalue = test(list(detector_values.values()))
+            res = test(list(detector_values.values()))
+            statistic, pvalue = res.statistic, res.pvalue
             statistics[(met, gt_col)] = statistic
             pvalues[(met, gt_col)] = pvalue
 
