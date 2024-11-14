@@ -48,7 +48,7 @@ def load(
     return _extract_sdt_subframe(sdt_metrics, channel_type, threshold, metrics)
 
 
-def mann_whitney(
+def wilcoxon(
         sdt_metrics: pd.DataFrame,
         channel_type: str,
         threshold: int,
@@ -61,8 +61,9 @@ def mann_whitney(
     sub_frame = sub_frame.droplevel(  # remove single-value levels from index
         level=[peyes.constants.CHANNEL_TYPE_STR, peyes.constants.THRESHOLD_STR], axis=0
     )
-    statistics, pvalues, Ns = h.mann_whitney(sub_frame, gt_cols=gt_cols, alternative=alternative, method=method)
+    statistics, pvalues, Ns = h.wilcoxon(sub_frame, gt_cols=gt_cols, alternative=alternative, method=method)
     return statistics, pvalues, Ns
+
 
 
 def kruskal_wallis_dunns(

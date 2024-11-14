@@ -35,7 +35,7 @@ global_metrics = pd.concat(
     [global_metrics.xs(det, axis=1, level='pred', drop_level=False) for det in COMPARED_DETECTORS], axis=1
 ).drop(index=peyes.constants.ACCURACY_STR, inplace=False)    # drop Accuracy metric
 
-global_statistics, global_pvalues, global_Ns = sm.mann_whitney(
+global_statistics, global_pvalues, global_Ns = sm.wilcoxon(
     global_metrics, [h.GT1, h.GT2], method='exact'
 )
 
@@ -63,13 +63,14 @@ fixation_csdt_metrics = ch_sdt.load(
 fixation_csdt_metrics = pd.concat(
     [fixation_csdt_metrics.xs(det, axis=1, level='pred', drop_level=False) for det in COMPARED_DETECTORS], axis=1
 )
+fixation_csdt_metrics.drop(index=['P', 'PP', 'TP', 'N'], level=peyes.constants.METRIC_STR, inplace=True)    # drop irrelevant metrics
 
 # calc stats
-fix_onset_u_stat, fix_onset_pvalues, fix_onset_Ns = ch_sdt.mann_whitney(
+fix_onset_w_stat, fix_onset_pvalues, fix_onset_Ns = ch_sdt.wilcoxon(
     fixation_csdt_metrics, "onset", THRESHOLD, [h.GT1, h.GT2], method='exact',
 )
 
-fix_offset_u_stat, fix_offset_pvalues, fix_offset_Ns = ch_sdt.mann_whitney(
+fix_offset_w_stat, fix_offset_pvalues, fix_offset_Ns = ch_sdt.wilcoxon(
     fixation_csdt_metrics, "offset", THRESHOLD, [h.GT1, h.GT2], method='exact',
 )
 
@@ -103,13 +104,14 @@ saccade_csdt_metrics = ch_sdt.load(
 saccade_csdt_metrics = pd.concat(
     [saccade_csdt_metrics.xs(det, axis=1, level='pred', drop_level=False) for det in COMPARED_DETECTORS], axis=1
 )
+saccade_csdt_metrics.drop(index=['P', 'PP', 'TP', 'N'], level=peyes.constants.METRIC_STR, inplace=True)    # drop irrelevant metrics
 
 # calc stats
-sacc_onset_u_stat, sacc_onset_pvalues, sacc_onset_Ns = ch_sdt.mann_whitney(
+sacc_onset_w_stat, sacc_onset_pvalues, sacc_onset_Ns = ch_sdt.wilcoxon(
     saccade_csdt_metrics, "onset", THRESHOLD, [h.GT1, h.GT2], method='exact',
 )
 
-sacc_offset_u_stat, sacc_offset_pvalues, sacc_offset_Ns = ch_sdt.mann_whitney(
+sacc_offset_w_stat, sacc_offset_pvalues, sacc_offset_Ns = ch_sdt.wilcoxon(
     saccade_csdt_metrics, "offset", THRESHOLD, [h.GT1, h.GT2], method='exact',
 )
 

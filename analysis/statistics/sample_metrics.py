@@ -43,13 +43,13 @@ def load_global_metrics(
     )
 
 
-def mann_whitney(
+def wilcoxon(
         data: pd.DataFrame,
         gt_cols: Union[str, Sequence[str]],
         alternative: str = "two-sided",
         method: str = "auto",
 ) -> Tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame]:
-    return h.mann_whitney(data, gt_cols, alternative, method)
+    return h.wilcoxon(data, gt_cols, alternative, method)
 
 
 def kruskal_wallis_dunns(

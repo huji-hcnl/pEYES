@@ -6,7 +6,6 @@ import pandas as pd
 import scipy.stats as stats
 import scikit_posthocs as sp
 import plotly.graph_objects as go
-from pywin.mfc.object import Object
 
 import peyes
 
@@ -92,15 +91,45 @@ def mann_whitney(
     return u_stats, p_vals, Ns
 
 
+def wilcoxon(data: pd.DataFrame,
+             gt_cols: Union[str, Sequence[str]],
+             alternative: str = "two-sided",
+             method: str = "auto",
+             zero_method: str = 'wilcox',
+) -> Tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame]:
+    """
+    Run the Wilcoxon signed-rank for each (metric, GT labeler) pair.
+    Wilcoxon is the non-parametric equivalent of paired-samples t-test (using ranks instead of means), which repeated
+    measures between groups.
+
+    Returns the W-statistic, p-value and number of samples for each pair.
+    Read the docstring for `_statistical_analysis` for implementation details.
+    """
+    def wilcoxon_test(vals):
+        assert 0 < len(vals) <=2, f"Wilcoxon test can only run on 1 set of differences or 2 sets of samples, {len(vals)} given."
+        if len(vals) == 1:
+            return stats.wilcoxon(
+                vals, alternative=alternative, method=method, zero_method=zero_method, nan_policy='omit'
+            )
+        vals1, vals2 = vals[0], vals[1]
+        assert len(vals1) == len(vals2), f"length mismatch: |group 1|={len(vals1)} and |group 2|={len(vals2)}"
+        return stats.wilcoxon(
+            x=vals1, y=vals2, alternative=alternative, method=method, zero_method=zero_method, nan_policy='omit'
+        )
+
+    w_stats, p_vals, _, Ns = _statistical_analysis(data, gt_cols, wilcoxon_test)
+    return w_stats, p_vals, Ns
+
+
 def kruskal_wallis_dunns(
         data: pd.DataFrame,
         gt_cols: Union[str, Sequence[str]],
         multi_comp: Optional[str] = "fdr_bh",
 ) -> Tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame, pd.DataFrame]:
     """
-    Run the Kruskal-Wallis test with Dunn's post-hoc test for multiple comparisons for each (metric, GT labeler) pair.
+    Run the Kruskal-Wallis test with Dunn's post-hoc test for multiple comparisons, for each (metric, GT labeler) pair.
     Kruskal-Wallis is the non-parametric equivalent to one-way ANOVA (using ranks instead of means), which assumes
-    independent measures between groups. Dunn's test is the common post-hoc test used after a significant KW, to
+    independent samples between groups. Dunn's test is the common post-hoc test used after a significant KW, to
     determine which pairs of groups are significantly different.
 
     Returns the KW-statistic, KW-p-value, Dunn's-p-values and number of samples for each pair.
@@ -200,7 +229,7 @@ def distributions_figure(
 def _statistical_analysis(
         data: pd.DataFrame,
         gt_cols: Union[str, Sequence[str]],
-        test: Callable[[Sequence[Sequence[float]]], Object],
+        test: Callable[[Sequence[Sequence[float]]], Tuple[float, float]],
         post_hoc_test: Optional[Callable[[Sequence[Sequence[float]]], pd.DataFrame]] = None,
 ) -> Tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame, pd.DataFrame]:
     """
@@ -256,8 +285,8 @@ def _statistical_analysis(
             detectors = u.sort_labelers(gt_df.columns.get_level_values(u.PRED_STR).unique())
             detector_values = {}
             for det in detectors:
-                vals = gt_df[det].explode().dropna().values.astype(float)
-                n = vals.shape[0]
+                vals = gt_df[det].explode().values.astype(float)
+                n = sum(~np.isnan(vals))
                 Ns[(met, gt_col, det)] = n
                 if n > 0:
                     detector_values[det] = vals
