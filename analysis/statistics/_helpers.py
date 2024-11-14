@@ -74,8 +74,11 @@ def mann_whitney(
 ) -> Tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame]:
     """
     Run the Mann-Whitney U-test for each (metric, GT labeler) pair.
+    Mann-Whitney is the non-parametric equivalent of two-sampled t-test (using ranks instead of means), which assumes
+    independent measures between groups.
+
     Returns the U-statistic, p-value and number of samples for each pair.
-    Read the docstring for `_statistical_analysis` for more details.
+    Read the docstring for `_statistical_analysis` for implementation details.
     """
     pred = data.columns.get_level_values(u.PRED_STR).unique()
     if len(pred) > 2:
@@ -95,8 +98,12 @@ def kruskal_wallis_dunns(
 ) -> Tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame, pd.DataFrame]:
     """
     Run the Kruskal-Wallis test with Dunn's post-hoc test for multiple comparisons for each (metric, GT labeler) pair.
+    Kruskal-Wallis is the non-parametric equivalent to one-way ANOVA (using ranks instead of means), which assumes
+    independent measures between groups. Dunn's test is the common post-hoc test used after a significant KW, to
+    determine which pairs of groups are significantly different.
+
     Returns the KW-statistic, KW-p-value, Dunn's-p-values and number of samples for each pair.
-    Read the docstring for `_statistical_analysis` for more details.
+    Read the docstring for `_statistical_analysis` for implementation details.
     """
     kw_test = lambda vals: stats.kruskal(*vals, nan_policy='omit')
     dunns_test = lambda vals: sp.posthoc_dunn(a=list(vals), p_adjust=multi_comp)
