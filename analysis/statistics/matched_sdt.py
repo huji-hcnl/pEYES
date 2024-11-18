@@ -56,6 +56,29 @@ def kruskal_wallis_dunns(
     return statistics, pvalues, dunns, Ns
 
 
+def friedman_nemenyi(
+        matches_sdt: pd.DataFrame,
+        matching_scheme: str,
+        gt_cols: Union[str, Sequence[str]],
+        metrics: Union[str, Sequence[str]] = None,
+) -> Tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame, pd.DataFrame]:
+    sub_frame = _extract_sdt_subframe(matches_sdt, matching_scheme, metrics)
+    sub_frame = sub_frame.droplevel(level=[u.MATCHING_SCHEME_STR], axis=0)  # remove single-value levels from index
+    statistics, pvalues, nemenyi, Ns = h.friedman_nemenyi(sub_frame, gt_cols=gt_cols)
+    return statistics, pvalues, nemenyi, Ns
+
+
+def post_hoc_table(
+        ph_data: pd.DataFrame,
+        metric: str,
+        gt_cols: Union[str, Sequence[str]],
+        alpha: float = 0.05,
+) -> pd.DataFrame:
+    if isinstance(gt_cols, str):
+        gt_cols = [gt_cols]
+    return h.create_post_hoc_table(ph_data, metric, *gt_cols, alpha=alpha)
+
+
 def single_scheme_figure(
         matches_sdt: pd.DataFrame,
         matching_scheme: str,
@@ -156,7 +179,7 @@ def multi_threshold_figures(
                         showlegend=i == 0,
                     )
                 )
-                if show_err_bands and errors:
+                if show_err_bands and errors is not None and not np.isnan(errors).all():
                     y_upper, y_lower = mean + errors, mean - errors
                     fig.add_trace(
                         row=r + 1, col=c + 1, trace=go.Scatter(
@@ -252,7 +275,7 @@ def multi_metric_figure(
                     ),
                     row=r + 1, col=c + 1
                 )
-                if show_err_bands and errors:
+                if show_err_bands and errors is not None and not np.isnan(errors).all():
                     y_upper, y_lower = mean + errors, mean - errors
                     fig.add_trace(
                         go.Scatter(
