@@ -88,6 +88,7 @@ def multi_threshold_figures(
         matching_scheme: str,
         metrics: Union[str, Sequence[str]] = None,
         title: str = "",
+        error_bars: Optional[str] = None,
         colors: u.COLORMAP_TYPE = None,
         show_other_gt: bool = True,
         show_err_bands: bool = False,
@@ -144,10 +145,10 @@ def multi_threshold_figures(
                 #  if we change how the thresholds are stored in the index, we could change this line
                 thresholds = met_det_frame.index.to_series(name=peyes.constants.THRESHOLD_STR).apply(lambda ms: int(ms.split("_")[-1]))
                 mean = met_det_frame.mean(axis=1)
-                sem = met_det_frame.std(axis=1) / np.sqrt(met_det_frame.count(axis=1))
+                errors = h.calc_error_bars(met_det_frame, error_bars)
                 fig.add_trace(
                     row=r + 1, col=c + 1, trace=go.Scatter(
-                        x=thresholds, y=mean, error_y=dict(type="data", array=sem),
+                        x=thresholds, y=mean, error_y=dict(type="data", array=errors),
                         name=det_name, legendgroup=det_name,
                         mode="lines+markers",
                         marker=dict(size=5, color=det_color),
@@ -156,7 +157,7 @@ def multi_threshold_figures(
                     )
                 )
                 if show_err_bands:
-                    y_upper, y_lower = mean + sem, mean - sem
+                    y_upper, y_lower = mean + errors, mean - errors
                     fig.add_trace(
                         row=r + 1, col=c + 1, trace=go.Scatter(
                             x=np.concatenate((thresholds, thresholds[::-1])),
@@ -182,6 +183,7 @@ def multi_metric_figure(
         matching_scheme: str,
         metrics: Union[str, Sequence[str]] = None,
         title: str = "",
+        error_bars: Optional[str] = None,
         colors: u.COLORMAP_TYPE = None,
         show_other_gt: bool = True,
         show_err_bands: bool = False,
@@ -238,10 +240,10 @@ def multi_metric_figure(
                 #  if we change how the thresholds are stored in the index, we could change this line
                 thresholds = det_data.index.to_series(name=peyes.constants.THRESHOLD_STR).apply(lambda ms: int(ms.split("_")[-1]))
                 mean = det_data.mean(axis=1)
-                sem = det_data.std(axis=1) / np.sqrt(det_data.count(axis=1))
+                errors = h.calc_error_bars(det_data, error_bars)
                 fig.add_trace(
                     go.Scatter(
-                        x=thresholds, y=mean, error_y=dict(type="data", array=sem),
+                        x=thresholds, y=mean, error_y=dict(type="data", array=errors),
                         name=det_name, legendgroup=det_name,
                         mode="lines+markers",
                         marker=dict(size=5, color=det_color),
@@ -251,7 +253,7 @@ def multi_metric_figure(
                     row=r + 1, col=c + 1
                 )
                 if show_err_bands:
-                    y_upper, y_lower = mean + sem, mean - sem
+                    y_upper, y_lower = mean + errors, mean - errors
                     fig.add_trace(
                         go.Scatter(
                             x=np.concatenate((thresholds, thresholds[::-1])),

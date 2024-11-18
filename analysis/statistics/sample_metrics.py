@@ -67,6 +67,17 @@ def friedman_nemenyi(
     return h.friedman_nemenyi(data, gt_cols)
 
 
+def post_hoc_table(
+        ph_data: pd.DataFrame,
+        metric: str,
+        gt_cols: Union[str, Sequence[str]],
+        alpha: float = 0.05,
+) -> pd.DataFrame:
+    if isinstance(gt_cols, str):
+        gt_cols = [gt_cols]
+    return h.create_post_hoc_table(ph_data, metric, *gt_cols, alpha=alpha)
+
+
 def sdt_distributions_figure(
         data: pd.DataFrame,
         gt1: str,

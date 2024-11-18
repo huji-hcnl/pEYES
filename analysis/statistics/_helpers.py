@@ -161,6 +161,37 @@ def friedman_nemenyi(
     return q_stat, p_vals, nemenyi_p_vals, Ns
 
 
+def create_post_hoc_table(
+        post_hoc_results: pd.DataFrame, metric: str, *gt_names: str, alpha: float = 0.05
+) -> (pd.DataFrame, pd.DataFrame):
+    assert 0 < alpha < 1, f"parameter `alpha` must be in range (0, 1), {alpha: .3f} given."
+    pvals = pd.concat(
+        [post_hoc_results.loc[metric, gt] for gt in gt_names], keys=gt_names
+    ).reorder_levels([1, 0])
+    pvals.sort_index(
+        level=0, key=lambda idx: idx.map(lambda det: list(pvals.columns).index(det)), inplace=True
+    )
+    pvals.index.names = [u.PRED_STR, u.GT_STR]
+    pvals.columns.names = [u.PRED_STR]
+
+    table = np.full_like(pvals, "n.s.", dtype=np.dtypes.StringDType())
+    table[pvals <= alpha] = '*'
+    table[pvals <= alpha / 5] = '**'
+    table[pvals <= alpha / 50] = '***'
+    table = pd.DataFrame(table, index=pvals.index, columns=pvals.columns)
+
+    for c, det1 in enumerate(pvals.index.get_level_values(0).unique()):
+        for r, det2 in enumerate(pvals.index.get_level_values(0).unique()):
+            if c == r:
+                table.loc[det1, det2] = "--"
+            elif r > c:
+                table.loc[det2, det1] = ""
+            else:
+                for gt in gt_names:
+                    table.loc[(det1, gt), det2] = f"{pvals.loc[(det1, gt), det2] :.4f}"
+    return table
+
+
 
 def distributions_figure(
         data: pd.DataFrame,
@@ -244,6 +275,18 @@ def distributions_figure(
         boxgap=0,
     )
     return fig
+
+
+def calc_error_bars(sub_data: pd.DataFrame, error_bars: Optional[str] = None):
+    error_bars = error_bars.strip().lower() if error_bars else None
+    if error_bars is None:
+        return None
+    std = sub_data.std(axis=1)
+    if error_bars == "std":
+        return std
+    elif error_bars == "sem":
+        return std / np.sqrt(sub_data.count(axis=1))
+    raise ValueError(f"Invalid error bars type: {error_bars}, choose from: sem, std")
 
 
 def _statistical_analysis(
