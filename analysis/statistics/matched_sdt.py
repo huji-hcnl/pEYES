@@ -179,7 +179,7 @@ def multi_threshold_figures(
                         showlegend=i == 0,
                     )
                 )
-                if show_err_bands and errors is not None and not np.isnan(errors).all():
+                if show_err_bands and errors is not None and not errors.isna().all():
                     y_upper, y_lower = mean + errors, mean - errors
                     fig.add_trace(
                         row=r + 1, col=c + 1, trace=go.Scatter(
@@ -275,7 +275,7 @@ def multi_metric_figure(
                     ),
                     row=r + 1, col=c + 1
                 )
-                if show_err_bands and errors is not None and not np.isnan(errors).all():
+                if show_err_bands and errors is not None and not errors.isna().all():
                     y_upper, y_lower = mean + errors, mean - errors
                     fig.add_trace(
                         go.Scatter(

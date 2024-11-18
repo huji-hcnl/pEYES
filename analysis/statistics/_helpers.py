@@ -277,16 +277,22 @@ def distributions_figure(
     return fig
 
 
-def calc_error_bars(sub_data: pd.DataFrame, error_bars: Optional[str] = None):
+def calc_error_bars(sub_data: pd.DataFrame, error_bars: Optional[str] = None) -> pd.Series:
     error_bars = error_bars.strip().lower() if error_bars else None
     if error_bars is None:
         return None
+    if error_bars == 'ci':
+        # see https://stackoverflow.com/a/69841368/8543025
+        ci = sub_data.apply(    # symmetric CI around 0
+            lambda x: stats.t.interval(0.95, len(x) - 1, loc=0, scale=stats.sem(x)), axis=1
+        )
+        return ci.apply(lambda x: x[1])     # only the top of the CI
     std = sub_data.std(axis=1)
     if error_bars == "std":
         return std
     elif error_bars == "sem":
         return std / np.sqrt(sub_data.count(axis=1))
-    raise ValueError(f"Invalid error bars type: {error_bars}, choose from: sem, std")
+    raise ValueError(f"Invalid error bars type: {error_bars}, choose from: sem, std, ci")
 
 
 def _statistical_analysis(
