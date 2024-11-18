@@ -82,6 +82,32 @@ def kruskal_wallis_dunns(
     return statistics, pvalues, dunns, Ns
 
 
+def friedman_nemenyi(
+        sdt_metrics: pd.DataFrame,
+        channel_type: str,
+        threshold: int,
+        gt_cols: Union[str, Sequence[str]],
+        metrics: Union[str, Sequence[str]] = None,
+) -> Tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame, pd.DataFrame]:
+    sub_frame = _extract_sdt_subframe(sdt_metrics, channel_type, threshold, metrics)
+    sub_frame = sub_frame.droplevel(  # remove single-value levels from index
+        level=[peyes.constants.CHANNEL_TYPE_STR, peyes.constants.THRESHOLD_STR], axis=0
+    )
+    statistics, pvalues, nemenyi, Ns = h.friedman_nemenyi(sub_frame, gt_cols=gt_cols)
+    return statistics, pvalues, nemenyi, Ns
+
+
+def post_hoc_table(
+        ph_data: pd.DataFrame,
+        metric: str,
+        gt_cols: Union[str, Sequence[str]],
+        alpha: float = 0.05,
+) -> pd.DataFrame:
+    if isinstance(gt_cols, str):
+        gt_cols = [gt_cols]
+    return h.create_post_hoc_table(ph_data, metric, *gt_cols, alpha=alpha)
+
+
 def single_threshold_figure(
         sdt_metrics: pd.DataFrame,
         channel_type: str,
