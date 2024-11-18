@@ -99,8 +99,8 @@ def wilcoxon(data: pd.DataFrame,
 ) -> Tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame]:
     """
     Run the Wilcoxon signed-rank for each (metric, GT labeler) pair.
-    Wilcoxon is the non-parametric equivalent of paired-samples t-test (using ranks instead of means), which repeated
-    measures between groups.
+    Wilcoxon is the non-parametric equivalent of paired-samples t-test (using ranks instead of means), which assumes
+    repeated measures between groups.
 
     Returns the W-statistic, p-value and number of samples for each pair.
     Read the docstring for `_statistical_analysis` for implementation details.
