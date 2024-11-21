@@ -114,7 +114,10 @@ def _signal_detection_metrics(
     p, pp = gt_channel.sum(), pred_channel.sum()  # number of positive samples in GT and prediction
     all_matched_diffs = timing_differences(
         ground_truth, prediction,
-        max_diff=max(threshold), channel_type=channel_type, sampling_rate=sampling_rate, min_num_samples=min_num_samples
+        max_diff=max(threshold),
+        channel_type=channel_type,
+        sampling_rate=sampling_rate,
+        min_num_samples=min_num_samples
     )
     if isinstance(threshold, int):
         threshold = [threshold]
