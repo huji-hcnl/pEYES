@@ -9,7 +9,7 @@ DATASET_NAME = "lund2013"
 STIMULUS_TYPE = peyes.constants.IMAGE_STR
 GT1, GT2 = "RA", "MN"
 MULTI_COMP = "bonferroni"   # method for multiple comparisons correction: bonferroni, fdr_bh, holm, etc.
-ALPHA = 0.05
+ALPHA, MARGINAL_ALPHA = 0.05, 0.075
 
 
 _ARTICLE_RESULTS_STR = "article_results"
