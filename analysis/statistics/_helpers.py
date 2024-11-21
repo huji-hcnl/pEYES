@@ -232,18 +232,14 @@ def distributions_figure(
     for i, idx in enumerate(indices):
         r, c = (i, 0) if ncols == 1 else divmod(i, ncols)
         for j, gt_col in enumerate(gt_cols):
+            violin_side = None if len(gt_cols) == 1 else 'positive' if j == 0 else 'negative'
+            opacity = 0.75 if len(gt_cols) == 1 else 0.75 if j == 0 else 0.25
             gt_series = data.xs(gt_col, level=u.GT_STR, axis=1).loc[idx]
             gt_df = gt_series.unstack().drop(columns=gt_cols, errors='ignore')  # drop other GT labelers
             detectors = u.sort_labelers(gt_df.columns.get_level_values(u.PRED_STR).unique())
             for k, det in enumerate(detectors):
                 det_name = det.removesuffix("Detector")
                 det_color = u.get_labeler_color(det_name, k, colors)
-                if len(gt_cols) == 1:
-                    violin_side = None
-                    opacity = 0.75
-                else:
-                    violin_side = 'positive' if j == 0 else 'negative'
-                    opacity = 0.75 if j == 0 else 0.25
                 if only_box:
                     fig.add_trace(
                         row=r + 1, col=c + 1,
