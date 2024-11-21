@@ -72,10 +72,11 @@ def post_hoc_table(
         metric: str,
         gt_cols: Union[str, Sequence[str]],
         alpha: float = 0.05,
+        marginal_alpha: Optional[float] = 0.075,
 ) -> pd.DataFrame:
     if isinstance(gt_cols, str):
         gt_cols = [gt_cols]
-    return h.create_post_hoc_table(ph_data, metric, *gt_cols, alpha=alpha)
+    return h.create_post_hoc_table(ph_data, metric, *gt_cols, alpha=alpha, marginal_alpha=marginal_alpha)
 
 
 def sdt_distributions_figure(

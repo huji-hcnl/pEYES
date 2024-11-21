@@ -162,9 +162,14 @@ def friedman_nemenyi(
 
 
 def create_post_hoc_table(
-        post_hoc_results: pd.DataFrame, metric: str, *gt_names: str, alpha: float = 0.05
+        post_hoc_results: pd.DataFrame,
+        metric: str,
+        *gt_names: str,
+        alpha: float = 0.05,
+        marginal_alpha: Optional[float] = 0.075,
 ) -> (pd.DataFrame, pd.DataFrame):
     assert 0 < alpha < 1, f"parameter `alpha` must be in range (0, 1), {alpha: .3f} given."
+    assert marginal_alpha is None or alpha < marginal_alpha < 1, f"parameter `marginal_alpha` must be in range ({alpha: .3f}, 1), {marginal_alpha: .3f} given."
     pvals = pd.concat(
         [post_hoc_results.loc[metric, gt] for gt in gt_names], keys=gt_names
     ).reorder_levels([1, 0])
@@ -175,6 +180,8 @@ def create_post_hoc_table(
     pvals.columns.names = [u.PRED_STR]
 
     table = np.full_like(pvals, "n.s.", dtype=np.dtypes.StringDType())
+    if marginal_alpha is not None:
+        table[pvals <= marginal_alpha] = 'marg.'
     table[pvals <= alpha] = '*'
     table[pvals <= alpha / 5] = '**'
     table[pvals <= alpha / 50] = '***'
