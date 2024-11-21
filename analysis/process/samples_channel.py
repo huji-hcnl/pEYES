@@ -18,6 +18,7 @@ _CHANNEL_TYPE_STR = "channel_type"
 def run_default(
         dataset_name: str,
         pos_labels: Optional[Union[UnparsedEventLabelType, UnparsedEventLabelSequenceType]] = None,
+        max_difference: int = 250,
 ):
     default_output_dir = h.get_default_output_dir(dataset_name)
     try:
@@ -35,7 +36,9 @@ def run_default(
     try:
         time_diffs = pd.read_pickle(time_diffs_fullpath)
     except FileNotFoundError:
-        time_diffs = timing_differences(labels, u.DATASET_ANNOTATORS[dataset_name], pos_labels=pos_labels)
+        time_diffs = timing_differences(
+            labels, u.DATASET_ANNOTATORS[dataset_name], pos_labels=pos_labels, max_difference=max_difference
+        )
         time_diffs.to_pickle(time_diffs_fullpath)
 
     sdt_metrics_fullpath = os.path.join(
@@ -56,11 +59,16 @@ def timing_differences(
         gt_labelers: List[str],
         pred_labelers: List[str] = None,
         pos_labels: Optional[Union[UnparsedEventLabelType, UnparsedEventLabelSequenceType]] = None,
+        max_difference: int = 250,
 ) -> pd.DataFrame:
     results = _calculation_wrapper(
         labels,
-        lambda gt_labels, pred_labels: peyes.channel_metrics.onset_differences(gt_labels, pred_labels),
-        lambda gt_labels, pred_labels: peyes.channel_metrics.offset_differences(gt_labels, pred_labels),
+        lambda gt_labels, pred_labels: peyes.channel_metrics.onset_differences(
+            gt_labels, pred_labels, max_diff=max_difference,
+        ),
+        lambda gt_labels, pred_labels: peyes.channel_metrics.offset_differences(
+            gt_labels, pred_labels, max_diff=max_difference,
+        ),
         gt_labelers,
         pred_labelers,
         pos_labels,

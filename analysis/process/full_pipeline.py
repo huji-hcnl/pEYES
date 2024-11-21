@@ -28,6 +28,7 @@ def full_pipeline(
         pos_labels: Optional[Union[UnparsedEventLabelType, UnparsedEventLabelSequenceType]] = None,
         sample_sdt_average: str = "weighted",
         sample_dprime_correction: str = "loglinear",
+        channel_max_difference: int = 250,
         channel_dprime_correction: str = "loglinear",
         verbose: bool = True
 ):
@@ -100,7 +101,9 @@ def full_pipeline(
     try:
         time_diffs = pd.read_pickle(time_diffs_fullpath)
     except FileNotFoundError:
-        time_diffs = channel_metrics.timing_differences(labels, annotators, pos_labels=pos_labels)
+        time_diffs = channel_metrics.timing_differences(
+            labels, annotators, pos_labels=pos_labels, max_difference=channel_max_difference,
+        )
         time_diffs.to_pickle(time_diffs_fullpath)
     channel_sdt_metrics_fullpath = os.path.join(
         channel_metrics_dir, u.get_filename_for_labels(pos_labels, suffix="sdt_metrics", extension="pkl")
