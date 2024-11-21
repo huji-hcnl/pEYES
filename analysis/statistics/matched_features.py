@@ -116,6 +116,7 @@ def distributions_figure(
         gt2: str,
         features: Union[str, Sequence[str]] = None,
         title: Optional[str] = None,
+        show_other_gt: bool = False,
 ) -> go.Figure:
     subframe = h.extract_subframe(
         matched_features, level=u.MATCHING_SCHEME_STR, value=matching_scheme, axis=0, drop_single_values=True
@@ -131,5 +132,5 @@ def distributions_figure(
         title = ("Matched Events :: Features <br>" +
                  f"<sup>({u.MATCHING_SCHEME_STR.replace("_", " ").title()}: {scheme_name.replace("_", " ").title()}  " +
                  f"Threshold: {threshold_str}</sup>")
-    fig = h.distributions_figure(subframe, gt1=gt1, gt2=gt2, title=title)
+    fig = h.distributions_figure(subframe, gt1=gt1, gt2=gt2, title=title, show_other_gt=show_other_gt)
     return fig

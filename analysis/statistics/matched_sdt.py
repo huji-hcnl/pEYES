@@ -87,6 +87,7 @@ def single_scheme_figure(
         title: str = "",
         gt2: Optional[str] = None,
         only_box: bool = False,
+        show_other_gt: bool = False,
 ) -> go.Figure:
     if metrics is None:
         metrics = [
@@ -102,8 +103,9 @@ def single_scheme_figure(
         title = ("Matched Events :: SDT Metrics <br>" +
                  f"<sup>({u.MATCHING_SCHEME_STR.replace("_", " ").title()}: {scheme_name.replace("_", " ").title()}  " +
                  f"Threshold: {threshold_str}</sup>")
-    fig = h.distributions_figure(sub_frame, gt1=gt1, gt2=gt2, title=title, only_box=only_box)
-    return fig
+    return h.distributions_figure(
+        sub_frame, gt1=gt1, gt2=gt2, title=title, only_box=only_box, show_other_gt=show_other_gt
+    )
 
 
 def multi_threshold_figures(

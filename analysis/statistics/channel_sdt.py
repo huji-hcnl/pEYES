@@ -117,6 +117,7 @@ def single_threshold_figure(
         title: str = "",
         gt2: Optional[str] = None,
         only_box: bool = False,
+        show_other_gt: bool = False,
 ) -> go.Figure:
     if metrics is None:
         metrics = [
@@ -131,7 +132,7 @@ def single_threshold_figure(
         "Samples Channel :: SDT Metrics <br>" +
         f"<sup>(Channel: {channel_type}  Max Difference: {threshold} samples)</sup>"
     )
-    fig = h.distributions_figure(sub_frame, gt1=gt1, gt2=gt2, title=title, only_box=only_box)
+    fig = h.distributions_figure(sub_frame, gt1=gt1, gt2=gt2, title=title, only_box=only_box, show_other_gt=show_other_gt)
     return fig
 
 

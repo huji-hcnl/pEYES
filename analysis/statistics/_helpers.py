@@ -200,6 +200,7 @@ def distributions_figure(
         colors: u.COLORMAP_TYPE = None,
         gt2: Optional[str] = None,
         only_box: bool = False,
+        show_other_gt: bool = False,
 ) -> go.Figure:
     """
     Creates a violin/box subplot for each unique value in the input DataFrame's index. Each subplot (index value)
@@ -213,9 +214,10 @@ def distributions_figure(
         - Columns :: 3rd level: detector
     :param gt1: name of the first GT labeler to compare.
     :param title: optional; title for the plot.
+    :param colors: optional; list of hex colors to mark different labelers in the violins/boxes.
     :param gt2: optional; name of the second GT labeler to compare.
     :param only_box: if True, only box plots will be shown.
-    :param colors: optional; list of hex colors to mark different labelers in the violins/boxes.
+    :param show_other_gt: if True, a separate violin/box plot will be shown for the other GT labeler.
 
     :return: Plotly figure with the violin/box plot.
     """
@@ -234,12 +236,17 @@ def distributions_figure(
         for j, gt_col in enumerate(gt_cols):
             violin_side = None if len(gt_cols) == 1 else 'positive' if j == 0 else 'negative'
             opacity = 0.75 if len(gt_cols) == 1 else 0.75 if j == 0 else 0.25
-            gt_series = data.xs(gt_col, level=u.GT_STR, axis=1).loc[idx]
-            gt_df = gt_series.unstack().drop(columns=gt_cols, errors='ignore')  # drop other GT labelers
+            gt_df = (data.xs(gt_col, level=u.GT_STR, axis=1).loc[idx]).unstack()
             detectors = u.sort_labelers(gt_df.columns.get_level_values(u.PRED_STR).unique())
             for k, det in enumerate(detectors):
-                det_name = det.removesuffix("Detector")
-                det_color = u.get_labeler_color(det_name, k, colors)
+                if det not in gt_cols:
+                    det_name = det.removesuffix("Detector")
+                    det_color = u.get_labeler_color(det_name, k, colors)
+                elif det in gt_cols and show_other_gt:
+                    det_name = "Other GT"
+                    det_color = "#bab0ac"
+                else:
+                    continue
                 if only_box:
                     fig.add_trace(
                         row=r + 1, col=c + 1,

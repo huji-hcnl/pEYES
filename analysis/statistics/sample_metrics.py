@@ -84,9 +84,10 @@ def sdt_distributions_figure(
         gt2: str,
         title: str = "",
         only_box: bool = False,
+        show_other_gt: bool = False,
 ) -> go.Figure:
     title = title or "Samples :: SDT Metrics Distributions"
-    return h.distributions_figure(data, gt1=gt1, gt2=gt2, title=title, only_box=only_box)
+    return h.distributions_figure(data, gt1=gt1, gt2=gt2, title=title, only_box=only_box, show_other_gt=show_other_gt)
 
 
 def global_metrics_distributions_figure(
@@ -95,6 +96,7 @@ def global_metrics_distributions_figure(
         gt2: str,
         title: str = "",
         only_box: bool = False,
+        show_other_gt: bool = False,
 ) -> go.Figure:
     title = title or f"Samples :: Global Metrics Distributions <br><sup>({peyes.constants.LABEL_STR.title()}:All)</sup>"
-    return h.distributions_figure(data, gt1=gt1, gt2=gt2, title=title, only_box=only_box)
+    return h.distributions_figure(data, gt1=gt1, gt2=gt2, title=title, only_box=only_box, show_other_gt=show_other_gt)
