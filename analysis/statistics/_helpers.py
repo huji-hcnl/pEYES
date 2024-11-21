@@ -181,7 +181,7 @@ def create_post_hoc_table(
 
     table = np.full_like(pvals, "n.s.", dtype=np.dtypes.StringDType())
     if marginal_alpha is not None:
-        table[pvals <= marginal_alpha] = 'marg.'
+        table[pvals <= marginal_alpha] = '†'
     table[pvals <= alpha] = '*'
     table[pvals <= alpha / 5] = '**'
     table[pvals <= alpha / 50] = '***'
