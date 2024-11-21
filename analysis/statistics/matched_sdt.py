@@ -149,20 +149,16 @@ def multi_threshold_figures(
             met_frame = gt_subframe.xs(met, level=peyes.constants.METRIC_STR, axis=0, drop_level=True)
             detectors = u.sort_labelers(met_frame.columns.get_level_values(u.PRED_STR).unique())
             for j, det in enumerate(detectors):
-                if det in gt_cols:
-                    if show_other_gt:
-                        # current detector is a GT labeler, and we want to refer to it as "Other GT"
-                        det_name = "Other GT"
-                        det_color = "#bab0ac"
-                        dash = "dot"
-                    else:
-                        # current detector is a GT labeler, and we don't want to show it in the figure
-                        continue
-                else:
+                if det not in gt_cols:
                     # current detector is a prediction labeler (detection algorithm)
                     det_name = det.strip().removesuffix("Detector")
                     det_color = u.get_labeler_color(det_name, j, colors)
                     dash = None
+                if det in gt_cols and show_other_gt:
+                    # current detector is a GT labeler, and we want to refer to it as "Other GT"
+                    det_name = "Other GT"
+                    det_color = "#bab0ac"
+                    dash = "dot"
                 met_det_frame = met_frame.xs(det, level=u.PRED_STR, axis=1, drop_level=True)
                 # TODO: the following line is the only difference between this func & the similar one in channel_sdt.py,
                 #  if we change how the thresholds are stored in the index, we could change this line
