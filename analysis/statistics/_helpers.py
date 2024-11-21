@@ -152,7 +152,7 @@ def friedman_nemenyi(
     determine which pairs of groups are significantly different.
     Note Nemenyi's test doesn't require correcting for multiple comparisons.
 
-    Returns the Friedman's Q-statistic, p-value, Nemenyi's p-values and number of samples for each pair.
+    Returns the Friedman's Fr-statistic, p-value, Nemenyi's p-values and number of samples for each pair.
     Read the docstring for `_statistical_analysis` for implementation details.
     """
     friedman_test = lambda vals: stats.friedmanchisquare(*vals, nan_policy='omit')
