@@ -191,9 +191,9 @@ def create_boolean_channel(
 
     :param channel_type: either 'start'/'onset' or 'end'/'offset'
     :param data: array-like of event labels or Event objects
-    :param sampling_rate: the sampling rate of the recorded data; required if `events` is provided
-    :param min_num_samples: the number of samples in the output sequence. If None, the number of samples is determined
-        by the total duration of the provided events.
+    :param sampling_rate: the sampling rate of the recorded data; required if `data` is a series of Event objects
+    :param min_num_samples: the number of samples in the output sequence; required if `data` is a series of Event
+        objects. If None, the number of samples is determined by the total duration of the provided events.
 
     :return: array of boolean values, where `True` indicates onsets or offsets
     """
