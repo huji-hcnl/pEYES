@@ -131,7 +131,9 @@ def _calculation_wrapper(
     for tr in tqdm(trials, desc=iteration_desc):
         for gt_lblr in gt_labelers:
             try:
-                trial_gt_labels = labels.xs((tr, gt_lblr), axis=1, level=[peyes.constants.TRIAL_ID_STR, peyes.constants.LABELER_STR])
+                trial_gt_labels = labels.xs(
+                    (tr, gt_lblr), axis=1, level=[peyes.constants.TRIAL_ID_STR, peyes.constants.LABELER_STR],
+                )
             except KeyError:
                 continue
             if trial_gt_labels.size == 0:
