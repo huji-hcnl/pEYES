@@ -8,7 +8,7 @@ from peyes._DataModels.Event import EventSequenceType
 from peyes._DataModels.UnparsedEventLabel import UnparsedEventLabelSequenceType
 
 from peyes._base.create import create_boolean_channel
-from peyes.channel_metrics._timing_differences import timing_differences
+from peyes.alignment_metrics._timing_differences import timing_differences
 from peyes._utils.metric_utils import dprime_and_criterion
 
 

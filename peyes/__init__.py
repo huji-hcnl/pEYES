@@ -10,6 +10,6 @@ import peyes.datasets as datasets
 import peyes.event_metrics as event_metrics
 import peyes.sample_metrics as sample_metrics
 import peyes.match_metrics as match_metrics
-import peyes.channel_metrics as channel_metrics
+import peyes.alignment_metrics as channel_metrics
 import peyes.visualize as visualization
 
