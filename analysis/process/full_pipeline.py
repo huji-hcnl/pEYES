@@ -12,7 +12,7 @@ from peyes._DataModels.UnparsedEventLabel import UnparsedEventLabelType, Unparse
 import analysis.utils as u
 import analysis.process.preprocess as preprocess
 import analysis.process.sample_metrics as sample_metrics
-import analysis.process.temporal_alignment as channel_metrics
+import analysis.process.temporal_alignment as temporal_alignment
 import analysis.process.match_metrics as match_metrics
 
 
@@ -101,7 +101,7 @@ def full_pipeline(
     try:
         time_diffs = pd.read_pickle(time_diffs_fullpath)
     except FileNotFoundError:
-        time_diffs = channel_metrics.timing_differences(
+        time_diffs = temporal_alignment.timing_differences(
             labels, annotators, pos_labels=pos_labels, max_difference=channel_max_difference,
         )
         time_diffs.to_pickle(time_diffs_fullpath)
@@ -111,7 +111,7 @@ def full_pipeline(
     try:
         channel_sdt_metrics = pd.read_pickle(channel_sdt_metrics_fullpath)
     except FileNotFoundError:
-        channel_sdt_metrics = channel_metrics.signal_detection_metrics(
+        channel_sdt_metrics = temporal_alignment.signal_detection_metrics(
             labels, np.arange(21), annotators, pos_labels=pos_labels, dprime_correction=channel_dprime_correction
         )
         channel_sdt_metrics.to_pickle(channel_sdt_metrics_fullpath)
