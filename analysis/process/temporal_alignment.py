@@ -12,8 +12,6 @@ from peyes._DataModels.EventLabelEnum import EventLabelEnum
 import analysis.utils as u
 import analysis.process._helpers as h
 
-_CHANNEL_TYPE_STR = "channel_type"
-
 
 def run_default(
         dataset_name: str,
@@ -76,7 +74,7 @@ def timing_differences(
     )
     results = pd.DataFrame.from_dict(results, orient="columns")
     results.columns.names = [peyes.constants.TRIAL_ID_STR, u.GT_STR, u.PRED_STR, peyes.constants.ITERATION_STR]
-    results.index.names = [_CHANNEL_TYPE_STR]
+    results.index.names = [peyes.constants.CHANNEL_TYPE_STR]
     return results
 
 
@@ -107,7 +105,7 @@ def signal_detection_metrics(
     results.columns.names = [
         peyes.constants.TRIAL_ID_STR, u.GT_STR, u.PRED_STR, peyes.constants.ITERATION_STR, peyes.constants.METRIC_STR
     ]
-    results.index.names = [_CHANNEL_TYPE_STR, peyes.constants.THRESHOLD_STR]
+    results.index.names = [peyes.constants.CHANNEL_TYPE_STR, peyes.constants.THRESHOLD_STR]
     return results
 
 
