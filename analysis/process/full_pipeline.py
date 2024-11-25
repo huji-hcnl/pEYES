@@ -12,7 +12,7 @@ from peyes._DataModels.UnparsedEventLabel import UnparsedEventLabelType, Unparse
 import analysis.utils as u
 import analysis.process.preprocess as preprocess
 import analysis.process.sample_metrics as sample_metrics
-import analysis.process.samples_channel as channel_metrics
+import analysis.process.temporal_alignment as channel_metrics
 import analysis.process.match_metrics as match_metrics
 
 
