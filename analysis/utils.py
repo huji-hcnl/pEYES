@@ -32,7 +32,7 @@ DEFAULT_CONTINUOUS_COLORMAP = px.colors.sequential.Viridis
 DATASET_ANNOTATORS = {
     "lund2013": ["RA", "MN"],
     "irf": ['RZ'],
-    "hfc": ['DN', 'IH', 'JB', 'JF', 'JV', 'KH', 'MN', 'MS', 'PZ', 'RA', 'RH', 'TC']
+    "hfc": ['IH', 'DN', 'JV', 'JB', 'JF', 'KH', 'MN', 'MS', 'PZ', 'RA', 'RH', 'TC']
 }
 _ALL_ANNOTATORS = [annot for annotators in DATASET_ANNOTATORS.values() for annot in annotators]
 
