@@ -1,4 +1,4 @@
-from typing import Tuple
+from typing import Tuple, Union
 from collections import Counter
 
 import numpy as np
@@ -12,74 +12,6 @@ from peyes._utils.vector_utils import is_one_dimensional
 from peyes._utils.pixel_utils import cast_to_integers
 
 # TODO: create figure of y-coordinates over x-coordinates with color changing according to event labels
-
-
-def gaze_trajectory(
-        x: np.ndarray,
-        y: np.ndarray,
-        resolution: Tuple[int, int],
-        t: np.ndarray = None,
-        title: str = "Gaze Visualization",
-        **kwargs,
-) -> go.Figure:
-    """
-    Plots the gaze trajectory, optionally with color changing through time.
-
-    :param x: the x-coordinates of the gaze.
-    :param y: the y-coordinates of the gaze.
-    :param resolution: the screen resolution in pixels (width, height).
-    :param t: optional; time axis (will be mapped to varying color).
-    :param title: the title of the figure.
-
-    :keyword bg_image: the background image to overlay on, defaults to None.
-    :keyword bg_image_format: the color format of the background image (if provided), defaults to "BGR".
-    :keyword bg_color: the background color if no image is provided, defaults to white.
-    :keyword bg_alpha: the alpha value (opacity) of the background image (range [0, 1]). defaults to 1.
-    :keyword marker_size: the size of the markers, defaults to 5.
-    :keyword marker_alpha: the alpha value (opacity) of the markers (range [0, 1]). default is 1.
-    :keyword colorscale: the colorscale to use for displaying time (if `t` is provided), defaults to "Jet".
-    :keyword color: the color of the markers if `t` is not provided, defaults to black.
-
-    :return: the figure.
-    """
-    x, y, t, _ = __verify_arrays(x=x, y=y, t=t, v=None)
-    bg_image = kwargs.get("bg_image", None)
-    bg = vis_utils.create_image(
-        resolution,
-        image=bg_image,
-        alpha=kwargs.get("bg_alpha", 1),
-        color_format=kwargs.get("bg_image_format", "BGR"),
-        default_color=kwargs.get("bg_color", "#ffffff"),
-    )
-    fig = go.Figure(
-        data=go.Image(z=bg, colormodel='rgba256'),
-        layout=dict(width=resolution[0], height=resolution[1], margin=dict(l=0, r=0, b=0, t=0)),
-    )
-    marker_size = kwargs.get("marker_size", 5)
-    marker_alpha = kwargs.get("marker_alpha", 1)
-    if t is None:
-        color = kwargs.get("color", "#000000")
-        fig.add_trace(
-            go.Scatter(x=x, y=y, mode="markers", marker=dict(color=color, size=marker_size, opacity=marker_alpha))
-        )
-    else:
-        fig.add_trace(go.Scatter(
-            x=x, y=y, mode="markers", marker=dict(
-                color=t,
-                size=marker_size,
-                opacity=marker_alpha,
-                colorscale=kwargs.get("colorscale", "Jet"),
-                colorbar=dict(title=cnst.TIME_STR),
-            )
-        ))
-    fig.update_layout(
-        title=title,
-        xaxis=dict(visible=False, showticklabels=False, showgrid=False, showline=False, zeroline=False),
-        yaxis=dict(visible=False, showticklabels=False, showgrid=False, showline=False, zeroline=False),
-        paper_bgcolor='rgba(0, 0, 0, 0)', plot_bgcolor='rgba(0, 0, 0, 0)',  # transparent background
-        title_y=0.98, title_yanchor='top',
-    )
-    return fig
 
 
 def gaze_heatmap(
@@ -106,7 +38,7 @@ def gaze_heatmap(
 
     :return: the figure.
     """
-    x, y, _, _ = __verify_arrays(x=x, y=y)
+    x, y = __verify_same_length(x, y)
     bg = vis_utils.create_image(
         resolution,
         image=kwargs.get("bg_image", None),
@@ -176,7 +108,7 @@ def gaze_over_time(
 
     :return: the figure.
     """
-    x, y, t, v = __verify_arrays(x=x, y=y, t=t, v=v)
+    x, y, t, v = __verify_same_length(x, y, t, v)
     mode = kwargs.get('mode', 'lines')
     line_width = kwargs.get('line_width', 2)
     marker_size = kwargs.get("marker_size", 4)
@@ -235,28 +167,99 @@ def gaze_over_time(
     return fig
 
 
-def __verify_arrays(x: np.ndarray, y: np.ndarray, t: np.ndarray = None, v: np.ndarray = None):
+def gaze_trajectory(
+        x: np.ndarray,
+        y: np.ndarray,
+        t: np.ndarray,
+        resolution: Tuple[int, int],
+        title: str = "Gaze Visualization",
+        **kwargs,
+) -> go.Figure:
+    return _visualize_gaze_trajectory(
+        x=x,
+        y=y,
+        resolution=resolution,
+        title=title,
+        bg_image=kwargs.get("bg_image", None),
+        bg_image_format=kwargs.get("bg_image_format", "BGR"),
+        bg_alpha=kwargs.get("bg_alpha", 1),
+        bg_color=kwargs.get("bg_color", "#ffffff"),
+        marker_color=t,
+        marker_size=kwargs.get("marker_size", 5),
+        marker_alpha=kwargs.get("marker_alpha", 1),
+        marker_colorscale=kwargs.get("colorscale", "Jet"),
+        marker_colorbar_title=cnst.TIME_STR.title(),
+    )
+
+
+
+def _visualize_gaze_trajectory(
+        x: np.ndarray,
+        y: np.ndarray,
+        resolution: Tuple[int, int],
+        title: str = None,
+        bg_image: np.ndarray = None,
+        bg_image_format: str = "BGR",
+        bg_alpha: float = 1,
+        bg_color: str = "#ffffff",
+        marker_color: Union[str, np.ndarray] = "#000000",
+        marker_size: Union[int, np.ndarray] = 5,
+        marker_alpha: Union[float, np.ndarray] = 1,
+        marker_colorscale: str = "Jet",
+        marker_colorbar_title: str = None,
+) -> go.Figure:
+    if isinstance(marker_color, str):
+        marker_color = np.full_like(x, marker_color)
+    if isinstance(marker_size, int) or isinstance(marker_size, float):
+        marker_size = np.full_like(x, marker_size)
+    if isinstance(marker_alpha, int) or isinstance(marker_alpha, float):
+        marker_alpha = np.full_like(x, marker_alpha)
+    x, y, marker_color, marker_size, marker_alpha = __verify_markers(x, y, marker_color, marker_size, marker_alpha)
+    bg = vis_utils.create_image(
+        resolution, image=bg_image, color_format=bg_image_format, alpha=bg_alpha, default_color=bg_color
+    )
+    fig = go.Figure(
+        data=go.Image(z=bg, colormodel='rgba256'),
+        layout=dict(width=resolution[0], height=resolution[1], margin=dict(l=0, r=0, b=0, t=0)),
+    )
+    fig.add_trace(go.Scatter(
+        x=x, y=y, mode="markers", marker=dict(
+            color=marker_color,
+            size=marker_size,
+            opacity=marker_alpha,
+            colorscale=marker_colorscale,
+            colorbar=dict(title=marker_colorbar_title),
+            line=dict(width=0),
+        )
+    ))
+    fig.update_layout(
+        title=title, title_y=0.98, title_yanchor='top',
+        xaxis=dict(visible=False, showticklabels=False, showgrid=False, showline=False, zeroline=False),
+        yaxis=dict(visible=False, showticklabels=False, showgrid=False, showline=False, zeroline=False),
+        paper_bgcolor='rgba(0, 0, 0, 0)', plot_bgcolor='rgba(0, 0, 0, 0)',  # transparent background
+    )
+    return fig
+
+
+def __verify_markers(
+        x: np.ndarray, y: np.ndarray, color: np.ndarray, size: np.ndarray, alpha: np.ndarray,
+) -> Tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray, np.ndarray]:
+    """ Verifies all marker arrays have valid values and the same length as the x and y arrays. """
+    if not all(size >= 0):
+        raise ValueError("`size` must be non-negative")
+    if not all((0 <= alpha) & (alpha <= 1)):
+        raise ValueError("`alpha` must be in the range [0, 1]")
+    x, y, color, size, alpha = __verify_same_length(x, y, color, size, alpha)
+    return x, y, color, size, alpha
+
+
+def __verify_same_length(*arrays: np.ndarray) -> Tuple[np.ndarray, ...]:
     """  Verifies all input arrays are one dimensional and have the same length.  """
-    if not is_one_dimensional(x):
-        raise ValueError("`x` must be one-dimensional")
-    if not is_one_dimensional(y):
-        raise ValueError("`y` must be one-dimensional")
-    x, y = x.reshape(-1), y.reshape(-1)
-    if len(x) != len(y):
-        raise ValueError("`x` and `y` must have the same length")
-    if t is not None:
-        if not is_one_dimensional(t):
-            raise ValueError("`t` must be one-dimensional")
-        t = t.reshape(-1)
-        if len(x) != len(t):
-            raise ValueError("`x` and `t` must have the same length")
-    if v is not None:
-        if not is_one_dimensional(v):
-            raise ValueError("`v` must be one-dimensional")
-        v = v.reshape(-1)
-        if len(x) != len(v):
-            raise ValueError("`x` and `v` must have the same length")
-    return x, y, t, v
+    if not all(is_one_dimensional(arr) for arr in arrays):
+        raise ValueError("All arrays must be one-dimensional")
+    if not all(len(arr) == len(arrays[0]) for arr in arrays):
+        raise ValueError("All arrays must have the same length")
+    return tuple(arr.reshape(-1) for arr in arrays)
 
 
 def __pixel_counts(
