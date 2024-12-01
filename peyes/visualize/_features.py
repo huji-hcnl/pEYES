@@ -103,18 +103,18 @@ def main_sequence(
     if y_feature.lower() == cnst.DURATION_STR.lower():
         params = dict(
             title="Main Sequence: Duration vs. Amplitude",
-            trendline_log_x=False, x_feature_units="deg", y_feature_units="ms",
+            trendline_log_x=False, x_feature_units="DVA", y_feature_units="ms",
         )
     elif y_feature.lower() == cnst.PEAK_VELOCITY_STR.lower():
         params = dict(
             title="Main Sequence: Peak Velocity vs. Amplitude",
-            trendline_log_x=True, x_feature_units="$log_2$" + "(deg)", y_feature_units="deg/s",
+            trendline_log_x=True, x_feature_units="DVA", y_feature_units="DVA/s",
         )
     else:
         raise KeyError(f"Invalid `y_feature` argument: {y_feature}. Must be `{cnst.DURATION_STR}` or `{cnst.PEAK_VELOCITY_STR}`.")
     fig, stat_results = feature_relationship(
         events=saccades, include_outliers=include_outliers, trendline="trace" if include_outliers else "overall",
-        x_feature="amplitude", y_feature=y_feature.lower().replace("_", " "),
+        x_feature="amplitude", y_feature=y_feature.lower(),
         marginal_x='box', marginal_y='box', **params
     )
     return fig, stat_results
@@ -198,5 +198,6 @@ def feature_relationship(
         title=title or f"{y_feature_title} vs. {x_feature_title}",
         xaxis_title=f"{x_feature_title} ({x_feature_units})" if x_feature_units else x_feature_title,
         yaxis_title=f"{y_feature_title} ({y_feature_units})" if y_feature_units else y_feature_title,
+        legend=dict(xanchor='right', x=1),
     )
     return fig, stat_results
