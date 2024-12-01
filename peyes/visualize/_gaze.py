@@ -8,7 +8,7 @@ from plotly.subplots import make_subplots
 
 import peyes._utils.constants as cnst
 import peyes._utils.visualization_utils as vis_utils
-from peyes._utils.vector_utils import is_one_dimensional, normalize
+from peyes._utils.vector_utils import is_one_dimensional
 from peyes._utils.pixel_utils import cast_to_integers
 
 # TODO: create figure of y-coordinates over x-coordinates with color changing according to event labels
@@ -100,6 +100,7 @@ def gaze_heatmap(
     :keyword bg_color: the background color if no image is provided, defaults to white.
     :keyword bg_alpha: the alpha value of the background image (range [0, 1]), defaults to 1.
     :keyword sigma: standard deviation of the Gaussian filter that smooths the heatmap, defaults to 10.0
+    :keyword scale: scale factor for the pixel counts, defaults to sigma^2 (to match the Gaussian filter)
     :keyword colorscale: name of the color scale to use. Must be one of the named color scales in plotly.express.colors
     :keyword opacity: opacity of the heatmap (0-1). Default is 0.5
 
@@ -117,8 +118,10 @@ def gaze_heatmap(
         data=go.Image(z=bg),
         layout=dict(width=resolution[0], height=resolution[1], margin=dict(l=0, r=0, b=0, t=0)),
     )
-    counts = __pixel_counts(x, y, resolution)
-    filtered_counts = gaussian_filter(counts, sigma=kwargs.get("sigma", 10.0))
+    sig = kwargs.get("sigma", 10.0)
+    scale = kwargs.get("scale", sig**2)
+    counts = scale * __pixel_counts(x, y, resolution)
+    filtered_counts = gaussian_filter(counts, sigma=sig)
     heatmap = (filtered_counts - np.nanmin(filtered_counts)) / (np.nanmax(filtered_counts) - np.nanmin(filtered_counts))
     heatmap[(~np.isfinite(heatmap)) | (heatmap <= np.nanmedian(heatmap))] = np.nan    # remove low values
     fig.add_trace(go.Heatmap(
