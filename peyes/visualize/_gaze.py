@@ -206,6 +206,12 @@ def gaze_over_time(
                 marker=dict(color=kwargs.get("v_color", "#bbbbbb"), size=marker_size),
             ), secondary_y=True,
         )
+
+        # align y-axis scales on (0_1, 0_2) and (max-val_1, max-val_2)
+        v_max = np.nanmax(v)
+        xy_max = max(np.nanmax(x), np.nanmax(y))
+        fig.update_layout(yaxis2=dict(scaleanchor='y', scaleratio=xy_max/v_max, constraintoward='bottom'))
+
     else:
         y_axis2_title = None
 
