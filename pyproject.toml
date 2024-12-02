@@ -24,6 +24,7 @@ dependencies = [
     "liac-arff~=2.4",
     # "kaleido~=0.2",   # TODO: kaleido has a bug in the current version, see https://github.com/huji-hcnl/pEYES/issues/15
     "kaleido==0.1.0post1",
+    "python-poppler~=0.4",
 ]
 classifiers = [
     "Programming Language :: Python :: 3",
