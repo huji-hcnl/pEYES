@@ -79,7 +79,9 @@ MATCHING_SCHEMES = {
 LABELER_PLOTTING_CONFIG = {
     # labeler -> (order, color, line-style)
     'Other Human': (0, "#bab0ac", 'dot'),
-    'RA': (1, "#ff0000", 'dot'),
-    'MN': (2, "#0000ff", 'dot'),
+    "IH": (1, u.DEFAULT_DISCRETE_COLORMAP[0], 'dot'),
+    "DN": (2, u.DEFAULT_DISCRETE_COLORMAP[1], 'dot'),
+    'RA': (1, u.DEFAULT_DISCRETE_COLORMAP[0], 'dot'),
+    'MN': (2, u.DEFAULT_DISCRETE_COLORMAP[1], 'dot'),
     **{key: (i+2 ,u.DEFAULT_DISCRETE_COLORMAP[i], None) for i, key in enumerate(DETECTORS.keys())}
 }
