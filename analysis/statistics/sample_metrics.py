@@ -83,21 +83,33 @@ def sdt_distributions_figure(
         data: pd.DataFrame,
         gt1: str,
         gt2: str,
+        colors: u.COLORMAP_TYPE = None,
         title: str = "",
         only_box: bool = False,
         show_other_gt: bool = False,
+        share_x: bool = False,
+        share_y: bool = False,
 ) -> go.Figure:
     title = title or "Samples :: SDT Metrics Distributions"
-    return h.distributions_figure(data, gt1=gt1, gt2=gt2, title=title, only_box=only_box, show_other_gt=show_other_gt)
+    return h.distributions_figure(
+        data, gt1=gt1, gt2=gt2, colors=colors, title=title, only_box=only_box,
+        show_other_gt=show_other_gt, share_x=share_x, share_y=share_y
+    )
 
 
 def global_metrics_distributions_figure(
         data: pd.DataFrame,
         gt1: str,
         gt2: str,
+        colors: u.COLORMAP_TYPE = None,
         title: str = "",
         only_box: bool = False,
         show_other_gt: bool = False,
+        share_x: bool = False,
+        share_y: bool = False,
 ) -> go.Figure:
     title = title or f"Samples :: Global Metrics Distributions <br><sup>({peyes.constants.LABEL_STR.title()}:All)</sup>"
-    return h.distributions_figure(data, gt1=gt1, gt2=gt2, title=title, only_box=only_box, show_other_gt=show_other_gt)
+    return h.distributions_figure(
+        data, gt1=gt1, gt2=gt2, colors=colors, title=title, only_box=only_box,
+        show_other_gt=show_other_gt, share_x=share_x, share_y=share_y
+    )

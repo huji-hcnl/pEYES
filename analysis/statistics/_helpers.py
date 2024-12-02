@@ -208,6 +208,8 @@ def distributions_figure(
         gt2: Optional[str] = None,
         only_box: bool = False,
         show_other_gt: bool = False,
+        share_x: bool = False,
+        share_y: bool = False,
 ) -> go.Figure:
     """
     Creates a violin/box subplot for each unique value in the input DataFrame's index. Each subplot (index value)
@@ -225,6 +227,8 @@ def distributions_figure(
     :param gt2: optional; name of the second GT labeler to compare.
     :param only_box: if True, only box plots will be shown.
     :param show_other_gt: if True, a separate violin/box plot will be shown for the other GT labeler.
+    :param share_x: if True, subplots will share x-axis within each column.
+    :param share_y: if True, subplots will share y-axis within each row.
 
     :return: Plotly figure with the violin/box plot.
     """
@@ -236,7 +240,7 @@ def distributions_figure(
     )
     fig, nrows, ncols = make_empty_figure(
         subtitles=list(map(lambda idx: u.METRICS_CONFIG[idx][0] if idx in u.METRICS_CONFIG else idx, indices)),
-        sharex=False, sharey=False,
+        sharex=share_x, sharey=share_y,
     )
     for i, idx in enumerate(indices):
         r, c = (i, 0) if ncols == 1 else divmod(i, ncols)

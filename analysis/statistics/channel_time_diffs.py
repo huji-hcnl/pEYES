@@ -58,11 +58,17 @@ def distributions_figure(
         data: pd.DataFrame,
         gt1: str,
         gt2: str,
+        colors: u.COLORMAP_TYPE = None,
         title: str = "Samples Channel :: Difference Distributions",
         only_box: bool = False,
         show_other_gt: bool = False,
+        share_x: bool = False,
+        share_y: bool = False,
 ) -> go.Figure:
-    fig = h.distributions_figure(data, gt1=gt1, gt2=gt2, title=title, only_box=only_box, show_other_gt=show_other_gt)
+    fig = h.distributions_figure(
+        data, gt1=gt1, gt2=gt2, colors=colors, title=title,
+        only_box=only_box, show_other_gt=show_other_gt, share_x=share_x, share_y=share_y
+    )
     fig.update_yaxes(
         title=f"{peyes.constants.TIME_STR} {peyes.constants.DIFFERENCE_STR} ({peyes.constants.SAMPLES_STR})"
     )

@@ -115,10 +115,13 @@ def single_threshold_figure(
         threshold: int,
         gt1: str,
         metrics: Union[str, Sequence[str]] = None,
+        colors: u.COLORMAP_TYPE = None,
         title: str = "",
         gt2: Optional[str] = None,
         only_box: bool = False,
         show_other_gt: bool = False,
+        share_x: bool = False,
+        share_y: bool = False,
 ) -> go.Figure:
     if metrics is None:
         metrics = [
@@ -133,7 +136,10 @@ def single_threshold_figure(
         "Samples Channel :: SDT Metrics <br>" +
         f"<sup>(Channel: {channel_type}  Max Difference: {threshold} samples)</sup>"
     )
-    fig = h.distributions_figure(sub_frame, gt1=gt1, gt2=gt2, title=title, only_box=only_box, show_other_gt=show_other_gt)
+    fig = h.distributions_figure(
+        sub_frame, gt1=gt1, gt2=gt2, colors=colors, title=title,
+        only_box=only_box, show_other_gt=show_other_gt, share_x=share_x, share_y=share_y,
+    )
     return fig
 
 
