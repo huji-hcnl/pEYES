@@ -9,7 +9,8 @@ DATASET_NAME = "hfc"
 STIMULUS_TYPE = "free_viewing"
 GT1 = "IH"      # 24 years of experience; lab "Exp Psy Utrecht"
 GT2 = "DN"      # 10 years of experience; lab "Humlab Lund"
-# GT2 = "JV"      # 10 years of experience; lab "Exp Psy Utrecht"
+GT3 = "JV"      # 10 years of experience; lab "Exp Psy Utrecht"
+GT4, GT5 = "RA", "MN"
 
 MULTI_COMP = "bonferroni"   # method for multiple comparisons correction: bonferroni, fdr_bh, holm, etc.
 ALPHA, MARGINAL_ALPHA = 0.05, 0.075
