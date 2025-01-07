@@ -1,6 +1,7 @@
 import os
 
 import numpy as np
+import plotly.graph_objects as go
 import peyes
 
 import analysis.utils as u
@@ -63,3 +64,10 @@ LABELER_PLOTTING_CONFIG = {
     'MN': (2, u.DEFAULT_DISCRETE_COLORMAP[1], 'dot'),
     **{key: (i+2 ,u.DEFAULT_DISCRETE_COLORMAP[i], None) for i, key in enumerate(DETECTORS.keys())}
 }
+
+
+def save_fig(fig: go.Figure, fig_id: int, panel_id: str, panel_name: str, is_supp: bool):
+    fig_path = os.path.join(FIGURES_DIR, f"{'supp-' if is_supp else ''}fig{fig_id}")
+    os.makedirs(fig_path, exist_ok=True)
+    file_name = f"{panel_id}_{panel_name}"
+    peyes.visualize.save_figure(fig, file_name, fig_path, as_png=True, as_eps=True)
