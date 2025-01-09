@@ -144,11 +144,20 @@ def to_rgb(color: ColorType) -> Tuple[int, int, int]:
 
 
 def make_empty_figure(
-        subtitles: Union[str, Sequence[str]], sharex=False, sharey=False
+        subtitles: Union[str, Sequence[str]],
+        sharex=False,
+        sharey=False,
+        subplots_vspace: float = 0.1,
+        subplots_hspace: float = 0.1,
 ) -> Tuple[go.Figure, int, int]:
     if isinstance(subtitles, str):
         subtitles = [subtitles]
     ncols = 1 if len(subtitles) <= 3 else 2 if len(subtitles) <= 8 else 3
     nrows = len(subtitles) if len(subtitles) <= 3 else sum(divmod(len(subtitles), ncols))
-    fig = make_subplots(rows=nrows, cols=ncols, shared_xaxes=sharex, shared_yaxes=sharey, subplot_titles=subtitles)
+    fig = make_subplots(
+        rows=nrows, cols=ncols,
+        shared_xaxes=sharex, shared_yaxes=sharey,
+        vertical_spacing=subplots_vspace, horizontal_spacing=subplots_hspace,
+        subplot_titles=subtitles,
+    )
     return fig, nrows, ncols
