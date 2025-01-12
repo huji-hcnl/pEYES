@@ -233,6 +233,8 @@ def multi_channel_figure(
         colors: u.COLORMAP_TYPE = None,
         show_other_gt: bool = True,
         show_err_bands: bool = False,
+        subplots_vspace: float = 0.025,
+        subplots_hspace: float = 0.01,
 ) -> go.Figure:
     subframe = _extract_sdt_subframe(sdt_metrics, metrics=metric, channel_type=None, threshold=None)
     subframe = subframe.droplevel(peyes.constants.METRIC_STR, axis=0)  # remove single-value levels from index
@@ -241,7 +243,7 @@ def multi_channel_figure(
     channel_types = subframe.index.get_level_values(peyes.constants.CHANNEL_TYPE_STR).unique()
     fig = make_subplots(
         rows=len(channel_types), cols=len(gt_cols), shared_xaxes="all", shared_yaxes="all",
-        vertical_spacing=0.025, horizontal_spacing=0.01,
+        vertical_spacing=subplots_vspace, horizontal_spacing=subplots_hspace,
         row_titles=list(map(lambda ch: ch.title(), channel_types)),
         column_titles=list(map(lambda gt: gt.upper(), gt_cols)),
     )
