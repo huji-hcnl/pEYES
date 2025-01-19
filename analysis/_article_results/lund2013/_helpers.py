@@ -70,4 +70,4 @@ def save_fig(fig: go.Figure, fig_id: int, panel_id: str, panel_name: str, is_sup
     fig_path = os.path.join(FIGURES_DIR, f"{'supp-' if is_supp else ''}fig{fig_id}")
     os.makedirs(fig_path, exist_ok=True)
     file_name = f"{panel_id}_{panel_name}"
-    peyes.visualize.save_figure(fig, file_name, fig_path, as_png=True, as_eps=True, as_json=True)
+    peyes.visualize.save_figure(fig, file_name, fig_path, as_png=True, as_eps=False, as_json=True)
