@@ -45,6 +45,7 @@ _DEFAULT_COLORMAP = {
 
 def save_figure(
         fig: go.Figure, fig_name: str, output_dir: str,
+        width: int = None, height: int = None, scale: float = 1,
         as_json: bool = False, as_html: bool = False, as_png: bool = False, as_eps: bool = False
 ):
     os.makedirs(output_dir, exist_ok=True)
@@ -53,9 +54,9 @@ def save_figure(
     if as_html:
         fig.write_html(os.path.join(output_dir, f"{fig_name}.html"))
     if as_png:
-        fig.write_image(os.path.join(output_dir, f"{fig_name}.png"))
+        fig.write_image(os.path.join(output_dir, f"{fig_name}.png"), scale=scale, width=width, height=height)
     if as_eps:
-        fig.write_image(os.path.join(output_dir, f"{fig_name}.eps"))
+        fig.write_image(os.path.join(output_dir, f"{fig_name}.eps"), scale=scale, width=width, height=height)
 
 
 def create_image(
