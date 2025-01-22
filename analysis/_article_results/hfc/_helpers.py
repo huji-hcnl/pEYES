@@ -13,7 +13,7 @@ GT1 = "IH"      # 24 years of experience; lab "Exp Psy Utrecht"
 GT2 = "DN"      # 10 years of experience; lab "Humlab Lund"
 GT3 = "JV"      # 10 years of experience; lab "Exp Psy Utrecht"
 GT4, GT5 = "RA", "MN"   # annotators of the lund2013 dataset; lab "Humlab Lund"
-# GT1, GT2 = GT4, GT5     # for now, use the same annotators as in lund2013 dataset   # TODO: remove this line
+GT1, GT2 = GT4, GT5     # for now, use the same annotators as in lund2013 dataset   # TODO: remove this line
 
 MULTI_COMP = "bonferroni"   # method for multiple comparisons correction: bonferroni, fdr_bh, holm, etc.
 ALPHA, MARGINAL_ALPHA = 0.05, 0.075
