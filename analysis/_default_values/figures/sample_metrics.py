@@ -1,6 +1,5 @@
 import pandas as pd
 import plotly.io as pio
-from patsy.util import widen
 
 import peyes
 import analysis.statistics.sample_metrics as sm

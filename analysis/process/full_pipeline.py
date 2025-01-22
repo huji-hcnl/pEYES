@@ -12,14 +12,14 @@ from peyes._DataModels.UnparsedEventLabel import UnparsedEventLabelType, Unparse
 import analysis.utils as u
 import analysis.process.preprocess as preprocess
 import analysis.process.sample_metrics as sample_metrics
-import analysis.process.samples_channel as channel_metrics
+import analysis.process.temporal_alignment as temporal_alignment
 import analysis.process.match_metrics as match_metrics
 
 
 def full_pipeline(
         output_dir: str,
         dataset_name: str,
-        detectors: List[BaseDetector] = None,
+        detectors: List[BaseDetector],
         annotators: List[str] = None,
         num_iterations: int = 4,
         iterations_overwrite_label: Union[UnparsedEventLabelType, UnparsedEventLabelSequenceType] = 2,
@@ -28,6 +28,7 @@ def full_pipeline(
         pos_labels: Optional[Union[UnparsedEventLabelType, UnparsedEventLabelSequenceType]] = None,
         sample_sdt_average: str = "weighted",
         sample_dprime_correction: str = "loglinear",
+        channel_max_difference: int = 250,
         channel_dprime_correction: str = "loglinear",
         verbose: bool = True
 ):
@@ -36,10 +37,7 @@ def full_pipeline(
     dataset = u.load_dataset(dataset_name, verbose=verbose)
     output_dir = os.path.join(output_dir, dataset_name)
     os.makedirs(output_dir, exist_ok=True)
-
-    ## default detectors & annotators ##
-    detectors = detectors or [v[0] for v in u.LABELERS_CONFIG.values() if v[0] is not None]
-    annotators = annotators or u.DATASET_ANNOTATORS[dataset_name]
+    annotators = annotators or u.DATASET_ANNOTATORS[dataset_name]   # dataset's human annotators
 
     ## labels, metadata, events, matches ##
     try:
@@ -103,7 +101,9 @@ def full_pipeline(
     try:
         time_diffs = pd.read_pickle(time_diffs_fullpath)
     except FileNotFoundError:
-        time_diffs = channel_metrics.timing_differences(labels, annotators, pos_labels=pos_labels)
+        time_diffs = temporal_alignment.timing_differences(
+            labels, annotators, pos_labels=pos_labels, max_difference=channel_max_difference,
+        )
         time_diffs.to_pickle(time_diffs_fullpath)
     channel_sdt_metrics_fullpath = os.path.join(
         channel_metrics_dir, u.get_filename_for_labels(pos_labels, suffix="sdt_metrics", extension="pkl")
@@ -111,7 +111,7 @@ def full_pipeline(
     try:
         channel_sdt_metrics = pd.read_pickle(channel_sdt_metrics_fullpath)
     except FileNotFoundError:
-        channel_sdt_metrics = channel_metrics.signal_detection_metrics(
+        channel_sdt_metrics = temporal_alignment.signal_detection_metrics(
             labels, np.arange(21), annotators, pos_labels=pos_labels, dprime_correction=channel_dprime_correction
         )
         channel_sdt_metrics.to_pickle(channel_sdt_metrics_fullpath)

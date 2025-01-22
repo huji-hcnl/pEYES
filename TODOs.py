@@ -14,4 +14,5 @@
 
 ######################
 # Dataset Loaders:
+# Create an "Example Dataset" in the pEYES public repository, and add a loader for it
 # Add support for EEGEyeNet dataset (require premature downloading and enable only loading from disk)?

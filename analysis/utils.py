@@ -1,5 +1,5 @@
 import os
-from typing import Optional, Union, Sequence, List
+from typing import Optional, Union, Sequence, List, Dict
 
 import numpy as np
 import pandas as pd
@@ -23,6 +23,7 @@ MATCHING_SCHEME_STR = "matching_scheme"
 
 ###########################
 
+COLORMAP_TYPE = Union[Dict[str, str], Sequence[str]]
 DEFAULT_DISCRETE_COLORMAP = px.colors.qualitative.Dark24
 DEFAULT_CONTINUOUS_COLORMAP = px.colors.sequential.Viridis
 
@@ -31,25 +32,9 @@ DEFAULT_CONTINUOUS_COLORMAP = px.colors.sequential.Viridis
 DATASET_ANNOTATORS = {
     "lund2013": ["RA", "MN"],
     "irf": ['RZ'],
-    "hfc": ['DN', 'IH', 'JB', 'JF', 'JV', 'KH', 'MN', 'MS', 'PZ', 'RA', 'RH', 'TC']
+    "hfc": ['IH', 'DN', 'JV', 'JB', 'JF', 'KH', 'MN', 'MS', 'PZ', 'RA', 'RH', 'TC']
 }
-
-_default_detector_params = dict(missing_value=np.nan, min_event_duration=4, pad_blinks_time=0)
-LABELERS_CONFIG = {
-    # detector name -> (detector object, order, color)
-    "ra": (None, 0.1, DEFAULT_DISCRETE_COLORMAP[0]),
-    "rz": (None, 0.1, DEFAULT_DISCRETE_COLORMAP[0]),
-    "mn": (None, 0.2, DEFAULT_DISCRETE_COLORMAP[1]),
-    "ivt": (peyes.create_detector("ivt", **_default_detector_params), 2, DEFAULT_DISCRETE_COLORMAP[2]),
-    "ivvt": (peyes.create_detector("ivvt", **_default_detector_params), 3, DEFAULT_DISCRETE_COLORMAP[3]),
-    "idt": (peyes.create_detector("idt", **_default_detector_params), 4, DEFAULT_DISCRETE_COLORMAP[4]),
-    "idvt": (peyes.create_detector("idvt", **_default_detector_params), 5, DEFAULT_DISCRETE_COLORMAP[5]),
-    "engbert": (peyes.create_detector("engbert", **_default_detector_params), 6, DEFAULT_DISCRETE_COLORMAP[6]),
-    "nh": (peyes.create_detector("nh", **_default_detector_params), 7, DEFAULT_DISCRETE_COLORMAP[7]),
-    "remodnav": (peyes.create_detector(
-        "remodnav", show_warnings=False, **_default_detector_params
-    ), 8, DEFAULT_DISCRETE_COLORMAP[8]),
-}
+_ALL_ANNOTATORS = [annot for annotators in DATASET_ANNOTATORS.values() for annot in annotators]
 
 METRICS_CONFIG = {
     # metric -> (name, order, value range)
@@ -137,3 +122,45 @@ def get_trials_for_stimulus_type(
     is_stimulus_type = dataset[peyes.constants.STIMULUS_TYPE_STR].str.lower().isin(stimulus_type)
     trials = dataset.loc[is_stimulus_type, peyes.constants.TRIAL_ID_STR].unique()
     return trials
+
+
+def get_labeler_color(labeler: str, idx: int, colors) -> str:
+    colors = colors or DEFAULT_DISCRETE_COLORMAP
+    if isinstance(colors, list):
+        return colors[idx % len(colors)]
+    elif isinstance(colors, dict):
+        possibilities = [
+            labeler, labeler.strip().lower(), labeler.strip().lower().removesuffix("detector"),
+        ]
+        for p in possibilities:
+            if p in colors:
+                return colors[p]
+        return colors[idx % len(colors)]
+    else:
+        raise TypeError(f"Unknown colors type: {type(colors)}")
+
+
+def sort_labelers(labelers: Sequence[str]) -> List[str]:
+    labelers = list(set(labelers))
+    return sorted(labelers, key=lambda l: _get_labeler_index(l, labelers))
+
+
+def _get_labeler_index(labeler_name: str, detectors_names: Sequence[str]) -> float:
+    if labeler_name in _ALL_ANNOTATORS:
+        return _ALL_ANNOTATORS.index(labeler_name) / 10
+    det_idx = detectors_names.index(labeler_name)
+    if "ivt" in labeler_name.strip().lower():
+        return det_idx + 10
+    if "ivvt" in labeler_name.strip().lower():
+        return det_idx + 20
+    if "idt" in labeler_name.strip().lower():
+        return det_idx + 30
+    if "idvt" in labeler_name.strip().lower():
+        return det_idx + 40
+    if "engbert" in labeler_name.strip().lower():
+        return det_idx + 50
+    if "nh" in labeler_name.strip().lower():
+        return det_idx + 60
+    if "remodnav" in labeler_name.strip().lower():
+        return det_idx + 70
+    return det_idx + 100

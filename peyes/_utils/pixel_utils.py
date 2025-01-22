@@ -8,9 +8,7 @@ import peyes._utils.constants as cnst
 
 def cast_to_integers(xs: np.ndarray, ys: np.ndarray) -> Tuple[np.ndarray, np.ndarray]:
     """
-    Casts the given x and y coordinates to integers, rounding to the nearest integer.
-    If `filter_warnings` is True, ignores warnings about casting to int.
-
+    Casts the given x and y coordinates to integers, rounding down to the nearest smaller integer.
     :param xs: 1D array of x coordinates
     :param ys: 1D array of y coordinates
 
@@ -18,7 +16,8 @@ def cast_to_integers(xs: np.ndarray, ys: np.ndarray) -> Tuple[np.ndarray, np.nda
     """
     def cast_finites_to_integers(arr: np.ndarray) -> np.ndarray:
         new_arr = arr.copy()
-        new_arr[np.isfinite(arr)] = np.rint(arr[np.isfinite(arr)]).astype(int)
+        is_finite = np.isfinite(arr)
+        new_arr[is_finite] = new_arr[is_finite].astype(int)
         return new_arr
 
     x_int = cast_finites_to_integers(xs)

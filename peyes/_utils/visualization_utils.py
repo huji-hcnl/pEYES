@@ -23,25 +23,30 @@ _DEFAULT_COLORMAP = {
     _EventLabelEnum.BLINK: "#222222",
     "ra": _DISCRETE_COLORMAP[0],
     "rz": _DISCRETE_COLORMAP[0],
+    'ih': _DISCRETE_COLORMAP[0],
     "mn": _DISCRETE_COLORMAP[1],
+    'dn': _DISCRETE_COLORMAP[1],
     "ivt": _DISCRETE_COLORMAP[2],
     "ivtdetector": _DISCRETE_COLORMAP[2],
     "ivvt": _DISCRETE_COLORMAP[3],
     "ivvtdetector": _DISCRETE_COLORMAP[3],
     "idt": _DISCRETE_COLORMAP[4],
     "idtdetector": _DISCRETE_COLORMAP[4],
-    "engbert": _DISCRETE_COLORMAP[5],
-    "engbertdetector": _DISCRETE_COLORMAP[5],
-    "nh": _DISCRETE_COLORMAP[6],
-    "nhdetector": _DISCRETE_COLORMAP[6],
-    "remodnav": _DISCRETE_COLORMAP[7],
-    "remodnavdetector": _DISCRETE_COLORMAP[7],
+    "idvt": _DISCRETE_COLORMAP[5],
+    "idvtdetector": _DISCRETE_COLORMAP[5],
+    "engbert": _DISCRETE_COLORMAP[6],
+    "engbertdetector": _DISCRETE_COLORMAP[6],
+    "nh": _DISCRETE_COLORMAP[7],
+    "nhdetector": _DISCRETE_COLORMAP[7],
+    "remodnav": _DISCRETE_COLORMAP[8],
+    "remodnavdetector": _DISCRETE_COLORMAP[8],
 }
 
 
 def save_figure(
         fig: go.Figure, fig_name: str, output_dir: str,
-        as_json: bool = False, as_html: bool = False, as_png: bool = False
+        width: int = None, height: int = None, scale: float = 1,
+        as_json: bool = False, as_html: bool = False, as_png: bool = False, as_eps: bool = False
 ):
     os.makedirs(output_dir, exist_ok=True)
     if as_json:
@@ -49,7 +54,9 @@ def save_figure(
     if as_html:
         fig.write_html(os.path.join(output_dir, f"{fig_name}.html"))
     if as_png:
-        fig.write_image(os.path.join(output_dir, f"{fig_name}.png"))
+        fig.write_image(os.path.join(output_dir, f"{fig_name}.png"), scale=scale, width=width, height=height)
+    if as_eps:
+        fig.write_image(os.path.join(output_dir, f"{fig_name}.eps"), scale=scale, width=width, height=height)
 
 
 def create_image(
@@ -137,10 +144,21 @@ def to_rgb(color: ColorType) -> Tuple[int, int, int]:
     raise ValueError("Invalid color format. Must be hex string or RGB tuple.")
 
 
-def make_empty_figure(subtitles: Union[str, Sequence[str]], sharex=False, sharey=False) -> Tuple[go.Figure, int, int]:
+def make_empty_figure(
+        subtitles: Union[str, Sequence[str]],
+        sharex=False,
+        sharey=False,
+        subplots_vspace: float = 0.1,
+        subplots_hspace: float = 0.1,
+) -> Tuple[go.Figure, int, int]:
     if isinstance(subtitles, str):
         subtitles = [subtitles]
     ncols = 1 if len(subtitles) <= 3 else 2 if len(subtitles) <= 8 else 3
     nrows = len(subtitles) if len(subtitles) <= 3 else sum(divmod(len(subtitles), ncols))
-    fig = make_subplots(rows=nrows, cols=ncols, shared_xaxes=sharex, shared_yaxes=sharey, subplot_titles=subtitles)
+    fig = make_subplots(
+        rows=nrows, cols=ncols,
+        shared_xaxes=sharex, shared_yaxes=sharey,
+        vertical_spacing=subplots_vspace, horizontal_spacing=subplots_hspace,
+        subplot_titles=subtitles,
+    )
     return fig, nrows, ncols

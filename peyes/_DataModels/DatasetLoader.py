@@ -379,6 +379,12 @@ class HFCDatasetLoader(BaseDatasetLoader):
     This loader is based on a previous implementation, see article:
     Startsev, M., Zemblys, R. Evaluating Eye Movement Event Detection: A Review of the State of the Art. Behav Res 55, 1653–1714 (2023)
     See their implementation: https://github.com/r-zemblys/EM-event-detection-evaluation/blob/main/misc/data_parsers/humanFixationClassification.py
+
+    Note the original publication did not specify the viewer distance used when recording the data. Here, we use the
+    value from the Tobii TX300 eye-tracker's specifications: 65.0 cm (https://www.spectratech.gr/Web/Tobii/pdf/TX300.pdf).
+    They used their eye-tracker's monitor with a resolution of 1920x1080 pixels, an aspect ratio of 16:9 and a diagonal
+    of 23". Based on this site (https://max.pm/posts/screensize/) we calculate the height and width of the monitor to be
+    28.64cm and 50.92cm, respectively. The pixel size is calculated based on these values.
     """
 
     _NAME: str = "HFC"
@@ -393,6 +399,13 @@ class HFCDatasetLoader(BaseDatasetLoader):
     __SUBJECT_GROUP_STR = "subject_group"
     __INFANT_STR, __ADULT_STR = "infant", "adult"
     __SEARCH_TASK_STR, __FREE_VIEWING_STR = "search_task", "free_viewing"
+
+    __VIEWER_DISTANCE_CM_VAL = 65
+    __MONITOR_WIDTH_CM_VAL, __MONITOR_HEIGHT_CM_VAL = 50.92, 28.64
+    __MONITOR_RESOLUTION_VAL = (1920, 1080)
+    __PIXEL_SIZE_CM_VAL = calculate_pixel_size(
+        __MONITOR_WIDTH_CM_VAL, __MONITOR_HEIGHT_CM_VAL, __MONITOR_RESOLUTION_VAL
+    )
 
     @staticmethod
     def column_order() -> Dict[str, float]:
@@ -458,9 +471,13 @@ class HFCDatasetLoader(BaseDatasetLoader):
                         labels[list(fixation_samples)] = 1
                 data[rater_name] = labels
                 data[rater_name] = data[rater_name].apply(lambda x: parse_label(x, safe=True))
-                merged_dfs.append(data)
+            merged_dfs.append(data)
+
+        # concatenate all dataframes into a single one and add metadata columns
         full_dataset = pd.concat(merged_dfs, ignore_index=True, axis=0)
         full_dataset.rename(columns={"time": cnst.T, "x": cnst.X, "y": cnst.Y}, inplace=True)
+        full_dataset[cnst.VIEWER_DISTANCE_STR] = cls.__VIEWER_DISTANCE_CM_VAL
+        full_dataset[cnst.PIXEL_SIZE_STR] = cls.__PIXEL_SIZE_CM_VAL
         return full_dataset
 
 

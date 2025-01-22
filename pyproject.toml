@@ -1,6 +1,6 @@
 [project]
 name = "peyes"
-version = "0.0.9.1"
+version = "0.0.9.2"
 authors = [
     {name="Human Cognitive Neuroscience Lab @ HUJI", email="hcnl@mail.huji.ac.il", website="https://www.hcnl.org/"},
     {name="Jonathan Nir", email="jonathan.nir@mail.huji.ac.il"},
@@ -24,6 +24,7 @@ dependencies = [
     "liac-arff~=2.4",
     # "kaleido~=0.2",   # TODO: kaleido has a bug in the current version, see https://github.com/huji-hcnl/pEYES/issues/15
     "kaleido==0.1.0post1",
+    "python-poppler~=0.4",
 ]
 classifiers = [
     "Programming Language :: Python :: 3",

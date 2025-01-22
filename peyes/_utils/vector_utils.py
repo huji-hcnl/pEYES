@@ -14,13 +14,6 @@ def is_one_dimensional(arr) -> bool:
     return False
 
 
-def normalize(arr: np.ndarray) -> np.ndarray:
-    """ Normalizes the input array to the range [0, 1]. """
-    if not is_one_dimensional(arr):
-        raise ValueError("input array must be one-dimensional")
-    return (arr - np.nanmin(arr)) / (np.nanmax(arr) - np.nanmin(arr))
-
-
 def pair_boolean_arrays(arr1: np.ndarray, arr2: np.ndarray) -> np.ndarray:
     """
     Given two boolean arrays, match `True` values between the two arrays such that the indices of the matched values

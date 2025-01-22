@@ -22,6 +22,17 @@ LABEL = 1
 STIMULUS_TYPE = peyes.constants.IMAGE_STR
 GT1, GT2 = "RA", "MN"
 
+DET_COLORMAP: u.COLORMAP_TYPE = {
+    "Other Human": "#bab0ac",
+    "ivt": u.DEFAULT_DISCRETE_COLORMAP[0],
+    "ivvt": u.DEFAULT_DISCRETE_COLORMAP[1],
+    "idt": u.DEFAULT_DISCRETE_COLORMAP[2],
+    "idvt": u.DEFAULT_DISCRETE_COLORMAP[3],
+    "engbert": u.DEFAULT_DISCRETE_COLORMAP[4],
+    "nh": u.DEFAULT_DISCRETE_COLORMAP[5],
+    "remodnav": u.DEFAULT_DISCRETE_COLORMAP[6],
+}
+
 # %%
 ###################
 ## Event Counts  ##
@@ -66,7 +77,9 @@ sample_metrics = pd.concat([
     sm.load_global_metrics(DATASET_NAME, PROCESSED_DATA_DIR, stimulus_type=STIMULUS_TYPE, metric=None),
     sm.load_sdt(DATASET_NAME, PROCESSED_DATA_DIR, label=LABEL, stimulus_type=STIMULUS_TYPE, metric=None)
 ], axis=0).loc[[peyes.constants.BALANCED_ACCURACY_STR, peyes.constants.COHENS_KAPPA_STR, peyes.constants.D_PRIME_STR]]
-fig2 = h.distributions_figure(data=sample_metrics, gt1=GT1, gt2=GT2, title="Agreement Metrics (global)")
+fig2 = h.distributions_figure(
+    data=sample_metrics, gt1=GT1, gt2=GT2, title="Agreement Metrics (global)", colors=DET_COLORMAP
+)
 fig2.update_layout(
     yaxis2=dict(range=[0, 1]),
     width=1000, height=500,
@@ -101,10 +114,7 @@ for i, gt in enumerate([GT1, GT2]):
     gt_data = sdt_metrics.xs(gt, level=u.GT_STR, axis=1)
     for j, ch_type in enumerate(CHANNEL_TYPES):
         ch_gt_data = gt_data.xs(ch_type, level=peyes.constants.CHANNEL_TYPE_STR, axis=0)
-        detectors = sorted(
-            ch_gt_data.columns.get_level_values(u.PRED_STR).unique(),
-            key=lambda d: u.LABELERS_CONFIG[d.strip().lower().removesuffix("detector")][1]
-        )
+        detectors = u.sort_labelers(ch_gt_data.columns.get_level_values(u.PRED_STR).unique())
         for k, det in enumerate(detectors):
             data = ch_gt_data.xs(det, level=u.PRED_STR, axis=1)
             thresholds = data.index.get_level_values(peyes.constants.THRESHOLD_STR).unique()
@@ -116,7 +126,7 @@ for i, gt in enumerate([GT1, GT2]):
                 dash = "dot"
             else:
                 det_name = det.strip().removesuffix("Detector")
-                det_color = u.LABELERS_CONFIG[det_name.lower()][2]
+                det_color = u.get_labeler_color(det_name, k, DET_COLORMAP)
                 dash = None
             fig3.add_trace(
                 row=j + 1, col=i + 1, trace=go.Scatter(

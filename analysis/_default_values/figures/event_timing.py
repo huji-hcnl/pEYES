@@ -96,18 +96,18 @@ saccade_criterion_figure.show()
 ## Save Figures
 
 peyes.visualize.save_figure(
-    fixation_dprime_figure, "channel_metrics-fixation-dprime", FIGURES_DIR,
+    fixation_dprime_figure, "alignment_metrics-fixation-dprime", FIGURES_DIR,
     as_png=True, as_html=False, as_json=False
 )
 peyes.visualize.save_figure(
-    fixation_criterion_figure, "channel_metrics-fixation-criterion", FIGURES_DIR,
+    fixation_criterion_figure, "alignment_metrics-fixation-criterion", FIGURES_DIR,
     as_png=True, as_html=False, as_json=False
 )
 peyes.visualize.save_figure(
-    saccade_dprime_figure, "channel_metrics-saccade-dprime", FIGURES_DIR,
+    saccade_dprime_figure, "alignment_metrics-saccade-dprime", FIGURES_DIR,
     as_png=True, as_html=False, as_json=False
 )
 peyes.visualize.save_figure(
-    saccade_criterion_figure, "channel_metrics-saccade-criterion", FIGURES_DIR,
+    saccade_criterion_figure, "alignment_metrics-saccade-criterion", FIGURES_DIR,
     as_png=True, as_html=False, as_json=False
 )

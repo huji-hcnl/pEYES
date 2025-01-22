@@ -13,6 +13,7 @@ def scarfplot_comparison_figure(
     :param t: The time axis.
     :param labels: multiple sequences of event labels to be plotted, each must have the same length as `t`.
     :keyword scarf_height: The height (in y-axis units) of each scarfplot, default is 1.
+    :keyword scarf_spacing: The spacing (in y-axis units) between scarfplots, default is 0.25.
     :keyword label_colors: A dictionary mapping event labels to their respective colors. If a label is missing, the
         default color is used.
     :keyword title: The title of the figure, default is "Scarfplot Comparison".
@@ -21,19 +22,20 @@ def scarfplot_comparison_figure(
     """
     num_scarfs = len(labels)
     scarf_height = kwargs.get("scarf_height", 1)
+    scarf_spacing = 1 + kwargs.get("scarf_spacing", 0.25)
     label_colors = vis_utils.get_label_colormap(kwargs.get("label_colors", None))
     fig = go.Figure()
     for i, l in enumerate(labels):
-        bottom, top = 2 * i * scarf_height, (2 * i + 1) * scarf_height
+        bottom, top = scarf_spacing * i * scarf_height, (scarf_spacing * i + 1) * scarf_height
         fig = add_scarfplot_to_figure(fig, t, l, top, bottom, label_colors=label_colors, show_colorbar=i == 0)
     names = kwargs.get("names", [str(i) for i in range(num_scarfs)])
     assert len(names) == num_scarfs
     fig.update_layout(
         title=kwargs.get("title", "Scarfplot Comparison"),
         yaxis=dict(
-            range=[0, (2 * num_scarfs - 1) * scarf_height],
+            range=[0, 1 + scarf_spacing * scarf_height * (num_scarfs - 1)],
             tickmode='array',
-            tickvals=[(2 * i + 0.5) * scarf_height for i in range(num_scarfs)],
+            tickvals=[(scarf_spacing * i + 0.5) * scarf_height for i in range(num_scarfs)],
             ticktext=names,
         ),
     )
