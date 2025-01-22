@@ -471,7 +471,7 @@ class HFCDatasetLoader(BaseDatasetLoader):
                         labels[list(fixation_samples)] = 1
                 data[rater_name] = labels
                 data[rater_name] = data[rater_name].apply(lambda x: parse_label(x, safe=True))
-                merged_dfs.append(data)
+            merged_dfs.append(data)
 
         # concatenate all dataframes into a single one and add metadata columns
         full_dataset = pd.concat(merged_dfs, ignore_index=True, axis=0)
