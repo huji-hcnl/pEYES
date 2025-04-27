@@ -11,7 +11,7 @@ STIMULUS_TYPE = peyes.constants.IMAGE_STR
 GT1, GT2 = "RA", "MN"
 MULTI_COMP = "bonferroni"   # method for multiple comparisons correction: bonferroni, fdr_bh, holm, etc.
 ALPHA, MARGINAL_ALPHA = 0.05, 0.075
-
+NON_500HZ_TRIALS = [33, 34, 39, 44, 54, 58, 63]     # seven of the 63 trials were recorded @ 200Hz instead of 500Hz
 
 _ARTICLE_RESULTS_STR = "article_results"
 _FIGURES_STR = "figures"
