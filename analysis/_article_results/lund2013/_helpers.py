@@ -60,8 +60,8 @@ for key, detector in DETECTORS.items():
 LABELER_PLOTTING_CONFIG = {
     # labeler -> (order, color, line-style)
     'Other Human': (0, "#bab0ac", 'dot'),
-    'RA': (1, u.DEFAULT_DISCRETE_COLORMAP[0], 'dot'),
-    'MN': (2, u.DEFAULT_DISCRETE_COLORMAP[1], 'dot'),
+    'RA': (1, u.DEFAULT_DISCRETE_COLORMAP[len(DETECTORS) + 1], 'dot'),
+    'MN': (2, u.DEFAULT_DISCRETE_COLORMAP[len(DETECTORS) + 2], 'dot'),
     **{key: (i+2 ,u.DEFAULT_DISCRETE_COLORMAP[i], None) for i, key in enumerate(DETECTORS.keys())}
 }
 
