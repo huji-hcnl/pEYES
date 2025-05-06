@@ -83,11 +83,12 @@ MATCHING_SCHEMES = {
 LABELER_PLOTTING_CONFIG = {
     # labeler -> (order, color, line-style)
     'Other Human': (0, "#bab0ac", 'dot'),
-    "IH": (1, u.DEFAULT_DISCRETE_COLORMAP[0], 'dot'),
-    "DN": (2, u.DEFAULT_DISCRETE_COLORMAP[1], 'dot'),
-    'RA': (1, u.DEFAULT_DISCRETE_COLORMAP[0], 'dot'),
-    'MN': (2, u.DEFAULT_DISCRETE_COLORMAP[1], 'dot'),
-    **{key: (i+2 ,u.DEFAULT_DISCRETE_COLORMAP[i], None) for i, key in enumerate(DETECTORS.keys())}
+    'RA': (1, u.DEFAULT_DISCRETE_COLORMAP[len(DETECTORS) + 1], 'dot'),
+    'MN': (2, u.DEFAULT_DISCRETE_COLORMAP[len(DETECTORS) + 2], 'dot'),
+    "IH": (1, u.DEFAULT_DISCRETE_COLORMAP[len(DETECTORS) + 3], 'dot'),
+    "DN": (2, u.DEFAULT_DISCRETE_COLORMAP[len(DETECTORS) + 4], 'dot'),
+    "JV": (3, u.DEFAULT_DISCRETE_COLORMAP[len(DETECTORS) + 5], 'dot'),
+    **{key: (i+3 ,u.DEFAULT_DISCRETE_COLORMAP[i], None) for i, key in enumerate(DETECTORS.keys())}
 }
 
 
@@ -95,4 +96,4 @@ def save_fig(fig: go.Figure, fig_id: int, panel_id: str, panel_name: str, is_sup
     fig_path = os.path.join(FIGURES_DIR, f"{'supp-' if is_supp else ''}fig{fig_id}")
     os.makedirs(fig_path, exist_ok=True)
     file_name = f"{panel_id}_{panel_name}"
-    peyes.visualize.save_figure(fig, file_name, fig_path, as_png=True, as_eps=False, as_json=True)
+    peyes.visualize.save_figure(fig, file_name, fig_path, as_png=True, as_json=True)

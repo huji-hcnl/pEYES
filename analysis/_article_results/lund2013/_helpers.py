@@ -11,7 +11,7 @@ STIMULUS_TYPE = peyes.constants.IMAGE_STR
 GT1, GT2 = "RA", "MN"
 MULTI_COMP = "bonferroni"   # method for multiple comparisons correction: bonferroni, fdr_bh, holm, etc.
 ALPHA, MARGINAL_ALPHA = 0.05, 0.075
-
+NON_500HZ_TRIALS = [33, 34, 39, 44, 54, 58, 63]     # seven of the 63 trials were recorded @ 200Hz instead of 500Hz
 
 _ARTICLE_RESULTS_STR = "article_results"
 _FIGURES_STR = "figures"
@@ -60,8 +60,8 @@ for key, detector in DETECTORS.items():
 LABELER_PLOTTING_CONFIG = {
     # labeler -> (order, color, line-style)
     'Other Human': (0, "#bab0ac", 'dot'),
-    'RA': (1, u.DEFAULT_DISCRETE_COLORMAP[0], 'dot'),
-    'MN': (2, u.DEFAULT_DISCRETE_COLORMAP[1], 'dot'),
+    'RA': (1, u.DEFAULT_DISCRETE_COLORMAP[len(DETECTORS) + 1], 'dot'),
+    'MN': (2, u.DEFAULT_DISCRETE_COLORMAP[len(DETECTORS) + 2], 'dot'),
     **{key: (i+2 ,u.DEFAULT_DISCRETE_COLORMAP[i], None) for i, key in enumerate(DETECTORS.keys())}
 }
 
@@ -70,4 +70,4 @@ def save_fig(fig: go.Figure, fig_id: int, panel_id: str, panel_name: str, is_sup
     fig_path = os.path.join(FIGURES_DIR, f"{'supp-' if is_supp else ''}fig{fig_id}")
     os.makedirs(fig_path, exist_ok=True)
     file_name = f"{panel_id}_{panel_name}"
-    peyes.visualize.save_figure(fig, file_name, fig_path, as_png=True, as_eps=False, as_json=True)
+    peyes.visualize.save_figure(fig, file_name, fig_path, as_png=True, as_json=True)
