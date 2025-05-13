@@ -16,7 +16,7 @@ class TestEventUtils(unittest.TestCase):
         t = np.arange(10) * cnst.MILLISECONDS_PER_SECOND
         self.assertEqual(calculate_sampling_rate(t), 1)
         t = np.setdiff1d(np.arange(10), [2, 5, 8])
-        self.assertEqual(calculate_sampling_rate(t), cnst.MILLISECONDS_PER_SECOND / 1.5)
+        self.assertEqual(calculate_sampling_rate(t), round(cnst.MILLISECONDS_PER_SECOND / 1.5, 1))
 
     def test_calculate_num_samples(self):
         self.assertEqual(calculate_num_samples(0, 1000, 1000), 1000)

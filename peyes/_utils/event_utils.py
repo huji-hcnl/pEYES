@@ -15,10 +15,10 @@ def calculate_sampling_rate(ms: np.ndarray) -> float:
     """
     if len(ms) < 2:
         raise ValueError("timestamps must be of length at least 2")
-    sr = cnst.MILLISECONDS_PER_SECOND / np.median(np.diff(ms))
+    sr = cnst.MILLISECONDS_PER_SECOND / np.mean(np.diff(ms))
     if not np.isfinite(sr):
         raise RuntimeError("Error calculating sampling rate")
-    return float(sr)
+    return round(sr, 1)
 
 
 def calculate_num_samples(
