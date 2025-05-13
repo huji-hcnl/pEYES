@@ -204,12 +204,13 @@ class BaseDetector(ABC):
         pad_samples = self.pad_blinks_samples
         if pad_samples == 0:
             return is_blink
-        for i, val in enumerate(is_blink):
+        new_is_blink = is_blink.copy()      # avoid overwriting the original array
+        for i, val in enumerate(is_blink):  # read the original array, write to the new one
             if val:
                 start = max(0, i - pad_samples)
                 end = min(len(is_blink), i + pad_samples)
-                is_blink[start:end] = True
-        return is_blink
+                new_is_blink[start:end] = True
+        return new_is_blink
 
     def _reshape_vectors(self, t: np.ndarray, x: np.ndarray, y: np.ndarray) -> (np.ndarray, np.ndarray, np.ndarray):
         if not is_one_dimensional(t):
