@@ -133,28 +133,31 @@ class BaseEvent(ABC):
         return reasons
 
     def summary(self) -> pd.Series:
-        d = {
-            f"{cnst.EVENT_STR}_{cnst.TYPE_STR}": self.label.name,
-            cnst.LABEL_STR: self.label.value,
-            cnst.START_TIME_STR: self.start_time,
-            cnst.END_TIME_STR: self.end_time,
-            cnst.DURATION_STR: self.duration,
-            cnst.DISTANCE_STR: self.distance,
-            cnst.AMPLITUDE_STR: self.amplitude,
-            cnst.AZIMUTH_STR: self.azimuth,
-            cnst.PEAK_VELOCITY_STR: self.peak_velocity,
-            cnst.MEDIAN_VELOCITY_STR: self.median_velocity,
-            cnst.MIN_VELOCITY_STR: self.min_velocity,
-            cnst.CUMULATIVE_DISTANCE_STR: self.cumulative_distance,
-            cnst.CUMULATIVE_AMPLITUDE_STR: self.cumulative_amplitude,
-            cnst.CENTER_PIXEL_STR: self.center_pixel,
-            cnst.PIXEL_STD_STR: self.pixel_std,
-            cnst.DISPERSION_STR: self.dispersion,
-            cnst.ELLIPSE_AREA_STR: self.ellipse_area,
-            cnst.IS_OUTLIER_STR: self.is_outlier,
-            self._OUTLIER_REASONS_STR: self.get_outlier_reasons()
-        }
-        return pd.Series(d)
+        with warnings.catch_warnings():
+            # ignore warnings about NaN values in the event summary
+            warnings.simplefilter("ignore", category=RuntimeWarning)
+            d = {
+                f"{cnst.EVENT_STR}_{cnst.TYPE_STR}": self.label.name,
+                cnst.LABEL_STR: self.label.value,
+                cnst.START_TIME_STR: self.start_time,
+                cnst.END_TIME_STR: self.end_time,
+                cnst.DURATION_STR: self.duration,
+                cnst.DISTANCE_STR: self.distance,
+                cnst.AMPLITUDE_STR: self.amplitude,
+                cnst.AZIMUTH_STR: self.azimuth,
+                cnst.PEAK_VELOCITY_STR: self.peak_velocity,
+                cnst.MEDIAN_VELOCITY_STR: self.median_velocity,
+                cnst.MIN_VELOCITY_STR: self.min_velocity,
+                cnst.CUMULATIVE_DISTANCE_STR: self.cumulative_distance,
+                cnst.CUMULATIVE_AMPLITUDE_STR: self.cumulative_amplitude,
+                cnst.CENTER_PIXEL_STR: self.center_pixel,
+                cnst.PIXEL_STD_STR: self.pixel_std,
+                cnst.DISPERSION_STR: self.dispersion,
+                cnst.ELLIPSE_AREA_STR: self.ellipse_area,
+                cnst.IS_OUTLIER_STR: self.is_outlier,
+                self._OUTLIER_REASONS_STR: self.get_outlier_reasons()
+            }
+            return pd.Series(d)
 
     @final
     def time_overlap(self, other: "BaseEvent", normalize: bool = True) -> float:
