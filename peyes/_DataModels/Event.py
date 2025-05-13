@@ -134,7 +134,8 @@ class BaseEvent(ABC):
 
     def summary(self) -> pd.Series:
         d = {
-            cnst.LABEL_STR: self.label,
+            f"{cnst.EVENT_STR}_{cnst.TYPE_STR}": self.label.name,
+            cnst.LABEL_STR: self.label.value,
             cnst.START_TIME_STR: self.start_time,
             cnst.END_TIME_STR: self.end_time,
             cnst.DURATION_STR: self.duration,
