@@ -1453,7 +1453,7 @@ class REMoDNaVDetector(BaseDetector):
         classifier = remodnav.EyegazeClassifier(
             px2deg=pixels_to_visual_angle(1, viewer_distance_cm, pixel_size_cm, use_radians=False),
             sampling_rate=self.sr,
-            min_saccade_duration=self.min_fixation_duration_ms / cnst.MILLISECONDS_PER_SECOND,
+            min_saccade_duration=self._min_saccade_duration_ms / cnst.MILLISECONDS_PER_SECOND,
             min_intersaccade_duration=self.min_inter_saccade_duration_ms / cnst.MILLISECONDS_PER_SECOND,
             saccade_context_window_length=self.saccade_context_window_duration_ms / cnst.MILLISECONDS_PER_SECOND,
             velthresh_startvelocity=self.saccade_initial_velocity_threshold,
