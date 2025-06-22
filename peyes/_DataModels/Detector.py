@@ -204,12 +204,13 @@ class BaseDetector(ABC):
         pad_samples = self.pad_blinks_samples
         if pad_samples == 0:
             return is_blink
-        for i, val in enumerate(is_blink):
+        new_is_blink = is_blink.copy()      # avoid overwriting the original array
+        for i, val in enumerate(is_blink):  # read the original array, write to the new one
             if val:
                 start = max(0, i - pad_samples)
                 end = min(len(is_blink), i + pad_samples)
-                is_blink[start:end] = True
-        return is_blink
+                new_is_blink[start:end] = True
+        return new_is_blink
 
     def _reshape_vectors(self, t: np.ndarray, x: np.ndarray, y: np.ndarray) -> (np.ndarray, np.ndarray, np.ndarray):
         if not is_one_dimensional(t):
@@ -1452,7 +1453,7 @@ class REMoDNaVDetector(BaseDetector):
         classifier = remodnav.EyegazeClassifier(
             px2deg=pixels_to_visual_angle(1, viewer_distance_cm, pixel_size_cm, use_radians=False),
             sampling_rate=self.sr,
-            min_saccade_duration=self.min_fixation_duration_ms / cnst.MILLISECONDS_PER_SECOND,
+            min_saccade_duration=self._min_saccade_duration_ms / cnst.MILLISECONDS_PER_SECOND,
             min_intersaccade_duration=self.min_inter_saccade_duration_ms / cnst.MILLISECONDS_PER_SECOND,
             saccade_context_window_length=self.saccade_context_window_duration_ms / cnst.MILLISECONDS_PER_SECOND,
             velthresh_startvelocity=self.saccade_initial_velocity_threshold,

@@ -11,8 +11,6 @@
 #   3) saccade onset/offset discriminability (d')
 #
 ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ###
-from unittest.mock import inplace
-
 import pandas as pd
 import plotly.io as pio
 
