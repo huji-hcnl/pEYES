@@ -1,3 +1,4 @@
+![peyes](https://github.com/user-attachments/assets/51d0138d-8e79-4530-96e9-1fce1393dcd3)
 # pEYES
 ## A Python Package for Eye-Tracking Researchers
 
