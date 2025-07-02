@@ -152,8 +152,8 @@ def create_events(
         x: np.ndarray,
         y: np.ndarray,
         pupil: np.ndarray,
-        viewer_distance: cnfg.VIEWER_DISTANCE,
-        pixel_size: cnfg.SCREEN_MONITOR[cnst.PIXEL_SIZE_STR],
+        viewer_distance: float,
+        pixel_size: float,
 ) -> Union[BaseEvent, EventSequenceType]:
     """
     Create gaze-events from the given data.
