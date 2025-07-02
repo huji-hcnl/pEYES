@@ -2,6 +2,7 @@ import peyes._utils.constants as constants
 
 from peyes._utils.event_utils import parse_label
 from peyes._base.parse import parse as parse_data
+from peyes._base.set_config import set_viewer_distance, set_screen_monitor, set_event_configurations
 from peyes._base.create import create_detector, create_events, create_boolean_channel
 from peyes._base.match import match
 from peyes._base.postprocess_events import summarize_events, events_to_labels
