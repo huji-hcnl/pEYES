@@ -242,10 +242,10 @@ class BaseDetector(ABC):
         return self.name
 
 
-class IThresholdDetector(ABC):
+class IGlobalThresholdDetector(ABC):
 
     @staticmethod
-    def _get_threshold(threshold_deg: float, unit: str, vd: float, ps: float) -> float:
+    def _get_global_threshold(threshold_deg: float, unit: str, vd: float, ps: float) -> float:
         unit = unit.lower().strip()
         if unit == "deg":
             return threshold_deg
@@ -256,7 +256,7 @@ class IThresholdDetector(ABC):
         raise ValueError(f"Invalid unit: {unit}")
 
 
-class IVTDetector(BaseDetector, IThresholdDetector):
+class IVTDetector(BaseDetector, IGlobalThresholdDetector):
     """
     Implements the I-VT (velocity threshold) gaze event detection algorithm, as described in:
         Salvucci, D. D., & Goldberg, J. H. (2000). Identifying fixations and saccades in eye-tracking protocols.
@@ -318,9 +318,8 @@ class IVTDetector(BaseDetector, IThresholdDetector):
             raise ValueError("Pixel size must be a positive finite number")
         labels = np.asarray(copy.deepcopy(labels), dtype=EventLabelEnum)
         px_velocities = calculate_velocities(x, y, t)
-        px_threshold = self._get_threshold(
-            self.saccade_velocity_threshold_deg, "px", viewer_distance_cm, pixel_size_cm
-        )
+        px_threshold = self._get_global_threshold(self.saccade_velocity_threshold_deg, "px", viewer_distance_cm,
+                                                  pixel_size_cm)
         labels[(labels != EventLabelEnum.BLINK) & (px_velocities > px_threshold)] = EventLabelEnum.SACCADE
         labels[(labels != EventLabelEnum.BLINK) & (px_velocities <= px_threshold)] = EventLabelEnum.FIXATION
         self._metadata.update({
@@ -406,9 +405,8 @@ class IVVTDetector(IVTDetector):
         labels = super()._detect_impl(t, x, y, labels, viewer_distance_cm, pixel_size_cm)
         labels[labels == EventLabelEnum.FIXATION] = EventLabelEnum.UNDEFINED  # reset fixation labels
         px_velocities = calculate_velocities(x, y, t)
-        px_threshold = self._get_threshold(
-            self.smooth_pursuit_velocity_threshold_deg, "px", viewer_distance_cm, pixel_size_cm
-        )
+        px_threshold = self._get_global_threshold(self.smooth_pursuit_velocity_threshold_deg, "px", viewer_distance_cm,
+                                                  pixel_size_cm)
         labels[(labels == EventLabelEnum.UNDEFINED) & (px_velocities > px_threshold)] = EventLabelEnum.SMOOTH_PURSUIT
         labels[(labels == EventLabelEnum.UNDEFINED) & (px_velocities <= px_threshold)] = EventLabelEnum.FIXATION
         self._metadata.update({
@@ -422,7 +420,7 @@ class IVVTDetector(IVTDetector):
         return self._smooth_pursuit_velocity_threshold
 
 
-class IDTDetector(BaseDetector, IThresholdDetector):
+class IDTDetector(BaseDetector, IGlobalThresholdDetector):
     """
     Implements the I-DT (dispersion threshold) gaze event detection algorithm, as described in:
         Salvucci, D. D., & Goldberg, J. H. (2000). Identifying fixations and saccades in eye-tracking protocols.
@@ -488,7 +486,8 @@ class IDTDetector(BaseDetector, IThresholdDetector):
     ) -> np.ndarray:
         labels = np.asarray(copy.deepcopy(labels), dtype=EventLabelEnum)
         ws = self._calculate_window_size_samples(t)
-        px_threshold = self._get_threshold(self.dispersion_threshold_deg, "px", viewer_distance_cm, pixel_size_cm)
+        px_threshold = self._get_global_threshold(self.dispersion_threshold_deg, "px", viewer_distance_cm,
+                                                  pixel_size_cm)
         start_idx, end_idx = 0, ws
         is_fixation = False
         while end_idx <= len(t):
