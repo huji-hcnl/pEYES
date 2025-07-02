@@ -118,9 +118,9 @@ class BaseEvent(ABC):
 
     def get_outlier_reasons(self) -> List[str]:
         reasons = []
-        if self.duration < self.get_min_duration():
+        if self.duration < cnfg.EVENT_MAPPING[self._LABEL][cnst.MIN_DURATION_STR]:
             reasons.append(cnst.MIN_DURATION_STR)
-        if self.duration > self.get_max_duration():
+        if self.duration > cnfg.EVENT_MAPPING[self._LABEL][cnst.MAX_DURATION_STR]:
             reasons.append(cnst.MAX_DURATION_STR)
         if np.any(self._x < 0) or np.any(self._y < 0):
             reasons.append("negative_pixel")
@@ -202,42 +202,6 @@ class BaseEvent(ABC):
         x1, y1 = self.center_pixel
         x2, y2 = other.center_pixel
         return float(np.linalg.norm([x1 - x2, y1 - y2]))
-
-    @classmethod
-    @final
-    def get_min_duration(cls) -> float:
-        """  Returns the minimum duration for this event type (in milliseconds)  """
-        return cnfg.EVENT_MAPPING[cls._LABEL][cnst.MIN_DURATION_STR]
-
-    @classmethod
-    @final
-    def set_min_duration(cls, min_duration: float):
-        """  Sets the minimum duration for this event type (in milliseconds)  """
-        event_type = cls._LABEL.name.capitalize()
-        if min_duration < 0:
-            raise ValueError(f"min_duration for {event_type} must be a positive number")
-        max_duration = cnfg.EVENT_MAPPING[cls._LABEL][cnst.MAX_DURATION_STR]
-        if min_duration > max_duration:
-            raise ValueError(f"min_duration for {event_type} must be less than or equal to max_duration")
-        cnfg.EVENT_MAPPING[cls._LABEL][cnst.MIN_DURATION_STR] = min_duration
-
-    @classmethod
-    @final
-    def get_max_duration(cls) -> float:
-        """  Returns the maximum duration for this event type (in milliseconds)  """
-        return cnfg.EVENT_MAPPING[cls._LABEL][cnst.MAX_DURATION_STR]
-
-    @classmethod
-    @final
-    def set_max_duration(cls, max_duration: float):
-        """  Sets the maximum duration for this event type (in milliseconds)  """
-        event_type = cls._LABEL.name.capitalize()
-        if max_duration < 0:
-            raise ValueError(f"max_duration for {event_type} must be a positive number")
-        min_duration = cnfg.EVENT_MAPPING[cls._LABEL][cnst.MIN_DURATION_STR]
-        if max_duration < min_duration:
-            raise ValueError(f"max_duration for {event_type} must be greater than or equal to min_duration")
-        cnfg.EVENT_MAPPING[cls._LABEL][cnst.MAX_DURATION_STR] = max_duration
 
     @final
     @property
