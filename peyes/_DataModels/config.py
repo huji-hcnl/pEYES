@@ -2,8 +2,6 @@ import peyes._utils.constants as cnst
 from peyes._DataModels.EventLabelEnum import EventLabelEnum
 from peyes._utils.pixel_utils import calculate_pixel_size as _calc_ps
 
-EPSILON = 1e-8
-
 VIEWER_DISTANCE = 60    # cm
 
 SCREEN_MONITOR = {

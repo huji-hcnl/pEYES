@@ -765,7 +765,7 @@ class EngbertDetector(BaseDetector):
         squared_median = np.power(np.nanmedian(arr), 2)
         median_of_squares = np.nanmedian(np.power(arr, 2))
         sd = np.sqrt(median_of_squares - squared_median)
-        return float(np.nanmax([sd, cnfg.EPSILON]))
+        return float(np.nanmax([sd, 1e-10]))  # avoid division by zero in case of no variance
 
     @override
     def _reshape_vectors(self, t: np.ndarray, x: np.ndarray, y: np.ndarray) -> (np.ndarray, np.ndarray, np.ndarray):
