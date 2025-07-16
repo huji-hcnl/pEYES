@@ -67,6 +67,13 @@ def parse_label(
         if isinstance(val, int):
             return EventLabelEnum(val)
         if isinstance(val, str):
+            if val.isdigit():
+                return EventLabelEnum(int(val))
+            if "." in val or "," in val:
+                # Handle cases like "1.0", "2,0", etc.
+                return EventLabelEnum(float(val))
+            if " " in val:
+                val = val.replace(" ", "_")
             return EventLabelEnum[val.upper()]
         if isinstance(val, float):
             if not val.is_integer():
