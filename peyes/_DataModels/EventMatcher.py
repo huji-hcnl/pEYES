@@ -1,5 +1,5 @@
 from abc import ABC
-from typing import Sequence, Dict, Union, Callable
+from typing import Dict, Union, Callable
 
 from peyes._DataModels.Event import BaseEvent, EventSequenceType
 
@@ -9,7 +9,7 @@ EventMatchesType = Union[OneToOneEventMatchesType, OneToManyEventMatchesType]
 EventMatchingFunctionType = Callable[[EventSequenceType, EventSequenceType], EventMatchesType]
 
 
-class EventMatcher(ABC):
+class EventMatcher(ABC):  # noqa: B024  # see code review B-6: a module of statics, not really an ABC
     """
     Implementation of different methods to match two sequences of gaze-events, that may have been detected by different
     human annotators or detection algorithms, as discussed in section "Event Matching Methods" in the article:

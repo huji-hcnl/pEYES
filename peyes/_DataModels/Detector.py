@@ -242,7 +242,7 @@ class BaseDetector(ABC):
         return self.name
 
 
-class IGlobalThresholdDetector(ABC):
+class IGlobalThresholdDetector(ABC):  # noqa: B024  # mixin: shares a helper, defines no abstract methods
 
     @staticmethod
     def _get_global_threshold(threshold_deg: float, unit: str, vd: float, ps: float) -> float:
@@ -1476,7 +1476,7 @@ class REMoDNaVDetector(BaseDetector):
         )
         detected_events = classifier(pp, classify_isp=True, sort_events=True)   # returns a list of dicts, each dict is a single gaze event
         labels = np.asarray(copy.deepcopy(labels), dtype=EventLabelEnum)
-        for i, event in enumerate(detected_events):
+        for i, event in enumerate(detected_events):  # noqa: B007  # `i` unused; left as-is, REMoDNaV is article-facing
             start_sample = round(event["start_time"] * self.sr)
             end_sample = round(event["end_time"] * self.sr)
             label = self.__LABEL_MAPPING[event["label"]]

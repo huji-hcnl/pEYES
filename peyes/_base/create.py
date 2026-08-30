@@ -3,7 +3,6 @@ from typing import Union
 import numpy as np
 
 import peyes._utils.constants as cnst
-import peyes._DataModels.config as cnfg
 from peyes._utils.event_utils import parse_label, calculate_num_samples
 from peyes._DataModels.Event import BaseEvent, EventSequenceType
 from peyes._DataModels.UnparsedEventLabel import UnparsedEventLabelType, UnparsedEventLabelSequenceType

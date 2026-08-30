@@ -448,7 +448,7 @@ class HFCDatasetLoader(BaseDatasetLoader):
 
         # merge annotations with gaze data:
         merged_dfs = []
-        for key, data in gaze_dfs.items():
+        for key, data in gaze_dfs.items():  # noqa: B007  # false positive: `key` is read by the `@key` in .query() below
             if data is None or len(data) == 0 or data.empty:
                 continue
             l = len(data)
@@ -459,7 +459,7 @@ class HFCDatasetLoader(BaseDatasetLoader):
                 else:
                     # reached here if there are annotations from this rater for this trial
                     labels = np.zeros(l, dtype=int)
-                    for _, row in annotations.iterrows():
+                    for _, row in annotations.iterrows():  # noqa: B007  # see code review S-1: this loop is redundant
                         f = interp1d(
                             data["time"], range(l), kind="nearest", bounds_error=False, fill_value="extrapolate"
                         )

@@ -65,9 +65,13 @@ target-version = "py312"
 select = ["E4", "E7", "E9", "F", "B"]
 ignore = [
     "E741",  # ambiguous variable name `l` - pervasive in this codebase
-    "F403",  # `from ... import *` - see C-25, tracked separately
+    "F403",  # `from ... import *` - see code review C-25, tracked separately
     "F405",  # name may be undefined from star imports - same
+    "B905",  # zip(strict=) - adding it would change behaviour on unequal lengths
 ]
 
 [tool.ruff.lint.per-file-ignores]
+# __init__.py files are the public API surface: the "unused" imports are re-exports.
+"peyes/**/__init__.py" = ["F401"]
+"peyes/__init__.py" = ["F401"]
 "tests/*" = ["F403", "F405"]
