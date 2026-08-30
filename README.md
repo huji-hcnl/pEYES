@@ -6,6 +6,9 @@ pEYES is a Python package that enables researchers to perform robust, quantitati
 segmentation algorithms. It provides implementations of several widely used algorithms and allows users to evaluate
 their performance against ground-truth, human-annotated datasets. The package simplifies the process of selecting an
 optimal algorithm by offering over 20 metrics to quantify performance, enhancing analysis reliability and reproducibility.
+<br><br>
+For a detailed overview of the package's functionalities and a systematic comparison of the implemented algorithms,
+please refer to the publication: [Nir & Deouell (2026)](https://doi.org/10.3758/s13428-026-02983-5).
 
 ## Overview
 pEYES offers several core functionalities designed to facilitate the processing, analysis, and comparison of
@@ -52,14 +55,25 @@ This package is distributed under the MIT License, but some of the datasets & de
 in this package are distributed under different licenses. Please refer to the documentation of the specific dataset or
 detection algorithm for more information.
 
-If you use this package in your research, please cite it as follows:
-```angular2html
-# TBD
+If you use this package in your research, please cite [Nir & Deouell (2026)](https://doi.org/10.3758/s13428-026-02983-5):
+```
+@article{nir2026systematic,
+  title={Systematic classification differences across eye movement detection algorithms},
+  author={Nir, Jonathan and Deouell, Leon Y},
+  journal={Behavior Research Methods},
+  volume={58},
+  number={4},
+  pages={109},
+  year={2026},
+  publisher={Springer}
+}
 ```
 
 If you use a specific dataset or detection algorithm that is implemented in this package, please also cite the original
-authors of that dataset or detection algorithm. This information, like the license, can be found in the documentation
-of the specific dataset or detection algorithm.
+authors of that dataset or detection algorithm. The datasets' licenses and detectors' citations can be found in their
+respective documentation (retrieved using the the `dataset.load()` call).
 
 ## Acknowledgements
-We are grateful for the support of the [Center for Interdisciplinary Data Science Research (CIDR)](https://cidr.huji.ac.il/) at the [Hebrew University of Jerusalem](https://new.huji.ac.il/). In particular, we would like to thank Haimasree Bhattacharya from CIDR for her assistance in publishing this package.
+We are grateful for the support of the [Center for Interdisciplinary Data Science Research (CIDR)](https://cidr.huji.ac.il/) at the
+[Hebrew University of Jerusalem](https://new.huji.ac.il/). In particular, we would like to thank Haimasree Bhattacharya from CIDR for
+her assistance in publishing this package.
