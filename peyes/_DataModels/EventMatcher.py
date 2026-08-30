@@ -157,7 +157,7 @@ class EventMatcher(ABC):  # noqa: B024  # see code review B-6: a module of stati
     def l2_timing(
             ground_truth: EventSequenceType,
             predictions: EventSequenceType,
-            max_l2: float = 0,
+            max_l2: float = float("inf"),
             allow_cross_matching: bool = True
     ) -> OneToOneEventMatchesType:
         """
@@ -171,7 +171,7 @@ class EventMatcher(ABC):  # noqa: B024  # see code review B-6: a module of stati
     def onset_difference(
             ground_truth: EventSequenceType,
             predictions: EventSequenceType,
-            max_onset_difference: float = 0,
+            max_onset_difference: float = float("inf"),
             allow_cross_matching: bool = True
     ) -> OneToOneEventMatchesType:
         """
@@ -186,7 +186,7 @@ class EventMatcher(ABC):  # noqa: B024  # see code review B-6: a module of stati
     def offset_difference(
             ground_truth: EventSequenceType,
             predictions: EventSequenceType,
-            max_offset_difference: float = 0,
+            max_offset_difference: float = float("inf"),
             allow_cross_matching: bool = True
     ) -> OneToOneEventMatchesType:
         """
@@ -201,8 +201,8 @@ class EventMatcher(ABC):  # noqa: B024  # see code review B-6: a module of stati
     def window_based(
             ground_truth: EventSequenceType,
             predictions: EventSequenceType,
-            max_onset_difference: float = 0,
-            max_offset_difference: float = 0,
+            max_onset_difference: float = float("inf"),
+            max_offset_difference: float = float("inf"),
             allow_cross_matching: bool = True,
             reduction: str = "onset difference"
     ) -> OneToOneEventMatchesType:
