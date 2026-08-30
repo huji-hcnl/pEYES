@@ -62,3 +62,29 @@ class TestEventsToLabels(unittest.TestCase):
     def test_empty_events_rejected(self):
         """ C-13: this used to raise an opaque ValueError from min() on an empty generator. """
         self.assertRaises(ValueError, peyes.events_to_labels, [], sampling_rate=self.SR)
+
+
+class TestSummarizeEvents(unittest.TestCase):
+
+    @staticmethod
+    def _event():
+        t = np.arange(0.0, 30.0, 2.0)
+        return peyes.create_events(
+            "saccade", t=t, x=np.linspace(100.0, 400.0, len(t)), y=np.linspace(200.0, 260.0, len(t)),
+            pupil=np.ones_like(t), viewer_distance=60.0, pixel_size=0.0277,
+        )
+
+    def test_empty_input_keeps_the_schema(self):
+        """ Issue #25: an empty result used to be a (0, 0) frame with no columns. """
+        empty = peyes.summarize_events([])
+        self.assertEqual(0, len(empty))
+        self.assertEqual(list(empty.columns), list(peyes.summarize_events([self._event()]).columns))
+
+    def test_empty_results_can_be_concatenated(self):
+        import pandas as pd
+        empty = peyes.summarize_events([])
+        self.assertIn("start_time", pd.concat([empty, empty]).columns)
+
+    def test_empty_result_columns_are_selectable(self):
+        empty = peyes.summarize_events([])
+        self.assertEqual(0, len(empty["start_time"]))

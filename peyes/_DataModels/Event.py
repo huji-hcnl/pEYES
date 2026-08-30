@@ -132,7 +132,33 @@ class BaseEvent(ABC):
         # TODO: check min, max velocity, acceleration, dispersion, etc.
         return reasons
 
+    @staticmethod
+    @final
+    def summary_columns() -> List[str]:
+        """
+        Column names produced by `summary()`, in order. Exposed so that callers -- and `summarize_events` for
+        an empty input -- can build a correctly-shaped frame without constructing an Event.
+        """
+        return [
+            f"{cnst.EVENT_STR}_{cnst.TYPE_STR}", cnst.LABEL_STR,
+            cnst.START_TIME_STR, cnst.END_TIME_STR, cnst.DURATION_STR,
+            cnst.DISTANCE_STR, cnst.AMPLITUDE_STR, cnst.AZIMUTH_STR,
+            cnst.PEAK_VELOCITY_STR, cnst.MEDIAN_VELOCITY_STR, cnst.MIN_VELOCITY_STR,
+            cnst.CUMULATIVE_DISTANCE_STR, cnst.CUMULATIVE_AMPLITUDE_STR,
+            cnst.START_X_STR, cnst.START_Y_STR, cnst.END_X_STR, cnst.END_Y_STR,
+            cnst.CENTER_PIXEL_STR, cnst.PIXEL_STD_STR,
+            cnst.DISPERSION_STR, cnst.ELLIPSE_AREA_STR,
+            cnst.IS_OUTLIER_STR, BaseEvent._OUTLIER_REASONS_STR,
+        ]
+
     def summary(self) -> pd.Series:
+        """
+        One-row summary of the event's features.
+
+        Note `is_outlier` and `outlier_reasons` are derived at call time from the mutable module-level
+        configuration (`peyes.set_event_configurations`), not fixed when the event was constructed, so the
+        same Event can summarise differently before and after a config change.
+        """
         with warnings.catch_warnings():
             # ignore warnings about NaN values in the event summary
             warnings.simplefilter("ignore", category=RuntimeWarning)
@@ -150,6 +176,10 @@ class BaseEvent(ABC):
                 cnst.MIN_VELOCITY_STR: self.min_velocity,
                 cnst.CUMULATIVE_DISTANCE_STR: self.cumulative_distance,
                 cnst.CUMULATIVE_AMPLITUDE_STR: self.cumulative_amplitude,
+                cnst.START_X_STR: self.start_pixel[0],
+                cnst.START_Y_STR: self.start_pixel[1],
+                cnst.END_X_STR: self.end_pixel[0],
+                cnst.END_Y_STR: self.end_pixel[1],
                 cnst.CENTER_PIXEL_STR: self.center_pixel,
                 cnst.PIXEL_STD_STR: self.pixel_std,
                 cnst.DISPERSION_STR: self.dispersion,

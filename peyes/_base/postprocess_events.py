@@ -3,16 +3,19 @@ import pandas as pd
 
 from peyes._utils import constants as cnst
 from peyes._utils.event_utils import calculate_num_samples
-from peyes._DataModels.Event import EventSequenceType
+from peyes._DataModels.Event import BaseEvent, EventSequenceType
 from peyes._DataModels.EventLabelEnum import EventLabelEnum, EventLabelSequenceType
 
 
 def summarize_events(
         events: EventSequenceType,
 ) -> pd.DataFrame:
-    """ Converts the given events to a DataFrame, where each row is an event and columns are event features. """
+    """
+    Converts the given events to a DataFrame, where each row is an event and columns are event features.
+    An empty input returns an empty frame carrying the full schema, not a column-less one.
+    """
     if len(events) == 0:
-        return pd.DataFrame()
+        return pd.DataFrame(columns=BaseEvent.summary_columns())
     summaries = [e.summary() for e in events]
     return pd.DataFrame(summaries)
 

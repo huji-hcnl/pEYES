@@ -99,3 +99,25 @@ class TestEvent(unittest.TestCase):
         f = FixationEvent(t=t)
         self.assertTrue(f.is_outlier)
         self.assertEqual(f.get_outlier_reasons(), [cnst.MIN_DURATION_STR])
+
+
+class TestEventSummary(unittest.TestCase):
+
+    @staticmethod
+    def _saccade():
+        t = np.arange(0.0, 30.0, 2.0)
+        return SaccadeEvent(
+            t=t, x=np.linspace(100.0, 400.0, len(t)), y=np.linspace(200.0, 260.0, len(t)),
+            pupil=np.ones_like(t), viewer_distance=60.0, pixel_size=0.0277,
+        )
+
+    def test_summary_reports_endpoints(self):
+        """ Issue #24: center_pixel is the midpoint of a saccade; the endpoints were unrecoverable. """
+        summary = self._saccade().summary()
+        self.assertEqual(100.0, summary[cnst.START_X_STR])
+        self.assertEqual(200.0, summary[cnst.START_Y_STR])
+        self.assertEqual(400.0, summary[cnst.END_X_STR])
+        self.assertEqual(260.0, summary[cnst.END_Y_STR])
+
+    def test_summary_columns_matches_summary(self):
+        self.assertEqual(BaseEvent.summary_columns(), list(self._saccade().summary().index))
