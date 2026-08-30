@@ -200,8 +200,8 @@ def create_boolean_channel(
     if channel_type_lower not in {cnst.START_STR, cnst.ONSET_STR, cnst.END_STR, cnst.OFFSET_STR}:
         raise ValueError(f"Invalid channel type: {channel_type}")
     if len(data) == 0:
-        # no events or labels provided -> return an empty array
-        return np.zeros(np.nanmin(len(data), min_num_samples), dtype=bool)
+        # no events or labels provided -> return an empty (or `min_num_samples`-long) array
+        return np.zeros(min_num_samples or 0, dtype=bool)
     if all(isinstance(e, BaseEvent) for e in data):
         # data is of type EventSequenceType
         return _events_to_boolean_channel(channel_type_lower, data, sampling_rate, min_num_samples)
@@ -257,18 +257,27 @@ def _events_to_boolean_channel(
 
     :return: array of boolean values, where `True` indicates the event onset or offset
     """
+    if sampling_rate is None:
+        raise ValueError("`sampling_rate` is required when `data` is a sequence of Event objects")
     global_start_time = min(e.start_time for e in events)
     global_end_time = max(e.end_time for e in events)
-    num_samples = calculate_num_samples(global_start_time, global_end_time, sampling_rate, min_num_samples)
+    # +1 because an event spanning `duration` ms covers `duration * sr / 1000 + 1` samples:
+    # `duration` is end_time - start_time, so an n-sample event has duration (n-1) * dt.
+    num_samples = calculate_num_samples(global_start_time, global_end_time, sampling_rate, 1) + 1
+    if min_num_samples is not None:
+        num_samples = max(num_samples, min_num_samples)
     bool_channel = np.zeros(num_samples, dtype=bool)
+    channel_type = channel_type.lower()
+    if channel_type not in {cnst.START_STR, cnst.ONSET_STR, cnst.END_STR, cnst.OFFSET_STR}:
+        raise ValueError(f"Invalid channel type: {channel_type}")
+    is_onset = channel_type in {cnst.START_STR, cnst.ONSET_STR}
     for e in events:
-        corrected_start_time, corrected_end_time = e.start_time - global_start_time, e.end_time - global_start_time
-        if channel_type.lower() == cnst.START_STR or channel_type.lower() == cnst.ONSET_STR:
-            start_sample = int(np.round(corrected_start_time * sampling_rate / cnst.MILLISECONDS_PER_SECOND))
-            bool_channel[start_sample] = True
-        elif channel_type.lower() == cnst.END_STR or channel_type.lower() == cnst.OFFSET_STR:
-            end_sample = int(np.round(corrected_end_time * sampling_rate / cnst.MILLISECONDS_PER_SECOND))
-            bool_channel[end_sample - 1] = True
-        else:
-            raise ValueError(f"Invalid channel type: {channel_type}")
+        corrected_time = (e.start_time if is_onset else e.end_time) - global_start_time
+        sample = int(np.round(corrected_time * sampling_rate / cnst.MILLISECONDS_PER_SECOND))
+        if not 0 <= sample < num_samples:
+            raise IndexError(
+                f"Event {'onset' if is_onset else 'offset'} maps to sample {sample}, outside the "
+                f"{num_samples}-sample channel; `min_num_samples` is too small for these events"
+            )
+        bool_channel[sample] = True
     return bool_channel
