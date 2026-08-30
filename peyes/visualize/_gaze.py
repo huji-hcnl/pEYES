@@ -108,7 +108,10 @@ def gaze_over_time(
 
     :return: the figure.
     """
-    x, y, t, v = __verify_same_length(x, y, t, v)
+    if v is not None:
+        x, y, t, v = __verify_same_length(x, y, t, v)
+    else:
+        x, y, t = __verify_same_length(x, y, t)
     mode = kwargs.get('mode', 'lines')
     line_width = kwargs.get('line_width', 2)
     marker_size = kwargs.get("marker_size", 4)
