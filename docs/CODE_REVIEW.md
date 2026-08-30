@@ -104,7 +104,7 @@ The peak-velocity panel of `visualize.event_summary` (AppendixA fig 1b) carries 
 **FIXED** in `9eb1161`.
 Self-consistent within `Event`, but it is the root of the round-trip off-by-one in C-2/C-3, and it makes a single-sample event have `duration == 0` (which then short-circuits `time_overlap`). Worth documenting explicitly on the `duration` property, and worth deciding once whether the package's convention is `n*dt` or `(n-1)*dt`. Both off-by-one bugs below stem from this being unstated.
 
-**C-26 · MED · `set_viewer_distance` and `set_screen_monitor` are silent no-ops for event defaults** **[FIXED `8b2433e`]**
+**C-26 · MED · `set_viewer_distance` and `set_screen_monitor` are silent no-ops for event defaults** **[FIXED `cab70f2`]**
 `BaseEvent.__init__`, `BaseEvent.make` and `BaseEvent.make_multiple` all bound their `viewer_distance` and
 `pixel_size` defaults directly from config in the signature:
 
