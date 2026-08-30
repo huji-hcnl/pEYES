@@ -181,7 +181,8 @@ def _create_single_event_figure(
     :return: the figure.
     """
     event_label = events[0].label
-    assert all(e.label == event_label for e in events), "All events must have the same label."
+    if not all(e.label == event_label for e in events):
+        raise ValueError("All events must have the same label.")
     summary_df = summarize_events(events)
     inlier_df, outlier_df = summary_df[~summary_df[cnst.IS_OUTLIER_STR]], summary_df[summary_df[cnst.IS_OUTLIER_STR]]
 

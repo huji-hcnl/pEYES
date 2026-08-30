@@ -27,9 +27,12 @@ class BaseEvent(ABC):
         _x = x if x is not None else np.full_like(t, np.nan, dtype=float)
         _y = y if y is not None else np.full_like(t, np.nan, dtype=float)
         _pupil = pupil if pupil is not None else np.full_like(t, np.nan, dtype=float)
-        assert len(t) == len(_x) == len(_y) == len(_pupil), "t, x, y, and pupil must have the same length"
-        assert np.isnan(viewer_distance) or viewer_distance > 0, "viewer_distance must be a positive number"
-        assert np.isnan(pixel_size) or pixel_size > 0, "pixel_size must be a positive number"
+        if not len(t) == len(_x) == len(_y) == len(_pupil):
+            raise ValueError("t, x, y, and pupil must have the same length")
+        if not (np.isnan(viewer_distance) or viewer_distance > 0):
+            raise ValueError("viewer_distance must be a positive number")
+        if not (np.isnan(pixel_size) or pixel_size > 0):
+            raise ValueError("pixel_size must be a positive number")
         samples = np.vstack([t, _x, _y, _pupil]).T
         samples = samples[samples[:, 0].argsort()]  # sort by time
         self._t = samples[:, 0]

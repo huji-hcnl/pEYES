@@ -72,7 +72,8 @@ def calculate_velocities(xs: np.ndarray, ys: np.ndarray, ts: np.ndarray) -> np.n
     :param ts: 1D array of timestamps (in milliseconds)
     :return: velocity (pixel / second) between subsequent pixels
     """
-    assert len(xs) == len(ys) == len(ts), "`xs`, `ys` and `ts` arrays must be of the same length"
+    if not len(xs) == len(ys) == len(ts):
+        raise ValueError("`xs`, `ys` and `ts` arrays must be of the same length")
     time_diff = np.diff(ts) / cnst.MILLISECONDS_PER_SECOND  # convert from milliseconds to seconds
     px_distance = np.sqrt(np.power(np.diff(xs), 2) + np.power(np.diff(ys), 2))
     velocities = px_distance / time_diff

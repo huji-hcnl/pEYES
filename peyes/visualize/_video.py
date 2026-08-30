@@ -49,7 +49,8 @@ def create_video(
 
     :return: full path to the output video file
     """
-    assert len(t) == len(x) == len(y) == len(labels), "All input arrays must have the same length."
+    if not len(t) == len(x) == len(y) == len(labels):
+        raise ValueError("All input arrays must have the same length.")
     fps = round(calculate_sampling_rate(t))
     frames = create_frames(
         x=x, y=y, labels=labels, resolution=resolution,
@@ -89,7 +90,8 @@ def create_frames(
 
     :return: list of frames (numpy arrays)
     """
-    assert len(x) == len(y) == len(labels), "All input arrays must have the same length."
+    if not len(x) == len(y) == len(labels):
+        raise ValueError("All input arrays must have the same length.")
     frames = []
     n_samples = len(x)
     bg_image = vis_utils.create_image(resolution, bg_image, bg_image_alpha, bg_image_format, "#000000")

@@ -78,7 +78,7 @@ class TestPixelUtils(unittest.TestCase):
             equal_nan=True
         ))
         t_coords3 = t_coords1[:-1].copy()
-        self.assertRaises(AssertionError, calculate_velocities, x_coords, y_coords1, t_coords3)
+        self.assertRaises(ValueError, calculate_velocities, x_coords, y_coords1, t_coords3)
 
     def test_pixels_to_visual_angle(self):
         self.assertEqual(0, pixels_to_visual_angle(num_px=0, d=1, pixel_size=1))

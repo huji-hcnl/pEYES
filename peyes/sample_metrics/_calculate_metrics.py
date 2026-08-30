@@ -57,7 +57,8 @@ def calculate(
     """
     with warnings.catch_warnings():
         warnings.simplefilter("ignore", category=UserWarning)
-        assert len(ground_truth) == len(prediction), "Ground Truth and Prediction must have the same length."
+        if len(ground_truth) != len(prediction):
+            raise ValueError("Ground Truth and Prediction must have the same length.")
         ground_truth = [parse_label(label) for label in ground_truth]
         prediction = [parse_label(label) for label in prediction]
         results: Dict[str, float] = {}

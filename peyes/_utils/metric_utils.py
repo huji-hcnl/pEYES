@@ -73,7 +73,8 @@ def _dprime_rates(p: int, n: float, pp: int, tp: int, correction: Optional[str])
     Returns a tuple of (hit-rate, false-alarm rate).
     """
     fp = pp - tp
-    assert 0 <= tp <= min(p, pp), f"True Positive count must be between 0 and min(p, pp) = {min(p, pp)}; got: {tp}"
+    if not 0 <= tp <= min(p, pp):
+        raise ValueError(f"True Positive count must be between 0 and min(p, pp) = {min(p, pp)}; got: {tp}")
     # assert 0 <= fp <= n, f"False Positive count must be between 0 and n = {n}; got: {fp}"
     # NOTE: when comparing events (not labels), it doesn't hold that 0 <= fp <= n
     hit_rate = tp / p if p > 0 else np.nan

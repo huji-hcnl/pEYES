@@ -153,7 +153,8 @@ def gaze_over_time(
     if vert_lines is not None:
         vert_line_color = kwargs.get("vert_line_color", ["#000000"] * len(vert_lines))
         vert_line_color = [vert_line_color] * len(vert_lines) if isinstance(vert_line_color, str) else vert_line_color
-        assert len(vert_lines) == len(vert_line_color), "Length mismatch: `vert_lines` and `vert_line_color`"
+        if len(vert_lines) != len(vert_line_color):
+            raise ValueError("Length mismatch: `vert_lines` and `vert_line_color`")
         vert_line_width = kwargs.get("vert_line_width", 1)
         for v, c in zip(vert_lines, vert_line_color):
             fig.add_vline(x=v, line=dict(color=c, width=vert_line_width, dash="dash"))
