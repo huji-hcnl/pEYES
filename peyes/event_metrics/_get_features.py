@@ -5,7 +5,7 @@ import pandas as pd
 from tqdm import tqdm
 
 import peyes._utils.constants as cnst
-from peyes._DataModels.Event import EventSequenceType, EventLabelEnum
+from peyes._DataModels.Event import BaseEvent, EventSequenceType, EventLabelEnum
 
 
 def features_by_labels(events: EventSequenceType) -> pd.DataFrame:
@@ -14,18 +14,15 @@ def features_by_labels(events: EventSequenceType) -> pd.DataFrame:
     Values of the same event-label are grouped together as lists (e.g. aggregated.loc["SACCADE", "amplitude"] is a list
     of all saccade amplitudes in the given events).
     """
-    summary = pd.DataFrame([e.summary() for e in events])
-    try:
-        aggregated = summary.groupby(cnst.LABEL_STR).agg(list)    # rows are event labels, columns are features
-    except KeyError:
-        aggregated = pd.DataFrame(index=[l for l in EventLabelEnum], columns=[])
+    # Build with the full schema so an empty input still has every feature column: callers compare an
+    # inlier frame against an outlier frame, and either group can legitimately be empty.
+    summary = pd.DataFrame([e.summary() for e in events], columns=BaseEvent.summary_columns())
+    aggregated = summary.groupby(cnst.LABEL_STR).agg(list)      # rows are event labels, columns are features
     for l in EventLabelEnum:
         if l not in aggregated.index:
             aggregated.loc[l] = [[] for _ in range(len(aggregated.columns))]
     # remove undefined events, these shouldn't exist in the first place:
     aggregated.drop(index=EventLabelEnum.UNDEFINED, inplace=True, errors="ignore")
-    if aggregated.empty:
-        return aggregated.sort_index()
     aggregated[cnst.COUNT_STR] = aggregated[cnst.DURATION_STR].map(len)
     return aggregated.sort_index()
 

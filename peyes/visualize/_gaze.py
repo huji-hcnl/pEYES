@@ -275,5 +275,8 @@ def __pixel_counts(
     for (y_, x_), count in counter.items():
         if not np.isfinite(x_) or not np.isfinite(y_):
             continue
-        counts[int(y_), int(x_)] = count
+        row, col = int(y_), int(x_)
+        if not (0 <= row < h and 0 <= col < w):
+            continue    # off-screen sample: drop it rather than let a negative index wrap
+        counts[row, col] = count
     return counts

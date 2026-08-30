@@ -3,7 +3,7 @@ from typing import Optional, Union
 import numpy as np
 
 from peyes._DataModels.EventLabelEnum import EventLabelEnum
-from peyes._DataModels.Event import EventSequenceType
+from peyes._DataModels.Event import BaseEvent, EventSequenceType
 from peyes._DataModels.EventMatcher import OneToOneEventMatchesType
 from peyes._DataModels.UnparsedEventLabel import UnparsedEventLabelType, UnparsedEventLabelSequenceType
 
@@ -34,6 +34,11 @@ def match_ratio(
         labels = {parse_label(labels)}
     else:
         labels = set(parse_label(l) for l in labels)
+    if any(not isinstance(e, BaseEvent) for e in matches.values()):
+        raise TypeError(
+            "`matches` must be a one-to-one mapping; got one-to-many values. "
+            "Use a matching scheme with a reduction (e.g. 'iou', 'onset'), not the generic 'all'."
+        )
     num_matched = sum(1 for e in matches.values() if e.label in labels)
     num_predicted = sum(1 for e in prediction if e.label in labels)
     return num_matched / num_predicted if num_predicted > 0 else np.nan

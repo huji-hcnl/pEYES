@@ -51,3 +51,19 @@ class TestContingencyValues(unittest.TestCase):
             self.GT, self.PRED, self._matches(), "saccade"
         )
         self.assertEqual((1.0, 1.0, 1.0), (precision, recall, f1))
+
+
+class TestMatchRatio(unittest.TestCase):
+
+    GT = [_event(0.0), _event(50.0)]
+    PRED = [_event(1.0), _event(51.0)]
+
+    def test_one_to_one_matches(self):
+        matches = peyes.match(self.GT, self.PRED, "onset")
+        self.assertEqual(1.0, peyes.match_metrics.match_ratio(self.PRED, matches))
+
+    def test_one_to_many_matches_are_rejected_clearly(self):
+        """ M-18: `.label` on a list raised an opaque AttributeError. """
+        matches = peyes.match(self.GT, self.PRED, "generic")
+        with self.assertRaises(TypeError):
+            peyes.match_metrics.match_ratio(self.PRED, matches)
