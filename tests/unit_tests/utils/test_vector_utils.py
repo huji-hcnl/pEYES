@@ -72,3 +72,20 @@ class TestVectorUtils(unittest.TestCase):
         self.assertTrue(np.array_equal(reset_short_chunks(arr, 2, 0), arr))
         self.assertRaises(ValueError, reset_short_chunks, np.array([[1, 2], [3, 4]]), 2, 0)
         self.assertRaises(ValueError, reset_short_chunks, np.array([1, 2, 3]), -1, 0)
+
+    def test_two_dimensional_row_and_column_vectors(self):
+        """
+        C-20: is_one_dimensional accepts (1, n) and (n, 1), but these three functions assumed a true 1-D
+        array and produced silently wrong results for the other two shapes.
+        """
+        flat = np.array([1, 1, 2, 2, 2, 3])
+        for arr in (flat, flat.reshape(1, -1), flat.reshape(-1, 1)):
+            with self.subTest(shape=arr.shape):
+                self.assertEqual(3, len(get_chunk_indices(arr)))
+                self.assertEqual((len(flat),), merge_chunks(arr, 1).shape)
+                self.assertEqual((len(flat),), reset_short_chunks(arr, 2, 0).shape)
+
+    def test_two_dimensional_results_match_flat(self):
+        flat = np.array([1, 1, 1, 2, 1, 1, 1])
+        self.assertTrue(np.array_equal(merge_chunks(flat, 1), merge_chunks(flat.reshape(1, -1), 1)))
+        self.assertTrue(np.array_equal(reset_short_chunks(flat, 2, 0), reset_short_chunks(flat.reshape(-1, 1), 2, 0)))

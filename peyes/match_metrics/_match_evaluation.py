@@ -130,6 +130,8 @@ def _extract_contingency_values(
         pp: int; number of positive predicted events
         tp: int; number of true positive predictions
     """
+    if positive_label is None:
+        raise ValueError("`positive_label` is required: there is no meaningful default positive class.")
     if isinstance(positive_label, UnparsedEventLabelType):
         positive_label = {positive_label}
     positive_label = set(parse_label(l) for l in positive_label)
@@ -138,5 +140,10 @@ def _extract_contingency_values(
     p = len([e for e in ground_truth if e.label in positive_label])
     n = len(ground_truth) - p
     pp = len([e for e in prediction if e.label in positive_label])
-    tp = len([e for e in matches.values() if e.label in positive_label])
+    # A true positive needs both sides positive. Counting only the prediction lets a negative-label GT event
+    # matched to a positive-label prediction count as a hit, which is reachable when cross-matching is allowed.
+    tp = len([
+        pred for gt, pred in matches.items()
+        if gt.label in positive_label and pred.label in positive_label
+    ])
     return p, n, pp, tp
