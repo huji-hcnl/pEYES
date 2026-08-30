@@ -55,6 +55,7 @@ The **Article?** column is the §8 triage: whether the finding could have reache
 | V-3 | HIGH | no | **fixed** | visualize | `create_frames` calls `int(x[i])`, raising `ValueError` on any NaN sample. |
 | P-1 | HIGH | no | **fixed** | packaging | `authors` carries a non-PEP-621 `website` key; no `requires-python`; version pins are near-meaningless. |
 | T-1 | HIGH | no | **fixed** | tests | `test_event.test_init` asserts `"FIXATION(19.00ms)"` but `__str__` yields `"FIXATION(19.0ms)"`. |
+| C-26 | MED | no | **fixed** | core / Event | `set_viewer_distance` / `set_screen_monitor` never reach the event constructors' import-time bound defaults. |
 | T-5 | HIGH | no | **fixed** | tests | `test_pixel_utils` asserts a stale literal `0.027844`; the correct value is `0.0276855`. |
 
 Everything else is MED and below, listed in the per-scope sections. Several MED findings *do* reach the published results (D-5, D-10, D-11, D-16, C-6, V-4/V-5) and are collected in §8.
@@ -102,6 +103,44 @@ The peak-velocity panel of `visualize.event_summary` (AppendixA fig 1b) carries 
 
 **FIXED** in `9eb1161`.
 Self-consistent within `Event`, but it is the root of the round-trip off-by-one in C-2/C-3, and it makes a single-sample event have `duration == 0` (which then short-circuits `time_overlap`). Worth documenting explicitly on the `duration` property, and worth deciding once whether the package's convention is `n*dt` or `(n-1)*dt`. Both off-by-one bugs below stem from this being unstated.
+
+**C-26 · MED · `set_viewer_distance` and `set_screen_monitor` are silent no-ops for event defaults** **[FIXED `8b2433e`]**
+`BaseEvent.__init__`, `BaseEvent.make` and `BaseEvent.make_multiple` all bound their `viewer_distance` and
+`pixel_size` defaults directly from config in the signature:
+
+```python
+viewer_distance: float = cnfg.VIEWER_DISTANCE,
+pixel_size: float = cnfg.SCREEN_MONITOR[cnst.PIXEL_SIZE_STR],
+```
+
+Python evaluates default expressions once, when the function object is built at import, and bakes the
+resulting float in. `peyes.set_viewer_distance` / `set_screen_monitor` work by mutating those module globals
+afterwards, so the mutation never reaches the compiled defaults. Setting the viewer distance to 999 and then
+constructing an event with defaults yielded 60.
+
+Same family as D-13, different mechanism and different file: D-13 is config-derived *class attributes* in
+`Detector.py`; this is config-derived *function defaults* in `Event.py`. Reported by a separate session, not
+found in the original pass — the review touched `set_viewer_distance` only in the §8b triage table, where it
+was dismissed because `analysis/` never calls it.
+
+**The sharper symptom is not the no-op.** `get_outlier_reasons` reads `cnfg.SCREEN_MONITOR` live inside the
+method body, so after `set_screen_monitor` an event built with defaults carries the *old* `pixel_size` while
+being bounds-checked against the *new* resolution — one object straddling two monitor configurations, its
+visual-angle features computed in units that no longer match the screen it is judged against:
+
+```
+event built with DEFAULT pixel_size = 0.027686   (stale, baked at import)
+config pixel_size now               = 0.1        (live)
+outlier check uses live resolution  = (1000, 500) (live)
+```
+
+*Article impact: none.* `analysis/` never calls either setter and never constructs `Event` subclasses
+directly (both greps return nothing); `create_events`, the documented entry point, requires
+`viewer_distance` and `pixel_size` as explicit non-optional arguments.
+
+*Fix:* `None` sentinels resolved inside `__init__`; `make` and `make_multiple` pass the sentinel through
+rather than carrying their own equally-stale copies. Confirmed nothing in `peyes/` or `analysis/` inspects
+these defaults via `inspect.signature` or `__defaults__`, so the change is inert elsewhere.
 
 **C-11 · NIT** — `peak_velocity`/`min_velocity` return `np.float64` while `median_velocity` returns `float`; `make_multiple` assumes `x`/`y`/`pupil` are `np.ndarray` (a list raises `TypeError` on fancy indexing).
 
@@ -615,7 +654,7 @@ Hold until phases A–D are merged, then take as **one** decision rather than pi
 
 ### Open after phases A-D
 
-**46 findings fixed, 2 partial, 61 open.** Each fixed finding is tagged in place with its commit. What
+**47 findings fixed, 2 partial, 61 open.** Each fixed finding is tagged in place with its commit. What
 remains, grouped by why:
 
 **1. Deferred to phase E as planned - moves published numbers (§8a).**
@@ -649,7 +688,8 @@ a deliberate exclusion - the plan named these in the per-scope sections but neve
 | repo | P-3 |
 
 Four MED findings that *were* missing from the plan for the same reason (M-13, M-18, V-6, V-7) were caught
-during implementation and fixed in `ee3e62b`; the rest above are LOW or NIT. **S-3** is the one worth
+during implementation and fixed in `ee3e62b`; a fifth (**C-26**, config-derived defaults bound at import)
+was reported by a separate session after the phase A-D work and fixed on the same basis; the rest above are LOW or NIT. **S-3** is the one worth
 promoting: IRF reconstructs coordinates with per-axis pixel sizes while every downstream calculation uses the
 diagonal one, and confirming which is intended needs the maintainer.
 
@@ -706,6 +746,7 @@ Run against this branch with `PYTHONPATH` forced to the worktree (the editable `
 | V-2 | `AttributeError: 'NoneType' object has no attribute 'ndim'` |
 | V-4 | Subset `{FIXATION, SACCADE}` gives bins `[0, 0.5, 0.5, 1.0]`; z-positions 0.2 and 0.4 — both land in bin 0, so saccades render in the fixation colour |
 | V-6 | 5 and 6 sequences OK; **7 sequences** raise `AttributeError: 'int' object has no attribute 'strip'` |
+| C-26 | `set_viewer_distance(999)` then `FixationEvent(t=...)` gave `_viewer_distance == 60`; signature defaults were `60` / `0.0276855` |
 | P-1 | `requires-python` confirmed absent; installed numpy 2.5.2 violates the declared `numpy~=1.2` pin |
 
 **Still unverified:** the `authors.website` half of P-1 (`hatchling` is not installed — run `python -m build`), V-5 (needs visual inspection), V-11, and the §8a items that need the article's own data rather than synthetic input (C-1's ceiling on real outputs, D-16, D-17, M-6/M-7).

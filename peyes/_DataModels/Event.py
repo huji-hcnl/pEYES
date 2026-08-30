@@ -21,9 +21,16 @@ class BaseEvent(ABC):
             x: np.ndarray = None,
             y: np.ndarray = None,
             pupil: np.ndarray = None,
-            viewer_distance: float = cnfg.VIEWER_DISTANCE,
-            pixel_size: float = cnfg.SCREEN_MONITOR[cnst.PIXEL_SIZE_STR],
+            viewer_distance: Optional[float] = None,
+            pixel_size: Optional[float] = None,
     ):
+        # Resolved here rather than bound as default values: `cnfg.VIEWER_DISTANCE` and
+        # `cnfg.SCREEN_MONITOR[...]` in a signature are evaluated once at import, so
+        # `set_viewer_distance` / `set_screen_monitor` would never reach them.
+        if viewer_distance is None:
+            viewer_distance = cnfg.VIEWER_DISTANCE
+        if pixel_size is None:
+            pixel_size = cnfg.SCREEN_MONITOR[cnst.PIXEL_SIZE_STR]
         _x = x if x is not None else np.full_like(t, np.nan, dtype=float)
         _y = y if y is not None else np.full_like(t, np.nan, dtype=float)
         _pupil = pupil if pupil is not None else np.full_like(t, np.nan, dtype=float)
@@ -50,10 +57,14 @@ class BaseEvent(ABC):
             x: np.ndarray = None,
             y: np.ndarray = None,
             pupil: np.ndarray = None,
-            viewer_distance: float = cnfg.VIEWER_DISTANCE,
-            pixel_size: float = cnfg.SCREEN_MONITOR[cnst.PIXEL_SIZE_STR],
+            viewer_distance: Optional[float] = None,
+            pixel_size: Optional[float] = None,
     ) -> Optional["BaseEvent"]:
-        """  Creates a single Event from the given data.  """
+        """
+        Creates a single Event from the given data.
+        `viewer_distance` and `pixel_size` default to the current values in `peyes.set_viewer_distance` /
+        `peyes.set_screen_monitor`, resolved when the event is constructed rather than at import.
+        """
         if label == EventLabelEnum.UNDEFINED:
             return None
         if label == EventLabelEnum.FIXATION:
@@ -76,8 +87,8 @@ class BaseEvent(ABC):
             x: np.ndarray = None,
             y: np.ndarray = None,
             pupil: np.ndarray = None,
-            viewer_distance: float = cnfg.VIEWER_DISTANCE,
-            pixel_size: float = cnfg.SCREEN_MONITOR[cnst.PIXEL_SIZE_STR],
+            viewer_distance: Optional[float] = None,
+            pixel_size: Optional[float] = None,
     ) -> list["BaseEvent"]:
         if len(labels) != len(t):
             raise ValueError("Length of `labels` and `t` must be the same")

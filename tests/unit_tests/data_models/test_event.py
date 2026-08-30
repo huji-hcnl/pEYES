@@ -149,3 +149,66 @@ class TestExtremumPixels(unittest.TestCase):
         event = self._event(x, y)
         self.assertEqual((x[int(np.argmin(x))], y[int(np.argmin(x))]), event.left_pixel)
         self.assertEqual((x[int(np.argmax(y))], y[int(np.argmax(y))]), event.bottom_pixel)
+
+
+class TestConfigDefaultsAreResolvedLive(unittest.TestCase):
+    """
+    C-26: `viewer_distance` and `pixel_size` were bound as default values from cnfg at import time, so
+    peyes.set_viewer_distance / set_screen_monitor silently had no effect on events built with defaults.
+    """
+
+    def setUp(self):
+        import peyes._DataModels.config as cnfg
+        self._cnfg = cnfg
+        self._viewer_distance = cnfg.VIEWER_DISTANCE
+        self._screen_monitor = dict(cnfg.SCREEN_MONITOR)
+
+    def tearDown(self):
+        self._cnfg.VIEWER_DISTANCE = self._viewer_distance
+        self._cnfg.SCREEN_MONITOR.clear()
+        self._cnfg.SCREEN_MONITOR.update(self._screen_monitor)
+
+    def _set_config(self):
+        import peyes
+        peyes.set_viewer_distance(999)
+        peyes.set_screen_monitor(width_cm=100, height_cm=50, width_px=1000, height_px=500)
+        return 999, self._cnfg.SCREEN_MONITOR[cnst.PIXEL_SIZE_STR]
+
+    def test_constructor_follows_the_setters(self):
+        expected_vd, expected_ps = self._set_config()
+        event = FixationEvent(t=np.arange(10, dtype=float))
+        self.assertEqual(expected_vd, event._viewer_distance)
+        self.assertEqual(expected_ps, event._pixel_size)
+
+    def test_make_follows_the_setters(self):
+        expected_vd, expected_ps = self._set_config()
+        event = BaseEvent.make(EventLabelEnum.FIXATION, t=np.arange(10, dtype=float))
+        self.assertEqual(expected_vd, event._viewer_distance)
+        self.assertEqual(expected_ps, event._pixel_size)
+
+    def test_make_multiple_follows_the_setters(self):
+        expected_vd, expected_ps = self._set_config()
+        events = BaseEvent.make_multiple(
+            np.full(10, EventLabelEnum.FIXATION), t=np.arange(10, dtype=float)
+        )
+        self.assertEqual(expected_vd, events[0]._viewer_distance)
+        self.assertEqual(expected_ps, events[0]._pixel_size)
+
+    def test_explicit_arguments_still_override(self):
+        self._set_config()
+        event = FixationEvent(t=np.arange(10, dtype=float), viewer_distance=12.0, pixel_size=0.5)
+        self.assertEqual(12.0, event._viewer_distance)
+        self.assertEqual(0.5, event._pixel_size)
+
+    def test_event_geometry_agrees_with_the_bounds_it_is_checked_against(self):
+        """
+        The sharper symptom: get_outlier_reasons reads the config live, so a stale pixel_size left the
+        event's visual-angle geometry and its screen-bounds check on two different monitors.
+        """
+        _, expected_ps = self._set_config()
+        event = FixationEvent(
+            t=np.arange(10, dtype=float), x=np.full(10, 900.0), y=np.full(10, 400.0),
+        )
+        self.assertEqual(expected_ps, event._pixel_size)
+        self.assertEqual(self._cnfg.SCREEN_MONITOR[cnst.RESOLUTION_STR], (1000, 500))
+        self.assertNotIn("pixel_outside_screen", event.get_outlier_reasons())
