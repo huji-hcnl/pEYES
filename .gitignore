@@ -1,6 +1,7 @@
 # Project outputs
 output/
 analysis/output/
+docs/User Guide/data/
 
 # Local working notes, kept out of the published repo
 docs/CODE_REVIEW.md
