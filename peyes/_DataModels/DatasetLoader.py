@@ -29,6 +29,7 @@ class BaseDatasetLoader(ABC):
     _INDEXERS: List[str] = [
         cnst.TRIAL_ID_STR, cnst.SUBJECT_ID_STR, cnst.STIMULUS_TYPE_STR, cnst.STIMULUS_NAME_STR
     ]
+    _DOWNLOAD_TIMEOUT_SEC: float = 60.0     # without this, a stalled connection hangs indefinitely
 
     @classmethod
     @final
@@ -63,7 +64,7 @@ class BaseDatasetLoader(ABC):
     def download(cls, verbose: bool = False) -> pd.DataFrame:
         """ Downloads the dataset from the internet, parses it and returns a DataFrame with cleaned data """
         url = cls.url()
-        response = req.get(cls._URL)
+        response = req.get(url, timeout=cls._DOWNLOAD_TIMEOUT_SEC)
         code = response.status_code
         if code != 200:
             raise ConnectionError(
@@ -463,8 +464,11 @@ class HFCDatasetLoader(BaseDatasetLoader):
                         f = interp1d(
                             data["time"], range(l), kind="nearest", bounds_error=False, fill_value="extrapolate"
                         )
+                        # `f` extrapolates (bounds_error=False), so an annotation outside the trial's
+                        # time range yields an index beyond [0, l). A negative index would silently
+                        # wrap to the far end of the trial, so clip rather than index blindly.
                         fixation_samples = itertools.chain(
-                            *[range(int(s), int(e + 1)) for s, e in zip(
+                            *[range(max(0, int(s)), min(l, int(e) + 1)) for s, e in zip(
                                 f(annotations["FixStart"]), f(annotations["FixEnd"])
                             )]
                         )
