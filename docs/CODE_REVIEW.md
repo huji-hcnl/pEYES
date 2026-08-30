@@ -4,6 +4,13 @@
 **Reviewed at:** branch `claude/peyes-code-review-4b4661`, base commit `34ab816`.
 **Priority ordering of concerns:** correctness > robustness/design > efficiency.
 
+> **Status (phases A-D complete).** Everything in §9 phases A-D has been implemented on branch
+> `claude/peyes-code-review-4b4661`, one finding-group per commit. The test suite went from 28 tests with 2
+> failures to **91 passing**, ruff is clean, and CI runs both. Findings still open are exactly the §8a set
+> (anything that moves published numbers) plus all of `NHDetector`, deferred to phase E, and two items that
+> need a decision from the maintainer -- see "Open after phases A-D" at the end of §9.
+
+
 ## How to read this
 
 Findings are grouped by **scope** (the module you'd open to fix them), and tagged with a **priority**:
@@ -540,6 +547,33 @@ Hold until phases A–D are merged, then take as **one** decision rather than pi
 27. **Check the conditionals** (M-6/M-7 — what `pos_labels` did the published runs use? — and D-17) so the decision is made with the full list in hand.
 28. **All `NHDetector` work, in one branch:** D-2 and D-5 (article-affecting) together with D-1, D-3, D-6, D-7, D-8 (article-neutral, deferred only to keep the class untouched until now).
 29. **If regenerating,** fix the rest of the §8a set in the same branch and re-run once. **D-20** (metadata accumulation) should go in regardless, since it affects only recorded metadata.
+
+### Open after phases A-D
+
+Everything below is what remains. Nothing here was touched.
+
+**Deferred to phase E, as planned:** the §8a set (C-1, D-2, D-16, D-5, D-10, D-11, D-24, C-6, V-4, V-5,
+D-20) and the conditionals (M-6/M-7, D-17), plus every `NHDetector` finding (D-1, D-2, D-3, D-6, D-7, D-8).
+
+**Needs a maintainer decision before it can be done:**
+
+- **M-10** (return type varies with the number of requested metrics). Making `calculate`, `event_metrics.get_features`
+  and `match_metrics.get_features` return a consistent type is a **breaking API change**, and `analysis/` calls
+  all three. Deliberately not done unilaterally. The options are: always return a dict; return a dict unless
+  exactly one metric is requested *and* a new `squeeze=True` argument is passed; or leave as-is and document.
+- **D-12 (the rest).** The `IDVTDetector(IDTDetector, IVTDetector)` diamond works only because
+  `IDTDetector.__init__`'s bare `super()` happens to land on `IVTDetector.__init__` with defaults, which are
+  then overwritten. The missing validation is fixed; restructuring the hierarchy touches an article-facing
+  detector and is left for phase E.
+
+**Triage correction made during implementation:** M-17 was missing from §8 entirely. It *is* reachable from
+the article's code path (`match_metrics.d_prime_and_criterion`, `precision_recall_f1`, `false_alarm_rate` are
+all called by `analysis/process/match_metrics.py`), but it is inert there: `allow_xmatch` is `False`
+throughout the pipeline, and with cross-matching disabled every matched prediction already shares its
+ground-truth event's label, so counting true positives over predictions and over pairs coincide. Fixed in
+phase D on that basis.
+
+**Not reached:** C-25 (star imports), M-14 (feature vocabularies), plus the NIT-level items.
 
 ### The NH exemption
 
