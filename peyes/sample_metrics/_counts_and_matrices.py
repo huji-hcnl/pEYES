@@ -13,6 +13,16 @@ _GROUND_TRUTH_STR = "Ground Truth"
 _PREDICTION_STR = "Prediction"
 
 
+def _reindex_to_all_labels(matrix: pd.DataFrame) -> pd.DataFrame:
+    """
+    Pads a transition matrix out to every EventLabelEnum, so matrices built from different sequences share a
+    shape and can be compared, stacked or subtracted. Missing transitions are 0 (or NaN for an all-zero row
+    that has been row-normalised).
+    """
+    labels = list(EventLabelEnum)
+    return matrix.reindex(index=labels, columns=labels, fill_value=0)
+
+
 def label_counts(
         seq: UnparsedEventLabelSequenceType
 ) -> pd.Series:
@@ -39,7 +49,7 @@ def transition_matrix(
     Returns a DataFrame where rows indicate the origin label and columns indicate the destination label.
     """
     seq = [_parse_label(l) for l in seq]
-    return _transition_matrix(seq, normalize_rows)
+    return _reindex_to_all_labels(_transition_matrix(seq, normalize_rows))
 
 
 def confusion_matrix(

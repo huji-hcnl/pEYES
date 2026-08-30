@@ -95,7 +95,7 @@ def _dprime_rates(p: int, n: float, pp: int, tp: int, correction: Optional[str])
         if false_alarm_rate == 1:
             false_alarm_rate = 1 - 0.5 / n
         return hit_rate, false_alarm_rate
-    if correction in {"ll", "loglinear", "log_linear", "hautus"}:
+    if corr in {"ll", "loglinear", "log_linear", "hautus"}:
         # apply Hautus (1995) correction
         prevalence = p / (p + n) if p + n > 0 else np.nan
         new_tp, new_fp = tp + prevalence, fp + 1 - prevalence
