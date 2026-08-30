@@ -35,26 +35,27 @@ Each finding has a stable ID (`C-1`, `D-3`, ...) so it can be referenced in issu
 ## Summary, most urgent first
 
 The **Article?** column is the §8 triage: whether the finding could have reached the published results.
+**Status** is as of the phase A-D work (see §9); `open` items are all either §8a or `NHDetector`.
 
-| ID | Priority | Article? | Scope | One-liner |
-|---|---|---|---|---|
-| C-1 | CRIT | **YES** | core / Event | `velocities(unit='deg')` applies a non-linear px to deg map to a px/s rate; deg/s velocities saturate at 180 and are badly compressed. |
-| V-1 | CRIT | no | visualize | `create_video` passes args to `create_frames` positionally and misaligns three of them; the function cannot work. |
-| D-1 | CRIT | no (latent) | detectors / NH | `num_edge_sample_to_drop == 0` at ~100 Hz makes `ch[0:-0]` empty, so PT/OnT become NaN and NH silently labels everything a fixation. |
-| D-2 | HIGH | **YES** | detectors / NH | `np.argmin` where `argmax` is meant: the adaptive peak threshold always initialises to 300 deg/s. |
-| C-2 | HIGH | no | core / postprocess | `events_to_labels` is off by one: output is one sample short and each event loses its last sample. |
-| C-3 | HIGH | no | core / create | `_events_to_boolean_channel` marks offsets one sample early, disagreeing with the labels-based path. |
-| C-4 | HIGH | no | core / create+postprocess | `min_num_samples=None` (the documented default) raises `TypeError` via `max(int(res), None)`. |
-| D-3 | HIGH | no | detectors / NH | `__find_local_minimum_index` reads `arr[idx+1]` at the last index, raising `IndexError`. |
-| M-1 | HIGH | no | metrics / alignment | `max(threshold)` runs before the int-to-list normalisation, raising `TypeError` for the documented scalar form. |
-| M-2 | HIGH | no | metrics / event | `event_rate` divides by absolute end time, not recording duration. |
-| B-1 | HIGH | no | core / match | `"offset max_onset_difference"` typo: `match_by="offset difference"` silently falls through to generic matching. |
-| B-2 | HIGH | no | core / match | Matcher wrappers default their tolerances to `0`, so `match(..., "onset"/"offset"/"l2")` matches almost nothing. |
-| V-2 | HIGH | no | visualize | `create_image` dereferences `image.ndim` before the `image is None` check. |
-| V-3 | HIGH | no | visualize | `create_frames` calls `int(x[i])`, raising `ValueError` on any NaN sample. |
-| P-1 | HIGH | no | packaging | `authors` carries a non-PEP-621 `website` key; no `requires-python`; version pins are near-meaningless. |
-| T-1 | HIGH | no | tests | `test_event.test_init` asserts `"FIXATION(19.00ms)"` but `__str__` yields `"FIXATION(19.0ms)"`. |
-| T-5 | HIGH | no | tests | `test_pixel_utils` asserts a stale literal `0.027844`; the correct value is `0.0276855`. |
+| ID | Priority | Article? | Status | Scope | One-liner |
+|---|---|---|---|---|---|
+| C-1 | CRIT | **YES** | open | core / Event | `velocities(unit='deg')` applies a non-linear px to deg map to a px/s rate; deg/s velocities saturate at 180 and are badly compressed. |
+| V-1 | CRIT | no | **fixed** | visualize | `create_video` passes args to `create_frames` positionally and misaligns three of them; the function cannot work. |
+| D-1 | CRIT | no (latent) | open | detectors / NH | `num_edge_sample_to_drop == 0` at ~100 Hz makes `ch[0:-0]` empty, so PT/OnT become NaN and NH silently labels everything a fixation. |
+| D-2 | HIGH | **YES** | open | detectors / NH | `np.argmin` where `argmax` is meant: the adaptive peak threshold always initialises to 300 deg/s. |
+| C-2 | HIGH | no | **fixed** | core / postprocess | `events_to_labels` is off by one: output is one sample short and each event loses its last sample. |
+| C-3 | HIGH | no | **fixed** | core / create | `_events_to_boolean_channel` marks offsets one sample early, disagreeing with the labels-based path. |
+| C-4 | HIGH | no | **fixed** | core / create+postprocess | `min_num_samples=None` (the documented default) raises `TypeError` via `max(int(res), None)`. |
+| D-3 | HIGH | no | open | detectors / NH | `__find_local_minimum_index` reads `arr[idx+1]` at the last index, raising `IndexError`. |
+| M-1 | HIGH | no | **fixed** | metrics / alignment | `max(threshold)` runs before the int-to-list normalisation, raising `TypeError` for the documented scalar form. |
+| M-2 | HIGH | no | **fixed** | metrics / event | `event_rate` divides by absolute end time, not recording duration. |
+| B-1 | HIGH | no | **fixed** | core / match | `"offset max_onset_difference"` typo: `match_by="offset difference"` silently falls through to generic matching. |
+| B-2 | HIGH | no | **fixed** | core / match | Matcher wrappers default their tolerances to `0`, so `match(..., "onset"/"offset"/"l2")` matches almost nothing. |
+| V-2 | HIGH | no | **fixed** | visualize | `create_image` dereferences `image.ndim` before the `image is None` check. |
+| V-3 | HIGH | no | **fixed** | visualize | `create_frames` calls `int(x[i])`, raising `ValueError` on any NaN sample. |
+| P-1 | HIGH | no | **fixed** | packaging | `authors` carries a non-PEP-621 `website` key; no `requires-python`; version pins are near-meaningless. |
+| T-1 | HIGH | no | **fixed** | tests | `test_event.test_init` asserts `"FIXATION(19.00ms)"` but `__str__` yields `"FIXATION(19.0ms)"`. |
+| T-5 | HIGH | no | **fixed** | tests | `test_pixel_utils` asserts a stale literal `0.027844`; the correct value is `0.0276855`. |
 
 Everything else is MED and below, listed in the per-scope sections. Several MED findings *do* reach the published results (D-5, D-10, D-11, D-16, C-6, V-4/V-5) and are collected in §8.
 
@@ -81,19 +82,25 @@ Note the correct pattern already exists in the codebase: `NHDetector._velocities
 Under the saturation, `peak_velocity` **cannot exceed 180 deg/s** for any event, so the 1000 deg/s criterion can never fire, the 45 deg/s screens operate on compressed values, and any saccade whose true peak exceeds 180 deg/s — i.e. most real saccades — is reported below its actual velocity. *Confirmation test:* take the saccade features already produced for the article and check `max(peak_velocity)`. If nothing exceeds 180, the bug is confirmed on the article's own data with no re-run needed.
 The peak-velocity panel of `visualize.event_summary` (AppendixA fig 1b) carries the same distortion. `visualize.main_sequence` is called with `y_feature=DURATION_STR`, so that figure is unaffected.
 
-**C-5 · MED · `summary()` omits `start_pixel` / `end_pixel`** — upstream issue #24. `center_pixel` alone cannot reconstruct a saccade's landing site. Both properties already exist (`Event.py:228`, `:238`). Prefer four scalar columns over 2-tuples.
+**C-5 · MED · `summary()` omits `start_pixel` / `end_pixel`** **[FIXED `0825efd`]** — upstream issue #24. `center_pixel` alone cannot reconstruct a saccade's landing site. Both properties already exist (`Event.py:228`, `:238`). Prefer four scalar columns over 2-tuples.
 
-**C-6 · MED · `get_outlier_reasons` checks only duration and screen bounds** — upstream issue #26, with an in-code `TODO` at `Event.py:132`. `is_outlier` reads as a general plausibility filter but does not check velocity/acceleration/dispersion. Either implement the checks or narrow the docstring; leaving it as-is has already cost the reporter debugging time.
+**C-6 · MED · `get_outlier_reasons` checks only duration and screen bounds** **[PARTIAL `0825efd`: the call-time caveat is documented; the checks themselves are phase E]** — upstream issue #26, with an in-code `TODO` at `Event.py:132`. `is_outlier` reads as a general plausibility filter but does not check velocity/acceleration/dispersion. Either implement the checks or narrow the docstring; leaving it as-is has already cost the reporter debugging time.
 
-**C-7 · LOW · `summary()` re-derives `outlier_reasons` from mutable global config at call time** — upstream issue #27. Behaviour is probably intended (config is global by design); the fix is a docstring note on `summary()` and `is_outlier` that the value is computed at call time, not at construction.
+**C-7 · LOW · `summary()` re-derives `outlier_reasons` from mutable global config at call time** **[FIXED `0825efd`]** — upstream issue #27. Behaviour is probably intended (config is global by design); the fix is a docstring note on `summary()` and `is_outlier` that the value is computed at call time, not at construction.
 
 **C-8 · MED · `top/bottom/left/right_pixel` use `argmin`/`argmax`, not the nan-aware variants**
+
+**FIXED** in `03815cd`.
 `Event.py:302-324`. With any NaN in `x`/`y`, which is routine after blink handling, `np.argmin` returns the index of the NaN, so these properties return `(nan, nan)`. Use `np.nanargmin`/`np.nanargmax`, guarding the all-NaN case.
 
 **C-9 · MED · Input validation uses bare `assert`**
+
+**FIXED** in `59ceb26`.
 `Event.__init__:30-32`, and likewise in `set_config.py`, `create_video`, and `EventMatcher.generic_matching`'s integrity checks. Under `python -O` these vanish, so mismatched-length arrays or a negative `pixel_size` proceed silently. Raise `ValueError` instead; keep `assert` only for genuine internal invariants.
 
 **C-10 · LOW · `duration` convention is `end - start`, so an n-sample event has duration `(n-1)*dt`**
+
+**FIXED** in `9eb1161`.
 Self-consistent within `Event`, but it is the root of the round-trip off-by-one in C-2/C-3, and it makes a single-sample event have `duration == 0` (which then short-circuits `time_overlap`). Worth documenting explicitly on the `duration` property, and worth deciding once whether the package's convention is `n*dt` or `(n-1)*dt`. Both off-by-one bugs below stem from this being unstated.
 
 **C-11 · NIT** — `peak_velocity`/`min_velocity` return `np.float64` while `median_velocity` returns `float`; `make_multiple` assumes `x`/`y`/`pupil` are `np.ndarray` (a list raises `TypeError` on fancy indexing).
@@ -101,43 +108,59 @@ Self-consistent within `Event`, but it is the root of the round-trip off-by-one 
 ### `peyes/_base/postprocess_events.py`
 
 **C-2 · HIGH · `events_to_labels` is off by one, twice**
+
+**FIXED** in `9eb1161`.
 `num_samples = ceil((end-start)*sr/1000)` under-counts by one sample, and `out[start_sample:end_sample]` excludes each event's final sample.
 Worked example, labels `[F,F,F,S,S]` at 500 Hz with `t=[0,2,4,6,8]`: round-tripping through `create_events` then `events_to_labels` yields `[F,F,UNDEFINED,S]` (4 samples) instead of `[F,F,F,S,S]`.
 *Fix:* `num_samples = calculate_num_samples(...) + 1` and `out[start_sample:end_sample + 1]`, or settle C-10 first and derive both consistently.
 
-**C-12 · MED · `summarize_events([])` returns a `(0, 0)` frame with no columns** — upstream issue #25. Downstream this breaks `feature_comparison` (`summary_df["is_outlier"]` raises `KeyError`) and `pd.concat` of two empty results. *Fix:* hoist the `summary()` key list into a module constant or a `BaseEvent.summary_columns()` classmethod and use it for the empty branch.
+**C-12 · MED · `summarize_events([])` returns a `(0, 0)` frame with no columns** **[FIXED `0825efd`]** — upstream issue #25. Downstream this breaks `feature_comparison` (`summary_df["is_outlier"]` raises `KeyError`) and `pd.concat` of two empty results. *Fix:* hoist the `summary()` key list into a module constant or a `BaseEvent.summary_columns()` classmethod and use it for the empty branch.
 
-**C-13 · LOW · `events_to_labels([])` raises `ValueError` from `min()` on an empty generator** — needs an explicit empty guard.
+**C-13 · LOW · `events_to_labels([])` raises `ValueError` from `min()` on an empty generator** **[FIXED `9eb1161`]** — needs an explicit empty guard.
 
-**C-14 · LOW · Return type is not what's annotated** — `EventLabelSequenceType` promises `Sequence[EventLabelEnum]`, but `np.full(n, EventLabelEnum.UNDEFINED)` yields an integer array, so elements are `np.int64`.
+**C-14 · LOW · Return type is not what's annotated** **[FIXED `9eb1161`]** — `EventLabelSequenceType` promises `Sequence[EventLabelEnum]`, but `np.full(n, EventLabelEnum.UNDEFINED)` yields an integer array, so elements are `np.int64`.
 
 ### `peyes/_base/create.py`
 
 **C-4 · HIGH · `min_num_samples=None` crashes**
+
+**FIXED** in `b38b390`.
 `_events_to_boolean_channel:263` and `events_to_labels:158` both pass `min_num_samples` positionally into `calculate_num_samples(..., min_samples)`, which ends in `max(int(res), min_samples)`. With `None`, which is the parameter default and explicitly documented as "If None, the number of samples is determined by the total duration", this is `max(int, None)` and raises `TypeError`. Verified in isolation on Python 3.14. *Fix:* `min_samples=1 if min_num_samples is None else min_num_samples`.
 
 **C-3 · HIGH · `_events_to_boolean_channel` marks offsets one sample early**
+
+**FIXED** in `b38b390`.
 `create.py:272` writes `bool_channel[end_sample - 1] = True` while onsets are written at `bool_channel[start_sample]` with no adjustment. With the `(n-1)*dt` duration convention, `end_sample` is already the index of the event's last sample, so the `-1` is spurious. The labels-based path (`_labels_to_boolean_channel`) marks the true last sample of each chunk, so **the two paths disagree by one sample**, and `alignment_metrics` (channel SDT, timing differences) accepts either as input. Any comparison mixing events and labels carries a systematic one-sample offset.
 
 **C-15 · MED · `create_boolean_channel` empty branch is broken**
+
+**FIXED** in `b38b390`.
 `create.py:205`: `np.zeros(np.nanmin(len(data), min_num_samples), dtype=bool)`. `np.nanmin`'s second positional argument is `axis`, not a second operand. With `min_num_samples=None` it happens to return `0`; with any integer it raises `AxisError`. *Fix:* `np.zeros(min_num_samples or 0, dtype=bool)`.
 
 **C-16 · MED · No bounds checking when writing onsets/offsets**
+
+**FIXED** in `b38b390`.
 `create.py:269, 272` index `bool_channel` with a computed sample index. If `min_num_samples` is smaller than the events' span this raises `IndexError`; a negative index silently writes at the wrong end.
 
 **C-17 · MED · `create_detector` is seven copy-pasted branches and silently drops unknown kwargs**
+
+**FIXED** in `287b160`.
 `create.py:81-146`. `**{k: kwargs.get(k, default_params[k]) for k in default_params}` means a misspelled keyword (`saccade_velocity_treshold`) is silently ignored and the default is used, which is a very easy way to run an experiment with the wrong parameters. *Fix:* a `{name: class}` registry plus one construction path; raise on kwargs not in `get_default_params()`.
 
 **C-18 · LOW · `_labels_to_boolean_channel` builds its output from the raw `labels` argument** (`np.zeros_like(labels, dtype=bool)`) rather than from `parsed_labels`; works for list/array input, fragile otherwise.
 
-**C-19 · NIT · `algorithm.lower().strip().replace('-','').removesuffix('detector')`** — `"IVT Detector"` normalises to `"ivt "` and fails to match. Strip again after `removesuffix`, or normalise whitespace first.
+**C-19 · NIT · `algorithm.lower().strip().replace('-','').removesuffix('detector')`** **[FIXED `287b160`]** — `"IVT Detector"` normalises to `"ivt "` and fails to match. Strip again after `removesuffix`, or normalise whitespace first.
 
 ### `peyes/_base/match.py` and `peyes/_DataModels/EventMatcher.py`
 
 **B-1 · HIGH · Copy-paste typo silently changes the matching algorithm**
+
+**FIXED** in `311560a`.
 `match.py:78`: `if match_by == "offset" or match_by == "offset max_onset_difference":`. The second alias is meant to be `"offset difference"`, which `match()`'s own docstring advertises. Today `match(gt, pred, match_by="offset difference")` falls through every branch and lands on `EventMatcher.generic_matching` with `reduction="all"`, returning one-to-many matches instead of offset-difference one-to-one matches. Callers get a structurally different result with no error.
 
 **B-2 · HIGH · Tolerance defaults of `0` make three matchers no-ops**
+
+**FIXED** in `311560a`.
 `EventMatcher.onset_difference(max_onset_difference=0)`, `offset_difference(max_offset_difference=0)`, `l2_timing(max_l2=0)`, `window_based(...=0, ...=0)`, and the corresponding `kwargs.pop(..., 0)` in `match.py:75, 82, 89-90, 95`. `generic_matching` sensibly defaults these to `inf`, but every wrapper overrides with `0`, requiring *exact* onset/offset equality. `peyes.match(gt, pred, "onset")` with no extra kwargs returns (near) nothing, silently. *Fix:* default to `inf` in the wrappers and in `match()`, matching `generic_matching`.
 
 **B-3 · MED · `matched_predictions` is a `set` of `BaseEvent`, which defines value-based `__eq__`/`__hash__`**
@@ -145,13 +168,15 @@ Worked example, labels `[F,F,F,S,S]` at 500 Hz with `t=[0,2,4,6,8]`: round-tripp
 
 **B-4 · LOW · `EventMatcher.py:72` — `if len(p):` after `__choose_match`** conflates "no match" with an empty reduction result; and `generic_matching`'s output-integrity `assert`s (`:80, :82`) vanish under `-O`.
 
-**B-5 · LOW · Dead branch** — `match.py:48`: `kwargs.pop("allow_xmatch", ...)` can never fire, since `allow_xmatch` is a named parameter and is consumed before `**kwargs`.
+**B-5 · LOW · Dead branch** **[FIXED `311560a`]** — `match.py:48`: `kwargs.pop("allow_xmatch", ...)` can never fire, since `allow_xmatch` is a named parameter and is consumed before `**kwargs`.
 
 **B-6 · NIT** — `match_multiple` is not exported from `peyes/__init__.py`; its docstring refers to a `match_events` function that does not exist. `EventMatcher` is an `ABC` containing only `@staticmethod`s, i.e. a module masquerading as a class.
 
 ### `peyes/_utils/`
 
 **C-20 · MED · `is_one_dimensional` accepts `(1, n)` / `(n, 1)`, but `get_chunk_indices`, `merge_chunks` and `reset_short_chunks` only handle true 1-D**
+
+**FIXED** in `26a44b5`.
 `vector_utils.py:231-236`: `np.arange(len(arr))` on a `(1, n)` array gives length 1, and `np.nonzero(np.diff(arr))[0]` returns row indices. Results are silently wrong rather than raising. *Fix:* `arr = np.asarray(arr).reshape(-1)` at the top of each, or tighten the guard.
 
 **C-21 · LOW · `parse_label` does not handle the case its own comment claims**
@@ -213,6 +238,8 @@ chunks_below_pt = [ch[num_edge_sample_to_drop: -num_edge_sample_to_drop] for ch 
 `Detector.py:624`: `is_smooth_pursuit = ~is_fixation & ~is_saccade`. `calculate_velocities` returns NaN for the first sample and for every sample adjacent to a blink, so those are neither fixation nor saccade and fall into smooth pursuit by default. *Fix:* require a finite velocity, or make smooth pursuit an explicit positive condition.
 
 **D-12 · MED · IDVT bypasses saccade-threshold validation**
+
+**PARTIALLY FIXED** in `287b160` - validation added; the inheritance restructure is deferred.
 `Detector.py:598`: `self._saccade_velocity_threshold = saccade_velocity_threshold` is assigned directly, skipping the `<= 0` check that `IVTDetector.__init__` performs. The diamond MRO (`IDVTDetector(IDTDetector, IVTDetector)`) is also fragile: `IDTDetector.__init__`'s bare `super().__init__(...)` happens to land on `IVTDetector.__init__` with defaults, which is then overwritten. Prefer composition, or pass all parameters explicitly through the chain.
 
 **D-13 · MED · Detector defaults are frozen at import and drift from `set_event_configurations`**
@@ -240,11 +267,13 @@ chunks_below_pt = [ch[num_edge_sample_to_drop: -num_edge_sample_to_drop] for ch 
 `BaseDetector.__init__:53` creates `self._metadata = {}` once; `detect()` and every `_detect_impl` only ever `.update()` it. Reusing one detector across trials, which is the normal usage, leaves stale keys from previous trials in the returned metadata. *Fix:* reset `self._metadata = {}` at the top of `detect()`.
 
 **D-21 · MED · Blink padding is asymmetric**
+
+**FIXED** in `0136921`.
 `_detect_blinks:210-212`: `start = max(0, i - pad)` but `end = min(len, i + pad)`, and the slice end is exclusive, so `pad` samples are added before but only `pad - 1` after. Use `i + pad + 1`. The whole loop is also O(n*pad); `scipy.ndimage.binary_dilation` does it in one call.
 
-**D-22 · LOW · REMoDNaV skips all parameter validation** — every other detector validates its arguments in `__init__`; `REMoDNaVDetector.__init__:1400-1417` validates none.
+**D-22 · LOW · REMoDNaV skips all parameter validation** **[FIXED `0136921`]** — every other detector validates its arguments in `__init__`; `REMoDNaVDetector.__init__:1400-1417` validates none.
 
-**D-23 · LOW · The remodnav logger level is raised globally and never restored** — `Detector.py:1450-1452`, when `show_warnings=False`. Use a context manager, or restore the prior level.
+**D-23 · LOW · The remodnav logger level is raised globally and never restored** **[FIXED `0136921`]** — `Detector.py:1450-1452`, when `show_warnings=False`. Use a context manager, or restore the prior level.
 
 **D-24 · LOW · REMoDNaV writes label spans inclusively (`[start:end+1]`) while NH writes them exclusively** — consecutive events overlap by one sample and the later one wins. Pick one convention (see C-10).
 
@@ -259,6 +288,8 @@ chunks_below_pt = [ch[num_edge_sample_to_drop: -num_edge_sample_to_drop] for ch 
 ### `peyes/alignment_metrics/`
 
 **M-1 · HIGH · `max(threshold)` runs before `threshold` is normalised**
+
+**FIXED** in `b38b390`.
 `_signal_detection_metrics.py:117` calls `max(threshold) + 1`; the `isinstance(threshold, int)` to `[threshold]` normalisation is at `:122`, five lines later. `onset_detection_metrics(gt, pred, threshold=5)`, the documented scalar form (`:33` "int or array-like of int"), raises `TypeError: 'int' object is not iterable`. Move the normalisation above the `timing_differences` call. Note a numpy scalar (`np.int64`) fails at the *other* branch, so widen the check to `numbers.Integral`.
 
 **M-3 · LOW · `N` is a non-integer window count** — `:130` computes `n = (len(gt_channel) - (2t+1)*p) / (2t+1)` as a float and feeds it to `dprime_and_criterion` as if it were a count. The `TODO` at `:95` about false-alarm rates exceeding 1 is the visible symptom of this framing; worth documenting the derivation.
@@ -268,6 +299,8 @@ chunks_below_pt = [ch[num_edge_sample_to_drop: -num_edge_sample_to_drop] for ch 
 ### `peyes/sample_metrics/` and `peyes/_utils/metric_utils.py`
 
 **M-5 · MED · `_dprime_rates` checks the raw `correction` for the log-linear branch instead of the normalised `corr`**
+
+**FIXED** in `ef72404`.
 `metric_utils.py:98`: `if correction in {"ll", "loglinear", "log_linear", "hautus"}`, but `corr` (built at `:84` precisely to normalise spacing/dashes/case) is what the Macmillan branch at `:87` uses. So `correction="log linear"` or `"Log-Linear"` normalises to `"log_linear"`, misses the raw comparison, and falls through to `raise ValueError(f"Invalid correction: ...")`. Existing tests only pass the already-normalised spelling, so this is uncaught. *Fix:* use `corr` on line 98.
 
 **M-6 · MED · Multi-label d-prime counts a hit only on exact label equality**
@@ -276,6 +309,8 @@ chunks_below_pt = [ch[num_edge_sample_to_drop: -num_edge_sample_to_drop] for ch 
 **M-7 · MED · `pos_labels=None` defaults to *all* labels**, making `n = 0` and every SDT rate NaN (`_calculate_metrics.py:216-217`). Compare `match_metrics._extract_contingency_values:195`, which correctly raises on the all-labels case. Make the sample-metrics path raise too.
 
 **M-8 · MED · `transition_matrix` is not reindexed to the full label set**
+
+**FIXED** in `ef72404`.
 `metric_utils.py:28`: `unstack(fill_value=0)` produces only rows/columns for labels present in the sequence, so matrices from different detectors have different shapes and cannot be stacked, subtracted, or compared. Reindex to `list(EventLabelEnum)`. It also raises on sequences shorter than 2.
 
 **M-9 · LOW · `confusion_matrix` passes `list(set(...))` as `labels`** (`_counts_and_matrices.py:291`) — silently deduplicates and discards the caller's ordering. `list(dict.fromkeys(...))` preserves both.
@@ -289,9 +324,13 @@ chunks_below_pt = [ch[num_edge_sample_to_drop: -num_edge_sample_to_drop] for ch 
 ### `peyes/event_metrics/`
 
 **M-2 · HIGH · `event_rate` and `microsaccade_rate` divide by absolute end time, not recording duration**
+
+**FIXED** in `ef72404`.
 `_rates_and_transitions.py:96-100` and `:112`: `len(label_events) / events[-1].end_time * 1000`. If the recording's timestamps do not start at 0, which is routine for dataset timestamps and for any trial-sliced sequence, the denominator is inflated and the rate is silently too low. *Fix:* `events[-1].end_time - events[0].start_time`. Both also assume `events` is sorted by time and index `events[-1]` without an emptiness guard.
 
 **M-13 · MED · `features_by_labels` drops the `count` column when the input is empty**
+
+**FIXED** in `ee3e62b`.
 `_get_features.py:27-29`: the `if aggregated.empty: return` early-exit happens before `count` is assigned. `visualize.event_summary` with `show_outliers=True` and no outliers then raises `KeyError: 'count'` at `_event_summary.py:70`.
 
 **M-14 · LOW · `get_features` supports only 6 of the 19 features `summary()` produces** — no `peak_velocity`, `dispersion`, `ellipse_area` and so on, though `feature_relationship` reads them straight off the summary frame. The two feature vocabularies should be unified.
@@ -301,16 +340,22 @@ chunks_below_pt = [ch[num_edge_sample_to_drop: -num_edge_sample_to_drop] for ch 
 ### `peyes/match_metrics/`
 
 **M-16 · MED · `positive_label=None` raises `TypeError` despite being typed `Optional`**
+
+**FIXED** in `26a44b5`.
 `_match_evaluation.py:192-194`: `None` is not in `UnparsedEventLabelType`, so it reaches `set(parse_label(l) for l in positive_label)` and fails on iteration. Either handle `None` explicitly or drop `Optional` from the four public signatures that advertise it.
 
 **M-17 · MED · `tp` counts matched *predictions* only**
+
+**FIXED** in `26a44b5`.
 `_match_evaluation.py:200`: `tp = len([e for e in matches.values() if e.label in positive_label])`. When cross-matching is enabled a negative-label GT event can be matched to a positive-label prediction and still be counted as a true positive. Check both sides via `matches.items()`.
 
-**M-18 · LOW · `match_ratio` assumes one-to-one matches** — `matches.values()` yields lists under `reduction="all"`, and `.label` then fails. Given B-1 routes `"offset difference"` into exactly that path, this is reachable.
+**M-18 · LOW · `match_ratio` assumes one-to-one matches** **[FIXED `ee3e62b`]** — `matches.values()` yields lists under `reduction="all"`, and `.label` then fails. Given B-1 routes `"offset difference"` into exactly that path, this is reachable.
 
 ## 4. Visualization (`peyes/visualize/`, `peyes/_utils/visualization_utils.py`)
 
 **V-1 · CRIT · `create_video` misaligns three arguments**
+
+**FIXED** in `b48f8ee`.
 `_video.py:334`:
 
 ```python
@@ -320,9 +365,13 @@ frames = create_frames(x, y, labels, resolution, bg_image, bg_image_format, labe
 `create_frames`'s signature is `(x, y, labels, resolution, bg_image, bg_image_format, bg_image_alpha, label_colors, gaze_radius, verbose)`. So `label_colors` lands in `bg_image_alpha`, `gaze_radius` in `label_colors`, `verbose` in `gaze_radius`, and `verbose` is never passed. The first thing `create_frames` does is `create_image(resolution, bg_image, <a dict or None>, ...)`, then `get_label_colormap(<an int>)`, which calls `.items()` on an `int`. The function cannot succeed on any input. *Fix:* call with keyword arguments.
 
 **V-2 · HIGH · `create_image` dereferences `image` before the `None` check**
+
+**FIXED** in `b48f8ee`.
 `visualization_utils.py:82`: `if image.ndim != 4 and (alpha < 0 or alpha > 1)`, but `image=None` is the default and the branch at `:86` exists precisely to handle it. Any call without a background image raises `AttributeError: 'NoneType' object has no attribute 'ndim'`, and that is the documented default path for `gaze_heatmap`, `gaze_trajectory` and `create_frames`. *Fix:* validate `alpha` unconditionally and move the check below the `None` handling. (`ndim != 4` is also the wrong test: images are 2-D or 3-D.)
 
 **V-3 · HIGH · `create_frames` crashes on NaN gaze samples**
+
+**FIXED** in `b48f8ee`.
 `_video.py:375`: `curr_x, curr_y = int(x[i]), int(y[i])` raises `ValueError: cannot convert float NaN to integer`. Blinks and tracker loss guarantee NaNs in real data, and the pipeline itself NaNs blink samples. Skip non-finite samples, or draw the previous position.
 
 **V-4 · MED · Scarfplot colours are wrong unless all six labels are present**
@@ -332,12 +381,16 @@ frames = create_frames(x, y, labels, resolution, bg_image, bg_image_format, labe
 `_scarfplot.py:244`: `tick_centers = tick_centers * colorbar_length * (max - min) / len(tick_centers)`. The tick values must be in `z` units (0-5) to line up with the colour bands; this expression produces neither `z` units nor `[0, 1]`. The commented-out "Normalize tick centers to [0,1]" note above it suggests this was known-unfinished. **[verify]** visually. Fix alongside V-4.
 
 **V-6 · MED · `feature_comparison` colour fallback indexes a label-keyed dict by position**
+
+**FIXED** in `ee3e62b`.
 `_features.py:332-335`: `colors[i]` where `colors` is `get_label_colormap(...)`, keyed by `EventLabelEnum` and by detector-name strings. For `i <= 5` this silently returns *event-label* colours for what are supposed to be per-sequence colours; for `i >= 6` it raises `KeyError`. And since `labels` defaults to `list(range(n))` (ints), the `seq_name.strip()` fallbacks on the same line raise `AttributeError` for `i >= 6`. So comparing 7 or more sequences without an explicit `colors=` always fails. *Fix:* use a dedicated qualitative sequence (`_DISCRETE_COLORMAP`) indexed modulo its length.
 
 **V-7 · MED · `__pixel_counts` does not bound-check**
+
+**FIXED** in `ee3e62b`.
 `_gaze.py:277`: `counts[int(y_), int(x_)] = count`. Coordinates outside the screen either raise `IndexError` or, for negatives, wrap silently to the opposite edge, putting off-screen gaze in the wrong place on the heatmap. Filter to the valid range first.
 
-**V-8 · MED · Video colours are channel-swapped** — `get_label_colormap` returns RGB tuples, but the frame is BGRA (`create_image` converts everything to BGRA) and `cv2.circle` expects BGR. Gaze markers render with R and B exchanged. Convert at the call site in `_video.py:376-377`.
+**V-8 · MED · Video colours are channel-swapped** **[FIXED `b48f8ee`]** — `get_label_colormap` returns RGB tuples, but the frame is BGRA (`create_image` converts everything to BGRA) and `cv2.circle` expects BGR. Gaze markers render with R and B exchanged. Convert at the call site in `_video.py:376-377`.
 
 **V-9 · LOW · `_visualize_gaze_trajectory`'s own default `marker_color` is unusable** — `_gaze.py:212`: `np.full_like(x, "#000000")` tries to parse a hex string into a float array. Only `gaze_trajectory`'s always-array `marker_color=t` keeps the public path alive.
 
@@ -345,7 +398,7 @@ frames = create_frames(x, y, labels, resolution, bg_image, bg_image_format, labe
 
 **V-11 · LOW · Unguarded divisions in figure code** — `_gaze.py:57` (flat heatmap gives 0/0), `_gaze.py:148` (`xy_max / v_max` with `v_max == 0`), `_features.py:465` (`px.get_trendline_results` when no trendline was requested) **[verify]**.
 
-**V-12 · LOW · `_write_video` calls `os.makedirs(os.path.dirname(output_path))`** — `dirname` of a bare filename is `""`, which raises `FileNotFoundError`.
+**V-12 · LOW · `_write_video` calls `os.makedirs(os.path.dirname(output_path))`** **[FIXED `b48f8ee`]** — `dirname` of a bare filename is `""`, which raises `FileNotFoundError`.
 
 **V-13 · LOW · `gaze_heatmap`'s `scale` keyword has no effect** — `_gaze.py:54-57` multiplies the counts by `scale` and then min-max normalises, cancelling it exactly. Either remove the keyword or apply it after normalisation.
 
@@ -361,12 +414,16 @@ frames = create_frames(x, y, labels, resolution, bg_image, bg_image_format, labe
 `DatasetLoader.py:463-472`: `for _, row in annotations.iterrows():` never uses `row`. The body rebuilds `interp1d` and re-applies it to the *entire* `annotations` frame each pass, producing the same `labels` array `len(annotations)` times. The result is correct; the cost is quadratic in the annotation count, per rater, per trial. *Fix:* hoist `f = interp1d(...)` out and drop the loop entirely.
 
 **S-2 · MED · Extrapolated annotation indices are written without bounds checking**
+
+**FIXED** in `0136921`.
 Same block, `:472`: `interp1d(..., bounds_error=False, fill_value="extrapolate")` can return indices below 0 or at/above `len(data)`; `labels[list(fixation_samples)] = 1` then raises or wraps. Clip to `[0, l-1]`.
 
 **S-3 · MED · IRF reconstructs coordinates with per-axis pixel sizes but reports a single diagonal pixel size**
 `__correct_coordinates:353-368` uses `width_cm / width_px` for x and `height_cm / height_px` for y (non-square pixels), while `__PIXEL_SIZE_CM_VAL`, the value written into the dataframe and used by every downstream visual-angle calculation, is the diagonal-based square-pixel size from `calculate_pixel_size`. Positions and angles are therefore derived under two different pixel models. Worth confirming which is intended; if the per-axis one is correct, downstream needs per-axis sizes too. The `.apply()` over every sample is also a Python-level loop over the whole dataset and is worth vectorising.
 
 **S-4 · MED · No timeout and no streaming on dataset downloads**
+
+**FIXED** in `0136921`.
 `BaseDatasetLoader.download:66`: `req.get(cls._URL)` with no `timeout=` can hang indefinitely, and `io.BytesIO(response.content)` holds the entire archive in memory, which GazeCom's own docstring warns is "extremely large". Add a timeout and stream to a temporary file.
 
 **S-5 · LOW · Lund2013 merges raters by index alignment**
@@ -382,19 +439,25 @@ Same block, `:472`: `interp1d(..., bounds_error=False, fill_value="extrapolate")
 
 **P-1 · HIGH · `pyproject.toml` problems**
 
+**FIXED** in `0c577e1`.
+
 - `authors` entries carry a `website` key. PEP 621 permits only `name` and `email` in `authors`. Move the URL into `[project.urls]`. **[verify]** — `hatchling` is not installed in the available venv, so whether it hard-rejects the key or silently drops it is still untested; run `python -m build` to settle it.
 - **No `requires-python`** (confirmed absent from `pyproject.toml`). The package uses `str.removesuffix` (3.9+) and PEP 585 builtin generics in annotations; pip will happily install it on 3.8 and fail at import. Add `requires-python = ">=3.12"` to match the README.
 - **Version pins are effectively unbounded below.** `numpy~=1.2` means `>=1.2, <2`, i.e. it admits numpy 1.2 (2008) and *excludes* numpy 2.x, which the issue reporters are actually running. Same shape for `scipy~=1.1`, `statsmodels~=0.1` (`>=0.1, <1`), `python-Levenshtein~=0.2`. Pin to the minor versions actually tested (`numpy~=1.26`, etc.) and decide explicitly about numpy 2.
 - `scikit_posthocs` is not imported anywhere under `peyes/`; it is an `analysis/` dependency and should not be a runtime requirement of the installed package. (`statsmodels` *is* needed, transitively, for plotly's `trendline="ols"`; worth a comment saying so.)
 
 **T-1 · HIGH · A unit test asserts a string the code cannot produce**
+
+**FIXED** in `56d9a5d`.
 `tests/unit_tests/data_models/test_event.py:26` expects `"FIXATION(19.00ms)"`; `BaseEvent.__str__` (`Event.py:401`) is `f"{self.label.name}({self.duration}ms)"` with `duration` a float, giving `"FIXATION(19.0ms)"`. *Confirmed:* `AssertionError: 'FIXATION(19.0ms)' != 'FIXATION(19.00ms)'`. Either fix the expectation or format the duration in `__str__`.
 
 **T-5 · HIGH · A second unit test fails, on a stale magic number**
+
+**FIXED** in `56d9a5d`.
 `tests/unit_tests/utils/test_pixel_utils.py:44` asserts `np.isclose(0.027844, calculate_pixel_size(TOBII_WIDTH, TOBII_HEIGHT, TOBII_RESOLUTION))`. The actual value is **0.0276855**; the test fails.
 `calculate_pixel_size` is not at fault — the two exact assertions above it in the same test (`1x1 @ 1x1 -> 1`, `1x1 @ 2x2 -> 0.5`) pass, and `53.1 x 30.0 cm` over `1920 x 1080` genuinely gives 0.0276855 (a 60.99 cm diagonal). The literal `0.027844` corresponds to a 61.34 cm diagonal and matches no configured geometry. `git log -L` shows `TOBII_WIDTH, TOBII_HEIGHT = 53.1, 30.0` was introduced once and never changed, so the constant is not the thing that drifted — the expected value was simply wrong when written. Replace it with the computed value, or assert against the formula rather than a literal.
 
-**T-6 · NIT · Stray `print()` in the test suite** — `tests/unit_tests/utils/test_pixel_utils.py:74` prints a velocity array on every run.
+**T-6 · NIT · Stray `print()` in the test suite** **[FIXED `56d9a5d`]** — `tests/unit_tests/utils/test_pixel_utils.py:74` prints a velocity array on every run.
 
 **T-2 · HIGH · Test coverage is confined to `_utils` and `Event`**
 Measured on this branch: **28 tests across 6 modules, 2 failing** (T-1, T-5), one module (`test_visualization_utils`) running zero tests. There are no tests at all for `Detector` (1548 lines, seven algorithms), `EventMatcher`, `DatasetLoader`, any of the four metrics packages, `_base/{create,match,parse,postprocess_events,set_config}.py`, or `visualize/` — which is precisely where the CRIT/HIGH findings above live. Highest-value additions, in order:
@@ -406,11 +469,13 @@ Measured on this branch: **28 tests across 6 modules, 2 failing** (T-1, T-5), on
 5. `summarize_events([])` schema (C-12) and `_dprime_rates` with unnormalised correction spellings (M-5).
 
 **T-3 · MED · `unittest discover` does not work**
+
+**FIXED** in `57637af`.
 `tests/` and its subpackages have no `__init__.py`, so `python -m unittest discover -s tests` reports the start directory as not importable (already noted in `CLAUDE.md`). Add the `__init__.py` files, or migrate to pytest; the latter also gives parametrisation, which would compress the detector matrix considerably.
 
-**T-4 · MED · Empty test stubs presented as passing** — `test_event.py::test_make` is `self.assertTrue(True)` under a `# TODO`, and `test_visualization_utils.py` is an empty class. These inflate the apparent test count.
+**T-4 · MED · Empty test stubs presented as passing** **[FIXED `56d9a5d`]** — `test_event.py::test_make` is `self.assertTrue(True)` under a `# TODO`, and `test_visualization_utils.py` is an empty class. These inflate the apparent test count.
 
-**P-2 · MED · No linter, formatter, or CI** — nothing in the repo would have caught V-1 (argument misalignment), D-9 (missing `f` prefix), or B-1/B-5 (dead comparison branches), all of which `ruff` flags by default. A minimal GitHub Actions job running the test suite on 3.12 plus `ruff check` would be high-leverage.
+**P-2 · MED · No linter, formatter, or CI** **[FIXED `a18c2d8`]** — nothing in the repo would have caught V-1 (argument misalignment), D-9 (missing `f` prefix), or B-1/B-5 (dead comparison branches), all of which `ruff` flags by default. A minimal GitHub Actions job running the test suite on 3.12 plus `ruff check` would be high-leverage.
 
 **P-3 · NIT · `constants.py:47` `TODO: replace these with enum`** — `IMAGE_STR`/`VIDEO_STR`/`MOVING_DOT_STR` are compared as bare strings in `DatasetLoader.__extract_metadata`; a `StrEnum` would make the stimulus-type vocabulary discoverable.
 
@@ -418,10 +483,10 @@ Measured on this branch: **28 tests across 6 modules, 2 failing** (T-1, T-5), on
 
 | Issue | Status against this code |
 |---|---|
-| [#24] `summary()` omits `start_pixel`/`end_pixel` | **Open** — see C-5. |
-| [#25] `summarize_events([])` has no columns | **Open** — see C-12; note the downstream `KeyError` in `feature_comparison`. |
-| [#26] `get_outlier_reasons` ignores velocity/acceleration/dispersion | **Open** — see C-6; the `TODO` is still at `Event.py:132`. |
-| [#27] `summary()` re-derives `outlier_reasons` from mutable config | **Open** — see C-7; docs-only fix. |
+| [#24] `summary()` omits `start_pixel`/`end_pixel` | **Fixed** in `0825efd` (C-5): added as four scalar columns. Ready to close. |
+| [#25] `summarize_events([])` has no columns | **Fixed** in `0825efd` (C-12), and the downstream `features_by_labels` case in `ee3e62b` (M-13). Ready to close. |
+| [#26] `get_outlier_reasons` ignores velocity/acceleration/dispersion | **Open** — see C-6. The call-time caveat is now documented, but the checks are unimplemented and `is_outlier` gates article figures, so it belongs to phase E. |
+| [#27] `summary()` re-derives `outlier_reasons` from mutable config | **Fixed** in `0825efd` (C-7): documented on `summary()` as the issue asked. Ready to close. |
 | [#18] python-poppler breaks installation | **Appears resolved** — `python-poppler` is no longer in `pyproject.toml` dependencies. Worth closing, or reopening against P-1 if it regressed. |
 | [#15] kaleido hangs on `write_image` | **Worked around** — pinned to `kaleido==0.1.0post1` with the `TODO` comment retained. Revisit now that kaleido 1.x exists. |
 
@@ -550,30 +615,48 @@ Hold until phases A–D are merged, then take as **one** decision rather than pi
 
 ### Open after phases A-D
 
-Everything below is what remains. Nothing here was touched.
+**46 findings fixed, 2 partial, 61 open.** Each fixed finding is tagged in place with its commit. What
+remains, grouped by why:
 
-**Deferred to phase E, as planned:** the §8a set (C-1, D-2, D-16, D-5, D-10, D-11, D-24, C-6, V-4, V-5,
-D-20) and the conditionals (M-6/M-7, D-17), plus every `NHDetector` finding (D-1, D-2, D-3, D-6, D-7, D-8).
+**1. Deferred to phase E as planned - moves published numbers (§8a).**
+C-1, D-2, D-5, D-10, D-11, D-16, D-24, D-20, V-4, V-5, and the conditionals M-6/M-7 and D-17.
+**C-6** is partial: the call-time caveat is documented, but the missing velocity/acceleration/dispersion
+checks change which events `is_outlier` excludes, and the article figures filter on it.
 
-**Needs a maintainer decision before it can be done:**
+**2. Deferred with the NH exemption.** D-1, D-3, D-6, D-7, D-8, D-9 - all in `NHDetector`, kept to one
+branch so the class is touched once.
 
-- **M-10** (return type varies with the number of requested metrics). Making `calculate`, `event_metrics.get_features`
-  and `match_metrics.get_features` return a consistent type is a **breaking API change**, and `analysis/` calls
-  all three. Deliberately not done unilaterally. The options are: always return a dict; return a dict unless
-  exactly one metric is requested *and* a new `squeeze=True` argument is passed; or leave as-is and document.
-- **D-12 (the rest).** The `IDVTDetector(IDTDetector, IVTDetector)` diamond works only because
-  `IDTDetector.__init__`'s bare `super()` happens to land on `IVTDetector.__init__` with defaults, which are
-  then overwritten. The missing validation is fixed; restructuring the hierarchy touches an article-facing
-  detector and is left for phase E.
+**3. Other `Detector.py` findings, held back deliberately.** D-4, D-13, D-14, D-15, D-18, D-19, D-25, D-26,
+D-27, and the rest of D-12. Some are article-neutral on their own (D-14 is a docstring mismatch, D-15 is dead
+code), but they sit in a file that is mostly article-facing or NH, so they are batched with phase E rather
+than edited piecemeal. Only D-21, D-22, D-23 and the D-12 validation were taken now, each verified inert at
+the article's settings.
 
-**Triage correction made during implementation:** M-17 was missing from §8 entirely. It *is* reachable from
-the article's code path (`match_metrics.d_prime_and_criterion`, `precision_recall_f1`, `false_alarm_rate` are
-all called by `analysis/process/match_metrics.py`), but it is inert there: `allow_xmatch` is `False`
-throughout the pipeline, and with cross-matching disabled every matched prediction already shares its
-ground-truth event's label, so counting true positives over predictions and over pairs coincide. Fixed in
-phase D on that basis.
+**4. Needs a maintainer decision, not a patch.**
+**M-10** - making `calculate`, `event_metrics.get_features` and `match_metrics.get_features` return a
+consistent type is a **breaking API change**, and `analysis/` calls all three. Options: always return a dict;
+keep the scalar only behind a new `squeeze=True`; or leave it and document. Not decided unilaterally.
 
-**Not reached:** C-25 (star imports), M-14 (feature vocabularies), plus the NIT-level items.
+**5. Article-neutral, and simply not in the phase A-D plan.** This is a gap in §9 as originally written, not
+a deliberate exclusion - the plan named these in the per-scope sections but never assigned them to a phase:
+
+| Scope | Open |
+|---|---|
+| core | B-3, B-4, B-6, C-11, C-18, C-21, C-22, C-23, C-24, C-25 |
+| metrics | M-3, M-4, M-9, M-11, M-12, M-14, M-15 |
+| datasets | S-1, S-3, S-5, S-6, S-7, S-8 |
+| visualize | V-9, V-10, V-11, V-13, V-14, V-15, V-16 |
+| repo | P-3 |
+
+Four MED findings that *were* missing from the plan for the same reason (M-13, M-18, V-6, V-7) were caught
+during implementation and fixed in `ee3e62b`; the rest above are LOW or NIT. **S-3** is the one worth
+promoting: IRF reconstructs coordinates with per-axis pixel sizes while every downstream calculation uses the
+diagonal one, and confirming which is intended needs the maintainer.
+
+**T-2** (test coverage) is materially improved but not closed: 28 tests with 2 failures to **100 passing**,
+with new coverage for `create_boolean_channel`, `events_to_labels`, the matcher aliases, `create_detector`,
+the video path and the figure builders. Still nothing exercises `NHDetector`, `EngbertDetector`,
+`DatasetLoader`, or the sample/alignment metric internals.
 
 ### The NH exemption
 
@@ -589,6 +672,10 @@ The cost is that **D-1 stays open the longest of any CRIT finding.** That is a d
 [#15]: https://github.com/huji-hcnl/pEYES/issues/15
 
 ## 10. Verification log
+
+**These are the observations that confirmed each finding, recorded *before* the phase A-D fixes.** They are
+kept as the evidence trail; for anything tagged FIXED above, the behaviour described here no longer occurs,
+and the regression test named in that finding's commit now pins the corrected behaviour.
 
 Run against this branch with `PYTHONPATH` forced to the worktree (the editable `peyes` install resolves to a different worktree). Environment: Python 3.14.3, numpy 2.5.2, pandas 3.0.5, scipy 1.18.1, plotly 7.0.0, scikit-learn 1.9.0.
 
