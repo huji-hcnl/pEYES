@@ -334,32 +334,39 @@ class BaseEvent(ABC):
             return x_std, y_std
 
     @final
+    def _extremum_pixel(self, values: np.ndarray, take_max: bool) -> Tuple[float, float]:
+        """
+        Returns the (x, y) pixel at the minimum or maximum of `values`, ignoring NaNs.
+        Returns (nan, nan) if every sample is NaN.
+        """
+        if np.all(np.isnan(values)):
+            return float("nan"), float("nan")
+        idx = int(np.nanargmax(values)) if take_max else int(np.nanargmin(values))
+        return float(self._x[idx]), float(self._y[idx])
+
+    @final
     @property
     def top_pixel(self) -> Tuple[float, float]:
         """  Returns the top pixel of the event (assuming the screen's top-left corner is (0,0))  """
-        min_y_idx = np.argmin(self._y)
-        return float(self._x[min_y_idx]), float(self._y[min_y_idx])
+        return self._extremum_pixel(self._y, take_max=False)
 
     @final
     @property
     def bottom_pixel(self) -> Tuple[float, float]:
         """  Returns the bottom pixel of the event (assuming the screen's top-left corner is (0,0))  """
-        max_y_idx = np.argmax(self._y)
-        return float(self._x[max_y_idx]), float(self._y[max_y_idx])
+        return self._extremum_pixel(self._y, take_max=True)
 
     @final
     @property
     def left_pixel(self) -> Tuple[float, float]:
         """  Returns the leftmost pixel of the event (assuming the screen's top-left corner is (0,0))  """
-        min_x_idx = np.argmin(self._x)
-        return float(self._x[min_x_idx]), float(self._y[min_x_idx])
+        return self._extremum_pixel(self._x, take_max=False)
 
     @final
     @property
     def right_pixel(self) -> Tuple[float, float]:
         """  Returns the rightmost pixel of the event (assuming the screen's top-left corner is (0,0))  """
-        max_x_idx = np.argmax(self._x)
-        return float(self._x[max_x_idx]), float(self._y[max_x_idx])
+        return self._extremum_pixel(self._x, take_max=True)
 
     @final
     @property

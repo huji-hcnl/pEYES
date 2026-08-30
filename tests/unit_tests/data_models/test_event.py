@@ -121,3 +121,31 @@ class TestEventSummary(unittest.TestCase):
 
     def test_summary_columns_matches_summary(self):
         self.assertEqual(BaseEvent.summary_columns(), list(self._saccade().summary().index))
+
+
+class TestExtremumPixels(unittest.TestCase):
+    """ C-8: argmin/argmax return the index of a NaN, so any missing sample poisoned these properties. """
+
+    @staticmethod
+    def _event(x, y):
+        t = np.arange(len(x), dtype=float)
+        return FixationEvent(t=t, x=np.asarray(x, dtype=float), y=np.asarray(y, dtype=float),
+                             pupil=np.ones(len(x)), viewer_distance=60.0, pixel_size=0.0277)
+
+    def test_ignores_nans(self):
+        event = self._event([5.0, 1.0, np.nan, 9.0, 3.0], [2.0, 6.0, 7.0, 0.0, 8.0])
+        self.assertEqual(1.0, event.left_pixel[0])
+        self.assertEqual(9.0, event.right_pixel[0])
+        self.assertEqual(0.0, event.top_pixel[1])
+        self.assertEqual(8.0, event.bottom_pixel[1])
+
+    def test_all_nan_returns_nan(self):
+        event = self._event([np.nan] * 4, [np.nan] * 4)
+        for pixel in (event.left_pixel, event.right_pixel, event.top_pixel, event.bottom_pixel):
+            self.assertTrue(all(np.isnan(v) for v in pixel))
+
+    def test_matches_naive_result_when_no_nans(self):
+        x, y = [5.0, 1.0, 9.0, 3.0], [2.0, 6.0, 0.0, 8.0]
+        event = self._event(x, y)
+        self.assertEqual((x[int(np.argmin(x))], y[int(np.argmin(x))]), event.left_pixel)
+        self.assertEqual((x[int(np.argmax(y))], y[int(np.argmax(y))]), event.bottom_pixel)
