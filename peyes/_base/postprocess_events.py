@@ -28,15 +28,23 @@ def events_to_labels(events: EventSequenceType, sampling_rate: float, min_num_sa
     :param min_num_samples: the minimal number of samples in the output sequence. If None, the number of samples is
         determined by the total duration of the provided events.
 
-    :return: sequence of labels
+    :return: array of label values (integers matching `EventLabelEnum`), one per sample
+
+    :raises ValueError: if `events` is empty
     """
+    if len(events) == 0:
+        raise ValueError("Cannot convert an empty event sequence to labels")
     global_start_time = min(e.start_time for e in events)
     global_end_time = max(e.end_time for e in events)
-    num_samples = calculate_num_samples(global_start_time, global_end_time, sampling_rate, min_num_samples)
-    out = np.full(num_samples, EventLabelEnum.UNDEFINED)
+    # +1 because `duration` is end_time - start_time, so an n-sample event spans (n-1) * dt
+    # (see BaseEvent.duration); without it the output is one sample short of the input.
+    num_samples = calculate_num_samples(global_start_time, global_end_time, sampling_rate, 1) + 1
+    if min_num_samples is not None:
+        num_samples = max(num_samples, min_num_samples)
+    out = np.full(num_samples, EventLabelEnum.UNDEFINED, dtype=int)
     for e in events:
         corrected_start_time, corrected_end_time = e.start_time - global_start_time, e.end_time - global_start_time
         start_sample = int(np.round(corrected_start_time * sampling_rate / cnst.MILLISECONDS_PER_SECOND))
         end_sample = int(np.round(corrected_end_time * sampling_rate / cnst.MILLISECONDS_PER_SECOND))
-        out[start_sample:end_sample] = e.label
+        out[start_sample:end_sample + 1] = e.label      # end_sample is the event's last sample, inclusive
     return out

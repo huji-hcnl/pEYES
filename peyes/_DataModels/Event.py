@@ -241,6 +241,14 @@ class BaseEvent(ABC):
     @final
     @property
     def duration(self) -> float:
+        """
+        Duration of the event in milliseconds, measured as `end_time - start_time`.
+
+        Note this is the span *between* the first and last samples, not the time they occupy: an event of
+        `n` samples recorded at interval `dt` has a duration of `(n - 1) * dt`, and a single-sample event has
+        a duration of 0. Code converting between durations and sample counts must add one accordingly
+        (see `peyes.events_to_labels` and `peyes.create_boolean_channel`).
+        """
         return float(self.end_time - self.start_time)
 
     @final
