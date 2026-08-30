@@ -79,8 +79,8 @@ def create_image(
     """
     if not resolution or len(resolution) != 2 or resolution[0] <= 0 or resolution[1] <= 0:
         raise ValueError("resolution must be a tuple of two positive integers")
-    if image.ndim != 4 and (alpha < 0 or alpha > 1):
-        raise ValueError("bg_alpha must be in the range [0, 1]")
+    if not 0 <= alpha <= 1:
+        raise ValueError("alpha must be in the range [0, 1]")
 
     # If bg_image is not provided or invalid, create an image with the specified RGB background color
     if image is None or image.size == 0 or image.ndim not in (2, 3, 4):
