@@ -5,8 +5,8 @@ while the major version is `0`, breaking changes bump the **minor** version.
 
 ## [0.2.0] - 2026-08-31
 
-A correctness release. It fixes 47 findings from a full review of the package (see
-[docs/CODE_REVIEW.md](docs/CODE_REVIEW.md)), several of which change values that previous versions returned.
+A correctness release. It fixes 47 findings from a full review of the package, several of which change
+values that previous versions returned.
 **Read the breaking changes before upgrading**: some of them alter results silently rather than raising.
 
 ### Breaking changes
@@ -102,16 +102,12 @@ This release does **not** fix everything found in the review. The most important
 - **Angular velocity is computed with the wrong transform.** `velocities(unit='deg')` converts a px/s rate
   through a transform meant for a spatial extent, so `peak_velocity`, `median_velocity` and `min_velocity`
   saturate at 180 deg/s and are compressed well below that - a true 500 deg/s saccade reports about
-  156 deg/s. **Velocity features from this release are not trustworthy in absolute terms.** Fixing it changes
-  values published in Nir & Deouell (2026), so it is being handled separately. Tracked as C-1 in
-  [docs/CODE_REVIEW.md](docs/CODE_REVIEW.md).
-- `NHDetector` raises at sampling rates around 120 Hz and below, and produces an all-fixation result with no
-  warning in a band around 150-166 Hz (D-1, D-6).
+  156 deg/s. **Velocity features from this release are not trustworthy in absolute terms.** A fix is planned
+  for a future release.
+- `NHDetector` raises at sampling rates of roughly 120 Hz and below, and produces an all-fixation result with
+  no warning in a band around 150-166 Hz.
 - `is_outlier` checks only event duration and screen bounds, not velocity, acceleration or dispersion, so it
-  is narrower than its name suggests ([#26], C-6).
-
-The full list of open findings, with reasons, is in
-[docs/CODE_REVIEW.md](docs/CODE_REVIEW.md) under "Open after phases A-D".
+  is narrower than its name suggests ([#26]).
 
 ## [0.1.0] - 2026
 
