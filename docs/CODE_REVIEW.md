@@ -28,7 +28,7 @@ Each finding has a stable ID (`C-1`, `D-3`, ...) so it can be referenced in issu
 ## Caveats on verification
 
 - **Findings were executed and confirmed.** A populated venv is now available and every CRIT/HIGH finding, plus most MED ones, was reproduced against this branch. Confirmed findings quote their observed output. The few still unverified are marked **[verify]**.
-- **The environment is not the declared one**, which is itself evidence for P-1: Python **3.14** (README says 3.12), **numpy 2.5.2** and **pandas 3.0.5** — but `pyproject.toml` pins `numpy~=1.2`, which *excludes* numpy 2.x. The installed environment already violates the declared constraints. The editable `peyes` install also points at a different worktree, so verification was run with `PYTHONPATH` forced to this branch.
+- **The environment is not the declared one**, which is itself evidence for P-1: Python **3.14** (README says 3.12), **numpy 2.5.2** and **pandas 3.0.5** - but `pyproject.toml` pins `numpy~=1.2`, which *excludes* numpy 2.x. The installed environment already violates the declared constraints. The editable `peyes` install also points at a different worktree, so verification was run with `PYTHONPATH` forced to this branch.
 - **Upstream issues** (`huji-hcnl/pEYES`) were read and are mapped in §7; `JonNir1/pEYES` has issues disabled.
 - **`analysis/` was not reviewed**, but it *was* read to determine which findings could have reached the published results (§8). That triage reflects `analysis/` as it stands at this commit, which may differ from what was actually run for the article.
 
@@ -80,14 +80,14 @@ Note the correct pattern already exists in the codebase: `NHDetector._velocities
 ('peak_velocity', 'max'): 1000,   # Nyström & Holmqvist (2010)
 ```
 
-Under the saturation, `peak_velocity` **cannot exceed 180 deg/s** for any event, so the 1000 deg/s criterion can never fire, the 45 deg/s screens operate on compressed values, and any saccade whose true peak exceeds 180 deg/s — i.e. most real saccades — is reported below its actual velocity. *Confirmation test:* take the saccade features already produced for the article and check `max(peak_velocity)`. If nothing exceeds 180, the bug is confirmed on the article's own data with no re-run needed.
+Under the saturation, `peak_velocity` **cannot exceed 180 deg/s** for any event, so the 1000 deg/s criterion can never fire, the 45 deg/s screens operate on compressed values, and any saccade whose true peak exceeds 180 deg/s - i.e. most real saccades - is reported below its actual velocity. *Confirmation test:* take the saccade features already produced for the article and check `max(peak_velocity)`. If nothing exceeds 180, the bug is confirmed on the article's own data with no re-run needed.
 The peak-velocity panel of `visualize.event_summary` (AppendixA fig 1b) carries the same distortion. `visualize.main_sequence` is called with `y_feature=DURATION_STR`, so that figure is unaffected.
 
-**C-5 · MED · `summary()` omits `start_pixel` / `end_pixel`** **[FIXED `0825efd`]** — upstream issue #24. `center_pixel` alone cannot reconstruct a saccade's landing site. Both properties already exist (`Event.py:228`, `:238`). Prefer four scalar columns over 2-tuples.
+**C-5 · MED · `summary()` omits `start_pixel` / `end_pixel`** **[FIXED `0825efd`]** - upstream issue #24. `center_pixel` alone cannot reconstruct a saccade's landing site. Both properties already exist (`Event.py:228`, `:238`). Prefer four scalar columns over 2-tuples.
 
-**C-6 · MED · `get_outlier_reasons` checks only duration and screen bounds** **[PARTIAL `0825efd`: the call-time caveat is documented; the checks themselves are phase E]** — upstream issue #26, with an in-code `TODO` at `Event.py:132`. `is_outlier` reads as a general plausibility filter but does not check velocity/acceleration/dispersion. Either implement the checks or narrow the docstring; leaving it as-is has already cost the reporter debugging time.
+**C-6 · MED · `get_outlier_reasons` checks only duration and screen bounds** **[PARTIAL `0825efd`: the call-time caveat is documented; the checks themselves are phase E]** - upstream issue #26, with an in-code `TODO` at `Event.py:132`. `is_outlier` reads as a general plausibility filter but does not check velocity/acceleration/dispersion. Either implement the checks or narrow the docstring; leaving it as-is has already cost the reporter debugging time.
 
-**C-7 · LOW · `summary()` re-derives `outlier_reasons` from mutable global config at call time** **[FIXED `0825efd`]** — upstream issue #27. Behaviour is probably intended (config is global by design); the fix is a docstring note on `summary()` and `is_outlier` that the value is computed at call time, not at construction.
+**C-7 · LOW · `summary()` re-derives `outlier_reasons` from mutable global config at call time** **[FIXED `0825efd`]** - upstream issue #27. Behaviour is probably intended (config is global by design); the fix is a docstring note on `summary()` and `is_outlier` that the value is computed at call time, not at construction.
 
 **C-8 · MED · `top/bottom/left/right_pixel` use `argmin`/`argmax`, not the nan-aware variants**
 
@@ -120,12 +120,12 @@ constructing an event with defaults yielded 60.
 
 Same family as D-13, different mechanism and different file: D-13 is config-derived *class attributes* in
 `Detector.py`; this is config-derived *function defaults* in `Event.py`. Reported by a separate session, not
-found in the original pass — the review touched `set_viewer_distance` only in the §8b triage table, where it
+found in the original pass - the review touched `set_viewer_distance` only in the §8b triage table, where it
 was dismissed because `analysis/` never calls it.
 
 **The sharper symptom is not the no-op.** `get_outlier_reasons` reads `cnfg.SCREEN_MONITOR` live inside the
 method body, so after `set_screen_monitor` an event built with defaults carries the *old* `pixel_size` while
-being bounds-checked against the *new* resolution — one object straddling two monitor configurations, its
+being bounds-checked against the *new* resolution - one object straddling two monitor configurations, its
 visual-angle features computed in units that no longer match the screen it is judged against:
 
 ```
@@ -142,7 +142,7 @@ directly (both greps return nothing); `create_events`, the documented entry poin
 rather than carrying their own equally-stale copies. Confirmed nothing in `peyes/` or `analysis/` inspects
 these defaults via `inspect.signature` or `__defaults__`, so the change is inert elsewhere.
 
-**C-11 · NIT** — `peak_velocity`/`min_velocity` return `np.float64` while `median_velocity` returns `float`; `make_multiple` assumes `x`/`y`/`pupil` are `np.ndarray` (a list raises `TypeError` on fancy indexing).
+**C-11 · NIT** - `peak_velocity`/`min_velocity` return `np.float64` while `median_velocity` returns `float`; `make_multiple` assumes `x`/`y`/`pupil` are `np.ndarray` (a list raises `TypeError` on fancy indexing).
 
 ### `peyes/_base/postprocess_events.py`
 
@@ -153,11 +153,11 @@ these defaults via `inspect.signature` or `__defaults__`, so the change is inert
 Worked example, labels `[F,F,F,S,S]` at 500 Hz with `t=[0,2,4,6,8]`: round-tripping through `create_events` then `events_to_labels` yields `[F,F,UNDEFINED,S]` (4 samples) instead of `[F,F,F,S,S]`.
 *Fix:* `num_samples = calculate_num_samples(...) + 1` and `out[start_sample:end_sample + 1]`, or settle C-10 first and derive both consistently.
 
-**C-12 · MED · `summarize_events([])` returns a `(0, 0)` frame with no columns** **[FIXED `0825efd`]** — upstream issue #25. Downstream this breaks `feature_comparison` (`summary_df["is_outlier"]` raises `KeyError`) and `pd.concat` of two empty results. *Fix:* hoist the `summary()` key list into a module constant or a `BaseEvent.summary_columns()` classmethod and use it for the empty branch.
+**C-12 · MED · `summarize_events([])` returns a `(0, 0)` frame with no columns** **[FIXED `0825efd`]** - upstream issue #25. Downstream this breaks `feature_comparison` (`summary_df["is_outlier"]` raises `KeyError`) and `pd.concat` of two empty results. *Fix:* hoist the `summary()` key list into a module constant or a `BaseEvent.summary_columns()` classmethod and use it for the empty branch.
 
-**C-13 · LOW · `events_to_labels([])` raises `ValueError` from `min()` on an empty generator** **[FIXED `9eb1161`]** — needs an explicit empty guard.
+**C-13 · LOW · `events_to_labels([])` raises `ValueError` from `min()` on an empty generator** **[FIXED `9eb1161`]** - needs an explicit empty guard.
 
-**C-14 · LOW · Return type is not what's annotated** **[FIXED `9eb1161`]** — `EventLabelSequenceType` promises `Sequence[EventLabelEnum]`, but `np.full(n, EventLabelEnum.UNDEFINED)` yields an integer array, so elements are `np.int64`.
+**C-14 · LOW · Return type is not what's annotated** **[FIXED `9eb1161`]** - `EventLabelSequenceType` promises `Sequence[EventLabelEnum]`, but `np.full(n, EventLabelEnum.UNDEFINED)` yields an integer array, so elements are `np.int64`.
 
 ### `peyes/_base/create.py`
 
@@ -188,7 +188,7 @@ Worked example, labels `[F,F,F,S,S]` at 500 Hz with `t=[0,2,4,6,8]`: round-tripp
 
 **C-18 · LOW · `_labels_to_boolean_channel` builds its output from the raw `labels` argument** (`np.zeros_like(labels, dtype=bool)`) rather than from `parsed_labels`; works for list/array input, fragile otherwise.
 
-**C-19 · NIT · `algorithm.lower().strip().replace('-','').removesuffix('detector')`** **[FIXED `287b160`]** — `"IVT Detector"` normalises to `"ivt "` and fails to match. Strip again after `removesuffix`, or normalise whitespace first.
+**C-19 · NIT · `algorithm.lower().strip().replace('-','').removesuffix('detector')`** **[FIXED `287b160`]** - `"IVT Detector"` normalises to `"ivt "` and fails to match. Strip again after `removesuffix`, or normalise whitespace first.
 
 ### `peyes/_base/match.py` and `peyes/_DataModels/EventMatcher.py`
 
@@ -205,11 +205,11 @@ Worked example, labels `[F,F,F,S,S]` at 500 Hz with `t=[0,2,4,6,8]`: round-tripp
 **B-3 · MED · `matched_predictions` is a `set` of `BaseEvent`, which defines value-based `__eq__`/`__hash__`**
 `EventMatcher.py:58, 60, 76`. Two distinct predicted events with byte-identical `t/x/y/pupil` are indistinguishable, so consuming one removes both from the candidate pool. Rare, but possible with short synthetic or degenerate events. *Fix:* track by `id()` or by index.
 
-**B-4 · LOW · `EventMatcher.py:72` — `if len(p):` after `__choose_match`** conflates "no match" with an empty reduction result; and `generic_matching`'s output-integrity `assert`s (`:80, :82`) vanish under `-O`.
+**B-4 · LOW · `EventMatcher.py:72` - `if len(p):` after `__choose_match`** conflates "no match" with an empty reduction result; and `generic_matching`'s output-integrity `assert`s (`:80, :82`) vanish under `-O`.
 
-**B-5 · LOW · Dead branch** **[FIXED `311560a`]** — `match.py:48`: `kwargs.pop("allow_xmatch", ...)` can never fire, since `allow_xmatch` is a named parameter and is consumed before `**kwargs`.
+**B-5 · LOW · Dead branch** **[FIXED `311560a`]** - `match.py:48`: `kwargs.pop("allow_xmatch", ...)` can never fire, since `allow_xmatch` is a named parameter and is consumed before `**kwargs`.
 
-**B-6 · NIT** — `match_multiple` is not exported from `peyes/__init__.py`; its docstring refers to a `match_events` function that does not exist. `EventMatcher` is an `ABC` containing only `@staticmethod`s, i.e. a module masquerading as a class.
+**B-6 · NIT** - `match_multiple` is not exported from `peyes/__init__.py`; its docstring refers to a `match_events` function that does not exist. `EventMatcher` is an `ABC` containing only `@staticmethod`s, i.e. a module masquerading as a class.
 
 ### `peyes/_utils/`
 
@@ -221,13 +221,13 @@ Worked example, labels `[F,F,F,S,S]` at 500 Hz with `t=[0,2,4,6,8]`: round-tripp
 **C-21 · LOW · `parse_label` does not handle the case its own comment claims**
 `event_utils.py:352-354`: the comment says it handles `"1.0", "2,0"`, but `float("2,0")` raises `ValueError` (verified), so comma-decimal strings become `UNDEFINED` under `safe=True`. Either implement the comma replacement or drop the claim.
 
-**C-22 · LOW · `parse_label(True)` returns `FIXATION`** — `bool` is an `int` subclass and is checked before anything else could reject it.
+**C-22 · LOW · `parse_label(True)` returns `FIXATION`** - `bool` is an `int` subclass and is checked before anything else could reject it.
 
-**C-23 · LOW · `cast_to_integers` truncates toward zero, not down** — `pixel_utils.py:20` uses `astype(int)`; the docstring says "rounding down to the nearest smaller integer", which differs for negative coordinates. Use `np.floor`.
+**C-23 · LOW · `cast_to_integers` truncates toward zero, not down** - `pixel_utils.py:20` uses `astype(int)`; the docstring says "rounding down to the nearest smaller integer", which differs for negative coordinates. Use `np.floor`.
 
-**C-24 · NIT · Duplicate `microsaccade_ratio`** — `event_utils.py:371` (strict `<`, no `zero_division` parameter, unused anywhere) versus `event_metrics/_rates_and_transitions.py:115` (`<=`, public). Delete the former.
+**C-24 · NIT · Duplicate `microsaccade_ratio`** - `event_utils.py:371` (strict `<`, no `zero_division` parameter, unused anywhere) versus `event_metrics/_rates_and_transitions.py:115` (`<=`, public). Delete the former.
 
-**C-25 · NIT · `from peyes._utils.pixel_utils import *` inside `Event.py` and `Detector.py`** — this is how `np`, `cnst`, `Tuple`, `List` reach those modules. It makes the dependency graph invisible and any rename in `pixel_utils` a silent breakage. Import explicitly.
+**C-25 · NIT · `from peyes._utils.pixel_utils import *` inside `Event.py` and `Detector.py`** - this is how `np`, `cnst`, `Tuple`, `List` reach those modules. It makes the dependency graph invisible and any rename in `pixel_utils` a silent breakage. Import explicitly.
 
 ## 2. Detectors (`peyes/_DataModels/Detector.py`)
 
@@ -243,7 +243,7 @@ chunks_below_pt = [ch[num_edge_sample_to_drop: -num_edge_sample_to_drop] for ch 
 `num_edge_sample_to_drop = _calc_num_samples(min_saccade_duration // 3, sr)`. With the default `min_saccade_duration = 10` ms, `10 // 3 = 3` ms, and at 100 Hz `round(3 * 100 / 1000) = 0`. Then `ch[0:-0]` is `ch[0:0]`, i.e. **empty for every chunk**. `np.concatenate` of empties gives an empty selector, `np.nanmean([])` is NaN, `pt` becomes NaN, the `while abs(pt - pt_prev) > 1` condition is False so the loop exits without hitting the `max_iters == 0` guard, and `ont` is NaN. Downstream `v > NaN` is all-False, so no saccades and no PSOs are found and `_classify_samples` labels everything `FIXATION`, with no error and no warning.
 *Confirmed on this branch, with a narrower trigger than first stated.* Measured `num_edge_sample_to_drop` by sampling rate: **500 Hz -> 2, 300 -> 1, 200 -> 1, 150 -> 0, 100 -> 0, 60 -> 0**, and `ch[0:-0]` is indeed empty. But at 100 and 120 Hz the run never reaches this code: `_velocities_and_accelerations` raises first, because the Savitzky-Golay window rounds to 2, which is not greater than `polyorder` (see D-6). The **silent** NaN path therefore fires in a band around **150-166 Hz**, where `edge == 0` but `savgol_ws == 3` passes the guard. At or below ~120 Hz the failure is loud instead.
 *Fix:* guard with `if num_edge_sample_to_drop > 0:` before trimming (or use `ch[k: len(ch)-k]`), and make a NaN `pt` raise rather than silently exit the loop.
-*Article impact: none — latent.* The article's datasets are Lund2013 at 500 Hz (seven trials at 200 Hz) and HFC at 300 Hz, giving `num_edge_sample_to_drop` of 2, 1 and 1 respectively. It is rated CRIT because it is silent, not because it fired: any future user at 100 Hz gets an all-fixation result with no warning.
+*Article impact: none - latent.* The article's datasets are Lund2013 at 500 Hz (seven trials at 200 Hz) and HFC at 300 Hz, giving `num_edge_sample_to_drop` of 2, 1 and 1 respectively. It is rated CRIT because it is silent, not because it fired: any future user at 100 Hz gets an all-fixation result with no warning.
 
 **D-2 · HIGH · `argmin` should be `argmax` when seeding the peak threshold**
 `Detector.py:1078`: `pt = start_pt_options[np.argmin(is_v_above_pt)]`. `start_pt_options` descends `[300, 275, ..., 75]`, so `is_v_above_pt` is `[False...False, True...True]`; `argmin` returns the first `False`, which is index 0 whenever any `False` exists, giving `pt = 300` always. The docstring says "the maximal value ... that has at least one sample with higher velocity", i.e. the first `True`, i.e. `np.argmax`. As written the documented adaptive initialisation never happens.
@@ -260,18 +260,18 @@ chunks_below_pt = [ch[num_edge_sample_to_drop: -num_edge_sample_to_drop] for ch 
 **D-6 · MED · Savitzky-Golay window length may be even**
 `_velocities_and_accelerations:1026` computes `ws = round(filter_duration_ms * sr / 1000)` and passes it straight to `savgol_filter`. *Confirmed:* at 100 Hz the default 20 ms filter gives `ws = 2`, which fails the `ws <= polyorder` guard and raises `RuntimeError`, so `NHDetector` is simply unusable at low sampling rates. Force an odd window and pick a minimum that satisfies the polyorder constraint. The raised message also exposes D-9 verbatim: it prints the literal text `{self.sr}Hz`.
 
-**D-7 · LOW · `.max()` on possibly-empty / NaN-containing slices** — `_detect_psos:1197` uses `v[a:b].max()`; an empty slice raises `ValueError`, a NaN makes the comparison silently False. Use `np.nanmax` with an emptiness guard.
+**D-7 · LOW · `.max()` on possibly-empty / NaN-containing slices** - `_detect_psos:1197` uses `v[a:b].max()`; an empty slice raises `ValueError`, a NaN makes the comparison silently False. Use `np.nanmax` with an emptiness guard.
 
-**D-8 · LOW · Unbounded fallback in the onset search** — if `__find_local_minimum_index(..., move_back=True)` finds nothing it returns `0`, and `_classify_samples` then labels `[0, offset_idx)` as one giant saccade.
+**D-8 · LOW · Unbounded fallback in the onset search** - if `__find_local_minimum_index(..., move_back=True)` finds nothing it returns `0`, and `_classify_samples` then labels `[0, offset_idx)` as one giant saccade.
 
-**D-9 · NIT** — missing `f` prefix on the error string at `Detector.py:1029-1030` (prints a literal `{self.sr}`); `ws` described as "ms" in the message but is in samples; `num_edge_sample_to_drop` computes `duration_ms // 3` then converts, while the docstring says `min_saccade_samples // 3`.
+**D-9 · NIT** - missing `f` prefix on the error string at `Detector.py:1029-1030` (prints a literal `{self.sr}`); `ws` described as "ms" in the message but is in samples; `num_edge_sample_to_drop` computes `duration_ms // 3` then converts, while the docstring says `min_saccade_samples // 3`.
 
 ### IDT / IDVT
 
 **D-10 · MED · The last `window_size - 1` samples are never labelled**
 `IDTDetector._detect_impl:493` loops `while end_idx <= len(t)`, so a tail of `window_size - 1` samples can never be reached.
 *Confirmed:* on a 300-sample 500 Hz trace ending in high dispersion, `ws = 28` and the last **27** samples come back `UNDEFINED`, both from `_detect_impl` directly and after the full `detect()` post-processing (`merge_chunks` / `reset_short_chunks` do not rescue them, since the trailing chunk is longer than `min_event_samples`).
-*Trigger condition:* only when the loop exits from the non-fixation branch. A trace ending inside an expanding fixation window has its tail covered by the final `labels[start_idx:end_idx]` write, so this does not fire on every trial — it fires on trials ending in a saccade or in high-dispersion data.
+*Trigger condition:* only when the loop exits from the non-fixation branch. A trace ending inside an expanding fixation window has its tail covered by the final `labels[start_idx:end_idx]` write, so this does not fire on every trial - it fires on trials ending in a saccade or in high-dispersion data.
 
 **D-11 · MED · IDVT classifies undefined-velocity samples as smooth pursuit**
 `Detector.py:624`: `is_smooth_pursuit = ~is_fixation & ~is_saccade`. `calculate_velocities` returns NaN for the first sample and for every sample adjacent to a blink, so those are neither fixation nor saccade and fall into smooth pursuit by default. *Fix:* require a finite velocity, or make smooth pursuit an explicit positive condition.
@@ -284,9 +284,9 @@ chunks_below_pt = [ch[num_edge_sample_to_drop: -num_edge_sample_to_drop] for ch 
 **D-13 · MED · Detector defaults are frozen at import and drift from `set_event_configurations`**
 `_DEFAULT_WINDOW_DURATION`, `_DEFAULT_MIN_SACCADE_DURATION_MS`, `_DEFAULT_MIN_FIXATION_DURATION_MS`, `_DEFAULT_MAX_PSO_DURATION_MS`, NH's `_DEFAULT_FILTER_DURATION_MS`, and REMoDNaV's four config-derived defaults are all evaluated at class-definition time from `cnfg.EVENT_MAPPING`. `set_event_configurations(...)` mutates that dict but the class attributes never update, contradicting docstrings such as "Default is the minimal fixation duration from the configuration file". *Fix:* resolve these inside `get_default_params()` / `__init__` using a `None` sentinel.
 
-**D-14 · LOW · Docstring/code mismatch on the IDVT dispersion default** — the docstring says "Default is 2.0 DVA, as used in ... Komogortsev & Karpov (2013)", but the signature uses `IDTDetector._DEFAULT_DISPERSION_THRESHOLD = 0.5`.
+**D-14 · LOW · Docstring/code mismatch on the IDVT dispersion default** - the docstring says "Default is 2.0 DVA, as used in ... Komogortsev & Karpov (2013)", but the signature uses `IDTDetector._DEFAULT_DISPERSION_THRESHOLD = 0.5`.
 
-**D-15 · NIT** — `IDTDetector._calculate_dispersion_length_px` is dead code (and uses non-nan-aware `max`/`min`); `_calculate_window_size_samples`'s error messages print a sample count labelled "ms"; `__DEFAULT_WINDOW_DURATION_STR` is a key name, not a default.
+**D-15 · NIT** - `IDTDetector._calculate_dispersion_length_px` is dead code (and uses non-nan-aware `max`/`min`); `_calculate_window_size_samples`'s error messages print a sample count labelled "ms"; `__DEFAULT_WINDOW_DURATION_STR` is a key name, not a default.
 
 ### Engbert
 
@@ -298,7 +298,7 @@ chunks_below_pt = [ch[num_edge_sample_to_drop: -num_edge_sample_to_drop] for ch 
 
 **D-18 · LOW · Pure-Python O(n*ws) loop** for axial velocities. A `cumsum`-based sliding sum, or `np.convolve` with a `[+1...0...-1]` kernel, is a one-liner and orders of magnitude faster on long recordings.
 
-**D-19 · NIT** — metadata keys are inconsistent: `"x_threshold_velocity_pxs"` versus `"y_threshold_velocity_px"`.
+**D-19 · NIT** - metadata keys are inconsistent: `"x_threshold_velocity_pxs"` versus `"y_threshold_velocity_px"`.
 
 ### BaseDetector / REMoDNaV
 
@@ -310,17 +310,17 @@ chunks_below_pt = [ch[num_edge_sample_to_drop: -num_edge_sample_to_drop] for ch 
 **FIXED** in `0136921`.
 `_detect_blinks:210-212`: `start = max(0, i - pad)` but `end = min(len, i + pad)`, and the slice end is exclusive, so `pad` samples are added before but only `pad - 1` after. Use `i + pad + 1`. The whole loop is also O(n*pad); `scipy.ndimage.binary_dilation` does it in one call.
 
-**D-22 · LOW · REMoDNaV skips all parameter validation** **[FIXED `0136921`]** — every other detector validates its arguments in `__init__`; `REMoDNaVDetector.__init__:1400-1417` validates none.
+**D-22 · LOW · REMoDNaV skips all parameter validation** **[FIXED `0136921`]** - every other detector validates its arguments in `__init__`; `REMoDNaVDetector.__init__:1400-1417` validates none.
 
-**D-23 · LOW · The remodnav logger level is raised globally and never restored** **[FIXED `0136921`]** — `Detector.py:1450-1452`, when `show_warnings=False`. Use a context manager, or restore the prior level.
+**D-23 · LOW · The remodnav logger level is raised globally and never restored** **[FIXED `0136921`]** - `Detector.py:1450-1452`, when `show_warnings=False`. Use a context manager, or restore the prior level.
 
-**D-24 · LOW · REMoDNaV writes label spans inclusively (`[start:end+1]`) while NH writes them exclusively** — consecutive events overlap by one sample and the later one wins. Pick one convention (see C-10).
+**D-24 · LOW · REMoDNaV writes label spans inclusively (`[start:end+1]`) while NH writes them exclusively** - consecutive events overlap by one sample and the later one wins. Pick one convention (see C-10).
 
 **D-25 · LOW · `detect()` never checks that `t` is monotonic**, and `calculate_sampling_rate` uses the *mean* inter-sample interval, so a single gap silently distorts the sampling rate used for every duration-to-samples conversion.
 
-**D-26 · LOW · Detector objects carry per-call state (`self._sr`, `self._metadata`)** — not reentrant or thread-safe; parallelising over trials with a shared detector will interleave.
+**D-26 · LOW · Detector objects carry per-call state (`self._sr`, `self._metadata`)** - not reentrant or thread-safe; parallelising over trials with a shared detector will interleave.
 
-**D-27 · NIT · `dtype=EventLabelEnum` in `np.full_like` / `np.asarray`** (`Detector.py:78`, and in each `_detect_impl`) is not a numpy dtype. *Confirmed on numpy 2.5.2:* it resolves to **`dtype=object`**, so every label array carries per-element Python objects and every mask operation on it dispatches through Python — which is presumably why the `[parse_label(l) for l in labels]` clean-up exists at `Detector.py:88`. It does not raise, so this is a memory and performance cost rather than a crash. Prefer an explicit integer dtype and convert once at the boundary.
+**D-27 · NIT · `dtype=EventLabelEnum` in `np.full_like` / `np.asarray`** (`Detector.py:78`, and in each `_detect_impl`) is not a numpy dtype. *Confirmed on numpy 2.5.2:* it resolves to **`dtype=object`**, so every label array carries per-element Python objects and every mask operation on it dispatches through Python - which is presumably why the `[parse_label(l) for l in labels]` clean-up exists at `Detector.py:88`. It does not raise, so this is a memory and performance cost rather than a crash. Prefer an explicit integer dtype and convert once at the boundary.
 
 ## 3. Metrics
 
@@ -331,9 +331,9 @@ chunks_below_pt = [ch[num_edge_sample_to_drop: -num_edge_sample_to_drop] for ch 
 **FIXED** in `b38b390`.
 `_signal_detection_metrics.py:117` calls `max(threshold) + 1`; the `isinstance(threshold, int)` to `[threshold]` normalisation is at `:122`, five lines later. `onset_detection_metrics(gt, pred, threshold=5)`, the documented scalar form (`:33` "int or array-like of int"), raises `TypeError: 'int' object is not iterable`. Move the normalisation above the `timing_differences` call. Note a numpy scalar (`np.int64`) fails at the *other* branch, so widen the check to `numbers.Integral`.
 
-**M-3 · LOW · `N` is a non-integer window count** — `:130` computes `n = (len(gt_channel) - (2t+1)*p) / (2t+1)` as a float and feeds it to `dprime_and_criterion` as if it were a count. The `TODO` at `:95` about false-alarm rates exceeding 1 is the visible symptom of this framing; worth documenting the derivation.
+**M-3 · LOW · `N` is a non-integer window count** - `:130` computes `n = (len(gt_channel) - (2t+1)*p) / (2t+1)` as a float and feeds it to `dprime_and_criterion` as if it were a count. The `TODO` at `:95` about false-alarm rates exceeding 1 is the visible symptom of this framing; worth documenting the derivation.
 
-**M-4 · NIT** — the sign convention of `timing_differences` (`pred_idx - gt_idx`) is not stated in the docstring.
+**M-4 · NIT** - the sign convention of `timing_differences` (`pred_idx - gt_idx`) is not stated in the docstring.
 
 ### `peyes/sample_metrics/` and `peyes/_utils/metric_utils.py`
 
@@ -352,11 +352,11 @@ chunks_below_pt = [ch[num_edge_sample_to_drop: -num_edge_sample_to_drop] for ch 
 **FIXED** in `ef72404`.
 `metric_utils.py:28`: `unstack(fill_value=0)` produces only rows/columns for labels present in the sequence, so matrices from different detectors have different shapes and cannot be stacked, subtracted, or compared. Reindex to `list(EventLabelEnum)`. It also raises on sequences shorter than 2.
 
-**M-9 · LOW · `confusion_matrix` passes `list(set(...))` as `labels`** (`_counts_and_matrices.py:291`) — silently deduplicates and discards the caller's ordering. `list(dict.fromkeys(...))` preserves both.
+**M-9 · LOW · `confusion_matrix` passes `list(set(...))` as `labels`** (`_counts_and_matrices.py:291`) - silently deduplicates and discards the caller's ordering. `list(dict.fromkeys(...))` preserves both.
 
-**M-10 · LOW · Return type varies with the number of requested metrics** — `calculate(...)` returns a bare float for one metric and a dict for several (`_calculate_metrics.py:183`); the same pattern is in `event_metrics.get_features` and `match_metrics.get_features`. Callers must special-case. Also `results` is keyed by the caller's raw string, so requesting the same metric twice collapses to one entry and silently changes the return *type*.
+**M-10 · LOW · Return type varies with the number of requested metrics** - `calculate(...)` returns a bare float for one metric and a dict for several (`_calculate_metrics.py:183`); the same pattern is in `event_metrics.get_features` and `match_metrics.get_features`. Callers must special-case. Also `results` is keyed by the caller's raw string, so requesting the same metric twice collapses to one entry and silently changes the return *type*.
 
-**M-11 · LOW · The whole of `calculate()` runs under `warnings.simplefilter("ignore", UserWarning)`** — this suppresses sklearn's "ill-defined metric" warnings, which are exactly the signal a user needs when a class is absent.
+**M-11 · LOW · The whole of `calculate()` runs under `warnings.simplefilter("ignore", UserWarning)`** - this suppresses sklearn's "ill-defined metric" warnings, which are exactly the signal a user needs when a class is absent.
 
 **M-12 · LOW · `normalized_levenshtein_distance` divides by `len(gt)` with no zero guard.**
 
@@ -372,7 +372,7 @@ chunks_below_pt = [ch[num_edge_sample_to_drop: -num_edge_sample_to_drop] for ch 
 **FIXED** in `ee3e62b`.
 `_get_features.py:27-29`: the `if aggregated.empty: return` early-exit happens before `count` is assigned. `visualize.event_summary` with `show_outliers=True` and no outliers then raises `KeyError: 'count'` at `_event_summary.py:70`.
 
-**M-14 · LOW · `get_features` supports only 6 of the 19 features `summary()` produces** — no `peak_velocity`, `dispersion`, `ellipse_area` and so on, though `feature_relationship` reads them straight off the summary frame. The two feature vocabularies should be unified.
+**M-14 · LOW · `get_features` supports only 6 of the 19 features `summary()` produces** - no `peak_velocity`, `dispersion`, `ellipse_area` and so on, though `feature_relationship` reads them straight off the summary frame. The two feature vocabularies should be unified.
 
 **M-15 · NIT · `feature_lower.removesuffix('s')`** (`_get_features.py:60`) mangles any feature name legitimately ending in `s`.
 
@@ -388,7 +388,7 @@ chunks_below_pt = [ch[num_edge_sample_to_drop: -num_edge_sample_to_drop] for ch 
 **FIXED** in `26a44b5`.
 `_match_evaluation.py:200`: `tp = len([e for e in matches.values() if e.label in positive_label])`. When cross-matching is enabled a negative-label GT event can be matched to a positive-label prediction and still be counted as a true positive. Check both sides via `matches.items()`.
 
-**M-18 · LOW · `match_ratio` assumes one-to-one matches** **[FIXED `ee3e62b`]** — `matches.values()` yields lists under `reduction="all"`, and `.label` then fails. Given B-1 routes `"offset difference"` into exactly that path, this is reachable.
+**M-18 · LOW · `match_ratio` assumes one-to-one matches** **[FIXED `ee3e62b`]** - `matches.values()` yields lists under `reduction="all"`, and `.label` then fails. Given B-1 routes `"offset difference"` into exactly that path, this is reachable.
 
 ## 4. Visualization (`peyes/visualize/`, `peyes/_utils/visualization_utils.py`)
 
@@ -429,23 +429,23 @@ frames = create_frames(x, y, labels, resolution, bg_image, bg_image_format, labe
 **FIXED** in `ee3e62b`.
 `_gaze.py:277`: `counts[int(y_), int(x_)] = count`. Coordinates outside the screen either raise `IndexError` or, for negatives, wrap silently to the opposite edge, putting off-screen gaze in the wrong place on the heatmap. Filter to the valid range first.
 
-**V-8 · MED · Video colours are channel-swapped** **[FIXED `b48f8ee`]** — `get_label_colormap` returns RGB tuples, but the frame is BGRA (`create_image` converts everything to BGRA) and `cv2.circle` expects BGR. Gaze markers render with R and B exchanged. Convert at the call site in `_video.py:376-377`.
+**V-8 · MED · Video colours are channel-swapped** **[FIXED `b48f8ee`]** - `get_label_colormap` returns RGB tuples, but the frame is BGRA (`create_image` converts everything to BGRA) and `cv2.circle` expects BGR. Gaze markers render with R and B exchanged. Convert at the call site in `_video.py:376-377`.
 
-**V-9 · LOW · `_visualize_gaze_trajectory`'s own default `marker_color` is unusable** — `_gaze.py:212`: `np.full_like(x, "#000000")` tries to parse a hex string into a float array. Only `gaze_trajectory`'s always-array `marker_color=t` keeps the public path alive.
+**V-9 · LOW · `_visualize_gaze_trajectory`'s own default `marker_color` is unusable** - `_gaze.py:212`: `np.full_like(x, "#000000")` tries to parse a hex string into a float array. Only `gaze_trajectory`'s always-array `marker_color=t` keeps the public path alive.
 
 **V-10 · LOW · `gaze_over_time` reads `vert_line_color` but documents `vert_line_colors`** (`_gaze.py:154` versus `:105`), so the documented keyword is silently ignored. The loop at `:158` also rebinds `v`, shadowing the velocity parameter. The x-axis is labelled `"time (sample)"` though `t` is in ms.
 
-**V-11 · LOW · Unguarded divisions in figure code** — `_gaze.py:57` (flat heatmap gives 0/0), `_gaze.py:148` (`xy_max / v_max` with `v_max == 0`), `_features.py:465` (`px.get_trendline_results` when no trendline was requested) **[verify]**.
+**V-11 · LOW · Unguarded divisions in figure code** - `_gaze.py:57` (flat heatmap gives 0/0), `_gaze.py:148` (`xy_max / v_max` with `v_max == 0`), `_features.py:465` (`px.get_trendline_results` when no trendline was requested) **[verify]**.
 
-**V-12 · LOW · `_write_video` calls `os.makedirs(os.path.dirname(output_path))`** **[FIXED `b48f8ee`]** — `dirname` of a bare filename is `""`, which raises `FileNotFoundError`.
+**V-12 · LOW · `_write_video` calls `os.makedirs(os.path.dirname(output_path))`** **[FIXED `b48f8ee`]** - `dirname` of a bare filename is `""`, which raises `FileNotFoundError`.
 
-**V-13 · LOW · `gaze_heatmap`'s `scale` keyword has no effect** — `_gaze.py:54-57` multiplies the counts by `scale` and then min-max normalises, cancelling it exactly. Either remove the keyword or apply it after normalisation.
+**V-13 · LOW · `gaze_heatmap`'s `scale` keyword has no effect** - `_gaze.py:54-57` multiplies the counts by `scale` and then min-max normalises, cancelling it exactly. Either remove the keyword or apply it after normalisation.
 
 **V-14 · LOW · `_create_single_event_figure` indexes `events[0]` without an emptiness guard** (`_event_summary.py:183`); `show_legend=i == 1` (`:214`) silently assumes `num_cols == 2`.
 
-**V-15 · NIT · `get_label_colormap` does not parse its keys** — a user passing `{"fixation": "#abc123"}` gets no override, because the defaults are keyed by `EventLabelEnum`. Run keys through `parse_label`.
+**V-15 · NIT · `get_label_colormap` does not parse its keys** - a user passing `{"fixation": "#abc123"}` gets no override, because the defaults are keyed by `EventLabelEnum`. Run keys through `parse_label`.
 
-**V-16 · NIT · Open `TODO`s** — `_gaze.py:14` (labelled x-y trajectory figure, never implemented) and `_features.py:461` (`color_discrete_map` for default event colours; this is also the cleanest fix for V-6's cousin in `feature_relationship`).
+**V-16 · NIT · Open `TODO`s** - `_gaze.py:14` (labelled x-y trajectory figure, never implemented) and `_features.py:461` (`color_discrete_map` for default event colours; this is also the cleanest fix for V-6's cousin in `feature_relationship`).
 
 ## 5. Datasets (`peyes/_DataModels/DatasetLoader.py`)
 
@@ -468,11 +468,11 @@ Same block, `:472`: `interp1d(..., bounds_error=False, fill_value="extrapolate")
 **S-5 · LOW · Lund2013 merges raters by index alignment**
 `:219`: `existing_df.loc[:, rater] = gaze_data.loc[:, rater]`. If two raters' files for the same trial differ in length, pandas aligns on the index and silently fills NaN rather than failing.
 
-**S-6 · LOW · `load()` uses exception flow for the cache-miss path** — `:45-52` catches only `FileNotFoundError`/`TypeError`, so a truncated or unpickleable cache file propagates an opaque error. Check `directory` explicitly and `os.path.isfile` first. Note also that this path calls `pd.read_pickle` on a caller-supplied path; fine for a cache the package wrote, but worth a docstring caveat.
+**S-6 · LOW · `load()` uses exception flow for the cache-miss path** - `:45-52` catches only `FileNotFoundError`/`TypeError`, so a truncated or unpickleable cache file propagates an opaque error. Check `directory` explicitly and `os.path.isfile` first. Note also that this path calls `pd.read_pickle` on a caller-supplied path; fine for a cache the package wrote, but worth a docstring caveat.
 
-**S-7 · LOW · `GazeComDatasetLoader.load_zipfile` uses `posixpath` for filesystem paths** (`:351-355`) — works on Windows by accident (`os.stat` tolerates mixed separators) but should be `os.path`.
+**S-7 · LOW · `GazeComDatasetLoader.load_zipfile` uses `posixpath` for filesystem paths** (`:351-355`) - works on Windows by accident (`os.stat` tolerates mixed separators) but should be `os.path`.
 
-**S-8 · NIT** — `download()` validates via `cls.url()` then requests `cls._URL` (`:65-66`); `tqdm(enumerate(...))` in all four loaders yields no progress percentage (wrap the sequence, not the enumerate).
+**S-8 · NIT** - `download()` validates via `cls.url()` then requests `cls._URL` (`:65-66`); `tqdm(enumerate(...))` in all four loaders yields no progress percentage (wrap the sequence, not the enumerate).
 
 ## 6. Packaging, tests, and repo hygiene
 
@@ -480,7 +480,7 @@ Same block, `:472`: `interp1d(..., bounds_error=False, fill_value="extrapolate")
 
 **FIXED** in `0c577e1`.
 
-- `authors` entries carry a `website` key. PEP 621 permits only `name` and `email` in `authors`. Move the URL into `[project.urls]`. **[verify]** — `hatchling` is not installed in the available venv, so whether it hard-rejects the key or silently drops it is still untested; run `python -m build` to settle it.
+- `authors` entries carry a `website` key. PEP 621 permits only `name` and `email` in `authors`. Move the URL into `[project.urls]`. **[verify]** - `hatchling` is not installed in the available venv, so whether it hard-rejects the key or silently drops it is still untested; run `python -m build` to settle it.
 - **No `requires-python`** (confirmed absent from `pyproject.toml`). The package uses `str.removesuffix` (3.9+) and PEP 585 builtin generics in annotations; pip will happily install it on 3.8 and fail at import. Add `requires-python = ">=3.12"` to match the README.
 - **Version pins are effectively unbounded below.** `numpy~=1.2` means `>=1.2, <2`, i.e. it admits numpy 1.2 (2008) and *excludes* numpy 2.x, which the issue reporters are actually running. Same shape for `scipy~=1.1`, `statsmodels~=0.1` (`>=0.1, <1`), `python-Levenshtein~=0.2`. Pin to the minor versions actually tested (`numpy~=1.26`, etc.) and decide explicitly about numpy 2.
 - `scikit_posthocs` is not imported anywhere under `peyes/`; it is an `analysis/` dependency and should not be a runtime requirement of the installed package. (`statsmodels` *is* needed, transitively, for plotly's `trendline="ols"`; worth a comment saying so.)
@@ -494,12 +494,12 @@ Same block, `:472`: `interp1d(..., bounds_error=False, fill_value="extrapolate")
 
 **FIXED** in `56d9a5d`.
 `tests/unit_tests/utils/test_pixel_utils.py:44` asserts `np.isclose(0.027844, calculate_pixel_size(TOBII_WIDTH, TOBII_HEIGHT, TOBII_RESOLUTION))`. The actual value is **0.0276855**; the test fails.
-`calculate_pixel_size` is not at fault — the two exact assertions above it in the same test (`1x1 @ 1x1 -> 1`, `1x1 @ 2x2 -> 0.5`) pass, and `53.1 x 30.0 cm` over `1920 x 1080` genuinely gives 0.0276855 (a 60.99 cm diagonal). The literal `0.027844` corresponds to a 61.34 cm diagonal and matches no configured geometry. `git log -L` shows `TOBII_WIDTH, TOBII_HEIGHT = 53.1, 30.0` was introduced once and never changed, so the constant is not the thing that drifted — the expected value was simply wrong when written. Replace it with the computed value, or assert against the formula rather than a literal.
+`calculate_pixel_size` is not at fault - the two exact assertions above it in the same test (`1x1 @ 1x1 -> 1`, `1x1 @ 2x2 -> 0.5`) pass, and `53.1 x 30.0 cm` over `1920 x 1080` genuinely gives 0.0276855 (a 60.99 cm diagonal). The literal `0.027844` corresponds to a 61.34 cm diagonal and matches no configured geometry. `git log -L` shows `TOBII_WIDTH, TOBII_HEIGHT = 53.1, 30.0` was introduced once and never changed, so the constant is not the thing that drifted - the expected value was simply wrong when written. Replace it with the computed value, or assert against the formula rather than a literal.
 
-**T-6 · NIT · Stray `print()` in the test suite** **[FIXED `56d9a5d`]** — `tests/unit_tests/utils/test_pixel_utils.py:74` prints a velocity array on every run.
+**T-6 · NIT · Stray `print()` in the test suite** **[FIXED `56d9a5d`]** - `tests/unit_tests/utils/test_pixel_utils.py:74` prints a velocity array on every run.
 
 **T-2 · HIGH · Test coverage is confined to `_utils` and `Event`**
-Measured on this branch: **28 tests across 6 modules, 2 failing** (T-1, T-5), one module (`test_visualization_utils`) running zero tests. There are no tests at all for `Detector` (1548 lines, seven algorithms), `EventMatcher`, `DatasetLoader`, any of the four metrics packages, `_base/{create,match,parse,postprocess_events,set_config}.py`, or `visualize/` — which is precisely where the CRIT/HIGH findings above live. Highest-value additions, in order:
+Measured on this branch: **28 tests across 6 modules, 2 failing** (T-1, T-5), one module (`test_visualization_utils`) running zero tests. There are no tests at all for `Detector` (1548 lines, seven algorithms), `EventMatcher`, `DatasetLoader`, any of the four metrics packages, `_base/{create,match,parse,postprocess_events,set_config}.py`, or `visualize/` - which is precisely where the CRIT/HIGH findings above live. Highest-value additions, in order:
 
 1. A labels-to-events-to-labels round-trip (catches C-2, C-3, C-10).
 2. `create_boolean_channel` onset/offset parity between the labels path and the events path (C-3, C-15, C-16).
@@ -512,11 +512,11 @@ Measured on this branch: **28 tests across 6 modules, 2 failing** (T-1, T-5), on
 **FIXED** in `57637af`.
 `tests/` and its subpackages have no `__init__.py`, so `python -m unittest discover -s tests` reports the start directory as not importable (already noted in `CLAUDE.md`). Add the `__init__.py` files, or migrate to pytest; the latter also gives parametrisation, which would compress the detector matrix considerably.
 
-**T-4 · MED · Empty test stubs presented as passing** **[FIXED `56d9a5d`]** — `test_event.py::test_make` is `self.assertTrue(True)` under a `# TODO`, and `test_visualization_utils.py` is an empty class. These inflate the apparent test count.
+**T-4 · MED · Empty test stubs presented as passing** **[FIXED `56d9a5d`]** - `test_event.py::test_make` is `self.assertTrue(True)` under a `# TODO`, and `test_visualization_utils.py` is an empty class. These inflate the apparent test count.
 
-**P-2 · MED · No linter, formatter, or CI** **[FIXED `a18c2d8`]** — nothing in the repo would have caught V-1 (argument misalignment), D-9 (missing `f` prefix), or B-1/B-5 (dead comparison branches), all of which `ruff` flags by default. A minimal GitHub Actions job running the test suite on 3.12 plus `ruff check` would be high-leverage.
+**P-2 · MED · No linter, formatter, or CI** **[FIXED `a18c2d8`]** - nothing in the repo would have caught V-1 (argument misalignment), D-9 (missing `f` prefix), or B-1/B-5 (dead comparison branches), all of which `ruff` flags by default. A minimal GitHub Actions job running the test suite on 3.12 plus `ruff check` would be high-leverage.
 
-**P-3 · NIT · `constants.py:47` `TODO: replace these with enum`** — `IMAGE_STR`/`VIDEO_STR`/`MOVING_DOT_STR` are compared as bare strings in `DatasetLoader.__extract_metadata`; a `StrEnum` would make the stimulus-type vocabulary discoverable.
+**P-3 · NIT · `constants.py:47` `TODO: replace these with enum`** - `IMAGE_STR`/`VIDEO_STR`/`MOVING_DOT_STR` are compared as bare strings in `DatasetLoader.__extract_metadata`; a `StrEnum` would make the stimulus-type vocabulary discoverable.
 
 ## 7. Upstream issue status
 
@@ -524,10 +524,10 @@ Measured on this branch: **28 tests across 6 modules, 2 failing** (T-1, T-5), on
 |---|---|
 | [#24] `summary()` omits `start_pixel`/`end_pixel` | **Fixed** in `0825efd` (C-5): added as four scalar columns. Ready to close. |
 | [#25] `summarize_events([])` has no columns | **Fixed** in `0825efd` (C-12), and the downstream `features_by_labels` case in `ee3e62b` (M-13). Ready to close. |
-| [#26] `get_outlier_reasons` ignores velocity/acceleration/dispersion | **Open** — see C-6. The call-time caveat is now documented, but the checks are unimplemented and `is_outlier` gates article figures, so it belongs to phase E. |
+| [#26] `get_outlier_reasons` ignores velocity/acceleration/dispersion | **Open** - see C-6. The call-time caveat is now documented, but the checks are unimplemented and `is_outlier` gates article figures, so it belongs to phase E. |
 | [#27] `summary()` re-derives `outlier_reasons` from mutable config | **Fixed** in `0825efd` (C-7): documented on `summary()` as the issue asked. Ready to close. |
-| [#18] python-poppler breaks installation | **Appears resolved** — `python-poppler` is no longer in `pyproject.toml` dependencies. Worth closing, or reopening against P-1 if it regressed. |
-| [#15] kaleido hangs on `write_image` | **Worked around** — pinned to `kaleido==0.1.0post1` with the `TODO` comment retained. Revisit now that kaleido 1.x exists. |
+| [#18] python-poppler breaks installation | **Appears resolved** - `python-poppler` is no longer in `pyproject.toml` dependencies. Worth closing, or reopening against P-1 if it regressed. |
+| [#15] kaleido hangs on `write_image` | **Worked around** - pinned to `kaleido==0.1.0post1` with the `TODO` comment retained. Revisit now that kaleido 1.x exists. |
 
 ## 8. Impact on the published results
 
@@ -552,10 +552,10 @@ One structural point applies throughout: **a bug that raises cannot have silentl
 | **V-4, V-5** | MED | AppendixA scarfplot | Colours and colourbar ticks; appearance only, no numbers. |
 | **D-20** | MED | Recorded detector metadata | Detectors are built once and reused across all trials, so `_metadata` carries stale keys. Affects the saved metadata, not the detections. |
 
-**Conditional — depends on run configuration, worth checking:**
+**Conditional - depends on run configuration, worth checking:**
 
 - **M-6 / M-7** (multi-label d-prime and the all-labels default) matter only if a run passed more than one positive label. The pipeline supports it (`temporal_alignment.py:127`, `sample_metrics.py:31`), so check the `pos_labels` each published run used.
-- **D-17** (Engbert negative variance) would have made a trial come out all-saccade — visibly wrong rather than subtly wrong, so it probably did not fire, but it is not provably excluded.
+- **D-17** (Engbert negative variance) would have made a trial come out all-saccade - visibly wrong rather than subtly wrong, so it probably did not fire, but it is not provably excluded.
 
 ### 8b. Cannot have reached the published results
 
@@ -598,57 +598,57 @@ Beyond sequencing convenience, this order has a technical advantage: phases A–
 
 Two deliberate departures from a strict §8b-then-§8a split: the **C-1 diagnostic** is pulled forward into phase A (it is read-only and changes nothing), and the **article-neutral `NHDetector` findings** are pushed back into phase E to keep that class to a single branch.
 
-**`NHDetector` is exempt from phases B–D.** All NH work is deferred to phase E, including the two article-neutral NH findings (D-1, D-3) — see "The NH exemption" below.
+**`NHDetector` is exempt from phases B–D.** All NH work is deferred to phase E, including the two article-neutral NH findings (D-1, D-3) - see "The NH exemption" below.
 
-### Phase A — environment, test suite, and the C-1 diagnostic
+### Phase A - environment, test suite, and the C-1 diagnostic
 
 Nothing else can be verified until this is done; the venv at `<repo>/.venv` currently holds only `pip` and is Python 3.14.
 
 1. Create a working 3.12 environment and `pip install -e .`.
-2. **Run the C-1 confirmation test — read-only, commits to nothing.** Check `max(peak_velocity)` across the saccade features already generated for the article. A ceiling at 180 deg/s confirms C-1 from existing outputs, with no re-run and no code change. Running it here rather than in phase E means the phase-E decision is made with the answer already in hand instead of as an open question, and the result may reasonably change how much of phase E you schedule.
-3. **T-3** — add `__init__.py` to `tests/` and its subpackages so `unittest discover` runs at all.
-4. **T-1** — fix the `"FIXATION(19.00ms)"` expectation so the suite is green and a red result means something.
-5. **T-5** — the second red test: replace the stale `0.027844` literal in `test_pixel_utils` with the computed value. **T-6** — drop the stray `print()` at line 74.
-6. **T-4** — delete or implement the two empty stubs (`test_make`, `TestVisualizationUtils`).
-7. **P-1** — add `requires-python = ">=3.12"`, drop the non-PEP-621 `website` key, tighten the version pins, remove `scikit_posthocs` from runtime deps.
-8. **P-2** — add `ruff` and a CI job. Do this *before* phase B: ruff flags V-1, D-9 and B-5 automatically, and will keep catching that class of bug for free.
+2. **Run the C-1 confirmation test - read-only, commits to nothing.** Check `max(peak_velocity)` across the saccade features already generated for the article. A ceiling at 180 deg/s confirms C-1 from existing outputs, with no re-run and no code change. Running it here rather than in phase E means the phase-E decision is made with the answer already in hand instead of as an open question, and the result may reasonably change how much of phase E you schedule.
+3. **T-3** - add `__init__.py` to `tests/` and its subpackages so `unittest discover` runs at all.
+4. **T-1** - fix the `"FIXATION(19.00ms)"` expectation so the suite is green and a red result means something.
+5. **T-5** - the second red test: replace the stale `0.027844` literal in `test_pixel_utils` with the computed value. **T-6** - drop the stray `print()` at line 74.
+6. **T-4** - delete or implement the two empty stubs (`test_make`, `TestVisualizationUtils`).
+7. **P-1** - add `requires-python = ">=3.12"`, drop the non-PEP-621 `website` key, tighten the version pins, remove `scikit_posthocs` from runtime deps.
+8. **P-2** - add `ruff` and a CI job. Do this *before* phase B: ruff flags V-1, D-9 and B-5 automatically, and will keep catching that class of bug for free.
 
-### Phase B — public entry points that cannot work
+### Phase B - public entry points that cannot work
 
 Crash-on-first-use bugs. Each is a few lines, each is trivially unit-testable, and none can touch the article because none of it was ever called.
 
-9. **V-1** — `create_video` argument misalignment. `peyes.visualization.create_video` has never worked for anyone.
-10. **V-2** — `create_image` dereferencing `image.ndim` before the `None` check. Fixing this unblocks the default path of `gaze_heatmap`, `gaze_trajectory` and `create_frames`.
-11. **V-3, V-8, V-12** — the rest of the video path: NaN samples, RGB/BGR swap, `makedirs("")`.
-12. **M-1** — normalise `threshold` before `max(threshold)`; widen the check to `numbers.Integral` while you are there.
-13. **C-4, C-15, C-16** — the `min_num_samples` / `np.nanmin` / bounds-check cluster in `create_boolean_channel`. Fix as one commit; they are the same three lines of neighbourhood.
+9. **V-1** - `create_video` argument misalignment. `peyes.visualization.create_video` has never worked for anyone.
+10. **V-2** - `create_image` dereferencing `image.ndim` before the `None` check. Fixing this unblocks the default path of `gaze_heatmap`, `gaze_trajectory` and `create_frames`.
+11. **V-3, V-8, V-12** - the rest of the video path: NaN samples, RGB/BGR swap, `makedirs("")`.
+12. **M-1** - normalise `threshold` before `max(threshold)`; widen the check to `numbers.Integral` while you are there.
+13. **C-4, C-15, C-16** - the `min_num_samples` / `np.nanmin` / bounds-check cluster in `create_boolean_channel`. Fix as one commit; they are the same three lines of neighbourhood.
 
-### Phase C — silent wrong results in paths the article never used
+### Phase C - silent wrong results in paths the article never used
 
 Live for every downstream user, latent for the article.
 
 14. **C-10 first, and it is a decision, not a fix.** Settle and document whether an n-sample event has duration `n*dt` or `(n-1)*dt`. C-2, C-3 and D-24 all follow from the answer, so fixing them in any other order means doing them twice.
-15. **C-2, C-3** — the two off-by-one bugs, once C-10 is settled. Add the labels→events→labels round-trip test here; it is the single highest-value test in the suite.
-16. **B-1, B-2** — the `"offset difference"` alias typo and the `0` tolerance defaults. Add a test asserting each documented `match_by` alias reaches the matcher it names.
-17. **M-2, M-5, M-8** — `event_rate` denominator, the `corr`/`correction` mix-up, transition-matrix reindexing.
-18. **C-5, C-12** — upstream issues #24 and #25 (`start/end_pixel` in `summary()`; empty-frame schema). Small, and they close two open issues.
-19. **C-8, C-13, C-14** — nan-aware extremum properties, empty guards, return-type honesty.
+15. **C-2, C-3** - the two off-by-one bugs, once C-10 is settled. Add the labels→events→labels round-trip test here; it is the single highest-value test in the suite.
+16. **B-1, B-2** - the `"offset difference"` alias typo and the `0` tolerance defaults. Add a test asserting each documented `match_by` alias reaches the matcher it names.
+17. **M-2, M-5, M-8** - `event_rate` denominator, the `corr`/`correction` mix-up, transition-matrix reindexing.
+18. **C-5, C-12** - upstream issues #24 and #25 (`start/end_pixel` in `summary()`; empty-frame schema). Small, and they close two open issues.
+19. **C-8, C-13, C-14** - nan-aware extremum properties, empty guards, return-type honesty.
 
-### Phase D — robustness and design, still article-neutral
+### Phase D - robustness and design, still article-neutral
 
-20. **C-9** — replace validation `assert`s with `ValueError`.
-21. **C-20** — make `get_chunk_indices` / `merge_chunks` / `reset_short_chunks` agree with `is_one_dimensional`.
-22. **M-16, M-17** — `positive_label=None`, and `tp` counting both sides of a match.
-23. **S-2, S-4** — annotation index clipping; download timeout and streaming.
-24. **D-21, D-22, D-23** — blink-padding asymmetry, REMoDNaV validation, the un-restored logger level. D-21 is in `BaseDetector` and therefore inherited by NH, but its fix is inert at `pad_blinks_time=0` (the article's setting), so it cannot move published numbers and stays in this phase.
-25. **C-17, M-10, D-12** — the design cleanups: detector registry, return-type consistency, the IDVT diamond.
+20. **C-9** - replace validation `assert`s with `ValueError`.
+21. **C-20** - make `get_chunk_indices` / `merge_chunks` / `reset_short_chunks` agree with `is_one_dimensional`.
+22. **M-16, M-17** - `positive_label=None`, and `tp` counting both sides of a match.
+23. **S-2, S-4** - annotation index clipping; download timeout and streaming.
+24. **D-21, D-22, D-23** - blink-padding asymmetry, REMoDNaV validation, the un-restored logger level. D-21 is in `BaseDetector` and therefore inherited by NH, but its fix is inert at `pad_blinks_time=0` (the article's setting), so it cannot move published numbers and stays in this phase.
+25. **C-17, M-10, D-12** - the design cleanups: detector registry, return-type consistency, the IDVT diamond.
 
-### Phase E — deferred: everything that moves published numbers, plus all NH work
+### Phase E - deferred: everything that moves published numbers, plus all NH work
 
 Hold until phases A–D are merged, then take as **one** decision rather than piecemeal.
 
 26. **Decide with the maintainer,** informed by the step-2 diagnostic: do the article's values stand with an erratum, or are the affected analyses regenerated? That single answer governs C-1, D-2, D-16, D-5, D-10, D-11, D-24, C-6/C-7 and V-4/V-5.
-27. **Check the conditionals** (M-6/M-7 — what `pos_labels` did the published runs use? — and D-17) so the decision is made with the full list in hand.
+27. **Check the conditionals** (M-6/M-7 - what `pos_labels` did the published runs use? - and D-17) so the decision is made with the full list in hand.
 28. **All `NHDetector` work, in one branch:** D-2 and D-5 (article-affecting) together with D-1, D-3, D-6, D-7, D-8 (article-neutral, deferred only to keep the class untouched until now).
 29. **If regenerating,** fix the rest of the §8a set in the same branch and re-run once. **D-20** (metadata accumulation) should go in regardless, since it affects only recorded metadata.
 
@@ -702,7 +702,7 @@ the video path and the figure builders. Still nothing exercises `NHDetector`, `E
 
 D-1 and D-2 sit about 25 lines apart inside `_calculate_saccade_thresholds`, and D-3, D-6, D-7 and D-8 are elsewhere in the same class. D-2 and D-5 move published numbers; the rest do not. Rather than edit `NHDetector` in two phases and split the history, **all** NH findings are deferred to phase E and land in one branch.
 
-The cost is that **D-1 stays open the longest of any CRIT finding.** That is a deliberate trade, but it is worth being explicit about what it means for users in the interim: anyone running `NHDetector` at ~100 Hz gets an all-fixation result with no error and no warning. If phase E ends up scheduled far out, consider carving out the single `if num_edge_sample_to_drop > 0:` guard — or even just a warning when `pt` comes out non-finite — as an isolated commit. It touches no article-affecting line and would remove the silent-failure mode without pre-empting the phase-E decision.
+The cost is that **D-1 stays open the longest of any CRIT finding.** That is a deliberate trade, but it is worth being explicit about what it means for users in the interim: anyone running `NHDetector` at ~100 Hz gets an all-fixation result with no error and no warning. If phase E ends up scheduled far out, consider carving out the single `if num_edge_sample_to_drop > 0:` guard - or even just a warning when `pt` comes out non-finite - as an isolated commit. It touches no article-affecting line and would remove the silent-failure mode without pre-empting the phase-E decision.
 
 [#24]: https://github.com/huji-hcnl/pEYES/issues/24
 [#25]: https://github.com/huji-hcnl/pEYES/issues/25
@@ -725,8 +725,8 @@ Run against this branch with `PYTHONPATH` forced to the worktree (the editable `
 | T-5 | `test_calculate_pixel_size` fails: expected `0.027844`, actual `0.0276855` |
 | T-2 | 28 tests / 6 modules, **2 failing**, 1 module with zero tests |
 | C-1 | 21,000 px/s saccade -> `peak_velocity = 156.7`; linear-correct = `555.5`; `pixels_to_visual_angle(1e9) = 180.000` |
-| C-2 | `[F,F,F,S,S]` round-trips to `[1, 1, 0, 2]` — 4 samples, middle sample lost |
-| C-3 | offsets from labels at idx `{2, 4}`; from events at idx `{1, 3}` — off by one, and the two paths disagree |
+| C-2 | `[F,F,F,S,S]` round-trips to `[1, 1, 0, 2]` - 4 samples, middle sample lost |
+| C-3 | offsets from labels at idx `{2, 4}`; from events at idx `{1, 3}` - off by one, and the two paths disagree |
 | C-4 | `TypeError: '>' not supported between instances of 'NoneType' and 'int'` on both `create_boolean_channel` and `events_to_labels` |
 | C-12 | `summarize_events([]).shape == (0, 0)` |
 | C-15 | `AxisError: axis 100 is out of bounds for array of dimension 0` |
@@ -738,17 +738,17 @@ Run against this branch with `PYTHONPATH` forced to the worktree (the editable `
 | D-1 | `num_edge_sample_to_drop` = 2/1/1/0/0/0 at 500/300/200/150/100/60 Hz; `ch[0:-0]` empty. Silent NaN band is ~150-166 Hz (below that, D-6 raises first). |
 | D-2 | `argmin` seeds PT=300; documented `argmax` would seed PT=100 |
 | D-3 | `IndexError: index 5 is out of bounds for axis 0 with size 5` |
-| D-6 | `RuntimeError` at 100 Hz (`ws=2` fails the polyorder guard) — NH unusable at low sampling rates |
+| D-6 | `RuntimeError` at 100 Hz (`ws=2` fails the polyorder guard) - NH unusable at low sampling rates |
 | D-9 | The D-6 message prints the literal text `{self.sr}Hz` |
 | D-10 | 300-sample 500 Hz trace, `ws=28`: trailing **27** samples `UNDEFINED`, before and after post-processing |
-| D-27 | Resolves to `dtype=object` on numpy 2.5.2 — a cost, not a crash |
+| D-27 | Resolves to `dtype=object` on numpy 2.5.2 - a cost, not a crash |
 | V-1 | `create_frames` signature confirmed as `(..., bg_image_format, bg_image_alpha, label_colors, gaze_radius, verbose)` |
 | V-2 | `AttributeError: 'NoneType' object has no attribute 'ndim'` |
-| V-4 | Subset `{FIXATION, SACCADE}` gives bins `[0, 0.5, 0.5, 1.0]`; z-positions 0.2 and 0.4 — both land in bin 0, so saccades render in the fixation colour |
+| V-4 | Subset `{FIXATION, SACCADE}` gives bins `[0, 0.5, 0.5, 1.0]`; z-positions 0.2 and 0.4 - both land in bin 0, so saccades render in the fixation colour |
 | V-6 | 5 and 6 sequences OK; **7 sequences** raise `AttributeError: 'int' object has no attribute 'strip'` |
 | C-26 | `set_viewer_distance(999)` then `FixationEvent(t=...)` gave `_viewer_distance == 60`; signature defaults were `60` / `0.0276855` |
 | P-1 | `requires-python` confirmed absent; installed numpy 2.5.2 violates the declared `numpy~=1.2` pin |
 
-**Still unverified:** the `authors.website` half of P-1 (`hatchling` is not installed — run `python -m build`), V-5 (needs visual inspection), V-11, and the §8a items that need the article's own data rather than synthetic input (C-1's ceiling on real outputs, D-16, D-17, M-6/M-7).
+**Still unverified:** the `authors.website` half of P-1 (`hatchling` is not installed - run `python -m build`), V-5 (needs visual inspection), V-11, and the §8a items that need the article's own data rather than synthetic input (C-1's ceiling on real outputs, D-16, D-17, M-6/M-7).
 
-Not reproduced on a first attempt and then confirmed with a targeted case: **D-10** — a trace ending inside an expanding fixation window has its tail covered, so the bug needs a trace ending in the non-fixation branch. Worth knowing when writing its regression test.
+Not reproduced on a first attempt and then confirmed with a targeted case: **D-10** - a trace ending inside an expanding fixation window has its tail covered, so the bug needs a trace ending in the non-fixation branch. Worth knowing when writing its regression test.

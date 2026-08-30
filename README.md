@@ -46,6 +46,9 @@ env\Scripts\activate  # on Windows; use `source env/bin/activate` on macOS/Linux
 pip install -e .
 ```
 
+Upgrading from 0.1.0? Read [CHANGELOG.md](CHANGELOG.md) first: 0.2.0 is a correctness release, and some
+of its fixes change values that earlier versions returned.
+
 ## Usage
 This package is intended for scientific use, and is designed to be easy to use for anyone with basic python knowledge.  
 Most of the functions in this package are documented, and can be accessed by running:
