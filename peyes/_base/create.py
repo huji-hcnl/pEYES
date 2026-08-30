@@ -77,72 +77,46 @@ def create_detector(
 
     :return: a detector object
     """
-    algorithm_lower = algorithm.lower().strip().replace('-', '').removesuffix('detector')
-    if algorithm_lower == 'ivt':
-        default_params = IVTDetector.get_default_params()
-        return IVTDetector(
-            missing_value=missing_value,
-            min_event_duration=min_event_duration,
-            pad_blinks_ms=pad_blinks_time,
-            name=name,
-            **{k: kwargs.get(k, default_params[k]) for k in default_params.keys()}
+    detector_class = _get_detector_class(algorithm)
+    default_params = detector_class.get_default_params()
+    unknown = set(kwargs) - set(default_params)
+    if unknown:
+        raise TypeError(
+            f"`{detector_class.__name__}` got unexpected keyword argument(s): {sorted(unknown)}. "
+            f"Supported: {sorted(default_params)}"
         )
-    elif algorithm_lower == 'ivvt':
-        default_params = IVVTDetector.get_default_params()
-        return IVVTDetector(
-            missing_value=missing_value,
-            min_event_duration=min_event_duration,
-            pad_blinks_ms=pad_blinks_time,
-            name=name,
-            **{k: kwargs.get(k, default_params[k]) for k in default_params.keys()}
+    return detector_class(
+        missing_value=missing_value,
+        min_event_duration=min_event_duration,
+        pad_blinks_ms=pad_blinks_time,
+        name=name,
+        **{key: kwargs.get(key, default) for key, default in default_params.items()},
+    )
+
+
+_DETECTORS = {
+    "ivt": IVTDetector,
+    "ivvt": IVVTDetector,
+    "idt": IDTDetector,
+    "idvt": IDVTDetector,
+    "engbert": EngbertDetector,
+    "nh": NHDetector,
+    "remodnav": REMoDNaVDetector,
+}
+
+
+def _get_detector_class(algorithm: str) -> type:
+    """ Resolves an algorithm name to its detector class, tolerating spacing, case and a `detector` suffix. """
+    key = algorithm.lower().strip()
+    for ch in ("-", "_", " "):
+        key = key.replace(ch, "")
+    key = key.removesuffix("detector")
+    detector_class = _DETECTORS.get(key)
+    if detector_class is None:
+        raise NotImplementedError(
+            f"Detector `{algorithm}` is not implemented. Available: {sorted(_DETECTORS)}"
         )
-    elif algorithm_lower == 'idt':
-        default_params = IDTDetector.get_default_params()
-        return IDTDetector(
-            missing_value=missing_value,
-            min_event_duration=min_event_duration,
-            pad_blinks_ms=pad_blinks_time,
-            name=name,
-            **{k: kwargs.get(k, default_params[k]) for k in default_params.keys()}
-        )
-    elif algorithm_lower == 'idvt':
-        default_params = IDVTDetector.get_default_params()
-        return IDVTDetector(
-            missing_value=missing_value,
-            min_event_duration=min_event_duration,
-            pad_blinks_ms=pad_blinks_time,
-            name=name,
-            **{k: kwargs.get(k, default_params[k]) for k in default_params.keys()}
-        )
-    elif algorithm_lower == 'engbert':
-        default_params = EngbertDetector.get_default_params()
-        return EngbertDetector(
-            missing_value=missing_value,
-            min_event_duration=min_event_duration,
-            pad_blinks_ms=pad_blinks_time,
-            name=name,
-            **{k: kwargs.get(k, default_params[k]) for k in default_params.keys()}
-        )
-    elif algorithm_lower == 'nh':
-        default_params = NHDetector.get_default_params()
-        return NHDetector(
-            missing_value=missing_value,
-            min_event_duration=min_event_duration,
-            pad_blinks_ms=pad_blinks_time,
-            name=name,
-            **{k: kwargs.get(k, default_params[k]) for k in default_params.keys()}
-        )
-    elif algorithm_lower == 'remodnav':
-        default_params = REMoDNaVDetector.get_default_params()
-        return REMoDNaVDetector(
-            missing_value=missing_value,
-            min_event_duration=min_event_duration,
-            pad_blinks_ms=pad_blinks_time,
-            name=name,
-            **{k: kwargs.get(k, default_params[k]) for k in default_params.keys()}
-        )
-    else:
-        raise NotImplementedError(f'Detector `{algorithm}` is not implemented.')
+    return detector_class
 
 
 def create_events(

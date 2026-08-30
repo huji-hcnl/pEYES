@@ -593,6 +593,10 @@ class IDVTDetector(IDTDetector, IVTDetector):
         super(IDVTDetector, self).__init__(
             missing_value, min_event_duration, pad_blinks_ms, name, dispersion_threshold, window_duration
         )
+        # assigned directly rather than through IVTDetector.__init__, which the MRO reaches with defaults,
+        # so the validation that constructor performs has to be repeated here
+        if saccade_velocity_threshold <= 0:
+            raise ValueError("Saccade velocity threshold must be positive")
         self._saccade_velocity_threshold = saccade_velocity_threshold
 
     @classmethod
