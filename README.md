@@ -2,20 +2,24 @@
 # pEYES
 ## A Python Package for Eye-Tracking Researchers
 
-pEYES is a Python package that enables researchers to perform robust, quantitative comparisons of eye-tracking
-segmentation algorithms. It provides implementations of several widely used algorithms and allows users to evaluate
-their performance against ground-truth, human-annotated datasets. The package simplifies the process of selecting an
-optimal algorithm by offering over 20 metrics to quantify performance, enhancing analysis reliability and reproducibility.
+pEYES is a Python package that enables researchers to perform robust, quantitative comparisons of eye-movement (EM)
+detection algorithms, i.e., algorithms that classify raw gaze samples into events such as fixations and saccades.
+It provides implementations of several widely used algorithms and allows users to evaluate their performance against
+ground-truth, human-annotated datasets. The package simplifies the process of selecting an optimal algorithm by
+offering over 20 metrics to quantify performance, enhancing analysis reliability and reproducibility.
 <br><br>
-For a detailed overview of the package's functionalities and a systematic comparison of the implemented algorithms,
-please refer to the publication: [Nir & Deouell (2026)](https://doi.org/10.3758/s13428-026-02983-5).
+Using pEYES, [Nir & Deouell (2026)](https://doi.org/10.3758/s13428-026-02983-5) compared seven detection algorithms
+against two human-annotated datasets and found that no single algorithm is universally optimal: performance varied
+by dataset, metric, and event type, though adaptive-threshold algorithms (e.g., Engbert's) were consistently among
+the top performers. For a detailed overview of the package's functionalities and the full comparison, please refer
+to the publication.
 
 ## Overview
 pEYES offers several core functionalities designed to facilitate the processing, analysis, and comparison of
 eye-tracking data:
 - **Downloading & Parsing Datasets**: Provides functions to easily download and parse publicly available,
 human-annotated eye-tracking datasets, streamlining the setup process for benchmarking algorithms.
-- **Configuring & Running Detection Algorithms**: Allows users to configure various eye-tracking segmentation algorithms
+- **Configuring & Running Detection Algorithms**: Allows users to configure various eye-movement detection algorithms
 and apply them to either the built-in datasets or their own custom data.
 - **Algorithm Comparison & Analysis**: Offers tools to analyze the results of detection algorithms, compare their
 performance against human-annotated ground-truth data, or evaluate differences between multiple algorithms.
@@ -30,21 +34,22 @@ eye-tracking data analysis.
 This package has been created and tested with python ```3.12```.
 
 To install this package as a user, use
-```angular2html
+```bash
 pip install peyes
 ```
-To install this package as a developer, clone the package from GitHub and run the following commands:
-```angular2html
+To install this package as a developer, clone the repository and install it in editable mode:
+```bash
+git clone https://github.com/huji-hcnl/pEYES.git
+cd pEYES
 python -m venv env
-git pull
+env\Scripts\activate  # on Windows; use `source env/bin/activate` on macOS/Linux
 pip install -e .
-git checkout -b dev
 ```
 
 ## Usage
 This package is intended for scientific use, and is designed to be easy to use for anyone with basic python knowledge.  
 Most of the functions in this package are documented, and can be accessed by running:
-```angular2html
+```python
 import peyes
 help(peyes)
 ```
@@ -71,7 +76,7 @@ If you use this package in your research, please cite [Nir & Deouell (2026)](htt
 
 If you use a specific dataset or detection algorithm that is implemented in this package, please also cite the original
 authors of that dataset or detection algorithm. The datasets' licenses and detectors' citations can be found in their
-respective documentation (retrieved using the the `dataset.load()` call).
+respective documentation (retrieved using the `dataset.load()` call).
 
 ## Acknowledgements
 We are grateful for the support of the [Center for Interdisciplinary Data Science Research (CIDR)](https://cidr.huji.ac.il/) at the
