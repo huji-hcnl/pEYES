@@ -49,9 +49,14 @@ def create_video(
 
     :return: full path to the output video file
     """
-    assert len(t) == len(x) == len(y) == len(labels), "All input arrays must have the same length."
+    if not len(t) == len(x) == len(y) == len(labels):
+        raise ValueError("All input arrays must have the same length.")
     fps = round(calculate_sampling_rate(t))
-    frames = create_frames(x, y, labels, resolution, bg_image, bg_image_format, label_colors, gaze_radius, verbose)
+    frames = create_frames(
+        x=x, y=y, labels=labels, resolution=resolution,
+        bg_image=bg_image, bg_image_format=bg_image_format,
+        label_colors=label_colors, gaze_radius=gaze_radius, verbose=verbose,
+    )
     return _write_video(frames, output_path, fps, codec, extension, verbose)
 
 
@@ -85,16 +90,21 @@ def create_frames(
 
     :return: list of frames (numpy arrays)
     """
-    assert len(x) == len(y) == len(labels), "All input arrays must have the same length."
+    if not len(x) == len(y) == len(labels):
+        raise ValueError("All input arrays must have the same length.")
     frames = []
     n_samples = len(x)
     bg_image = vis_utils.create_image(resolution, bg_image, bg_image_alpha, bg_image_format, "#000000")
     label_colors = vis_utils.get_label_colormap(label_colors)
     for i in trange(n_samples, desc="Creating Frames", disable=not verbose):
         curr_img = bg_image.copy()
-        curr_x, curr_y = int(x[i]), int(y[i])
-        color = label_colors.get(labels[i], label_colors[cnfg.EventLabelEnum.UNDEFINED])
-        cv2.circle(curr_img, (curr_x, curr_y), gaze_radius, color, -1)
+        if not (np.isfinite(x[i]) and np.isfinite(y[i])):
+            # missing sample (blink or tracker loss): emit the frame without a gaze marker
+            frames.append(curr_img)
+            continue
+        rgb = label_colors.get(labels[i], label_colors[cnfg.EventLabelEnum.UNDEFINED])
+        bgr = (int(rgb[2]), int(rgb[1]), int(rgb[0]))   # cv2 expects BGR, the colormap is RGB
+        cv2.circle(curr_img, (int(x[i]), int(y[i])), gaze_radius, bgr, -1)
         frames.append(curr_img)
     return frames
 
@@ -109,13 +119,18 @@ def _write_video(
 ) -> str:
     if not output_path.endswith(extension):
         output_path += extension
-    os.makedirs(os.path.dirname(output_path), exist_ok=True)
+    output_dir = os.path.dirname(output_path)
+    if output_dir:
+        os.makedirs(output_dir, exist_ok=True)
     if verbose:
         print(f"Writing video to: {output_path}")
-    h, w, _ = frames[0].shape
+    h, w = frames[0].shape[:2]
     writer = cv2.VideoWriter(output_path, codec, fps, (w, h))
     for i in trange(len(frames), desc="Writing Frames", disable=not verbose):
-        writer.write(frames[i])
+        frame = frames[i]
+        if frame.ndim == 3 and frame.shape[2] == 4:
+            frame = cv2.cvtColor(frame, cv2.COLOR_BGRA2BGR)     # VideoWriter takes 3-channel BGR
+        writer.write(frame)
     writer.release()
     if verbose:
         print("Video writing complete.")

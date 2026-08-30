@@ -29,7 +29,8 @@ def scarfplot_comparison_figure(
         bottom, top = scarf_spacing * i * scarf_height, (scarf_spacing * i + 1) * scarf_height
         fig = add_scarfplot_to_figure(fig, t, l, top, bottom, label_colors=label_colors, show_colorbar=i == 0)
     names = kwargs.get("names", [str(i) for i in range(num_scarfs)])
-    assert len(names) == num_scarfs
+    if len(names) != num_scarfs:
+        raise ValueError(f"Expected {num_scarfs} names, got {len(names)}")
     fig.update_layout(
         title=kwargs.get("title", "Scarfplot Comparison"),
         yaxis=dict(
@@ -67,7 +68,8 @@ def add_scarfplot_to_figure(
     :param colorbar_thickness: the thickness of the colorbar, default is 25.
     :param show_colorbar: whether to show the colorbar, default is True.
     """
-    assert len(t) == len(labels), f"Length mismatch: len(t)={len(t)} != {len(labels)}=len(labels)"
+    if len(t) != len(labels):
+        raise ValueError(f"Length mismatch: len(t)={len(t)} != {len(labels)}=len(labels)")
     label_colors = vis_utils.get_label_colormap(label_colors)
     label_colors = {k: v for k, v in label_colors.items() if k in labels}   # Remove unused colors
     colormap, tick_centers = _discrete_colormap(label_colors)

@@ -1,28 +1,32 @@
 [project]
 name = "peyes"
-version = "0.1.00"
+# keep in sync with peyes/__init__.py::__version__ (tests/unit_tests/test_version.py checks this)
+version = "0.2.0"
 authors = [
-    {name="Human Cognitive Neuroscience Lab @ HUJI", email="hcnl@mail.huji.ac.il", website="https://www.hcnl.org/"},
+    {name="Human Cognitive Neuroscience Lab @ HUJI", email="hcnl@mail.huji.ac.il"},
     {name="Jonathan Nir", email="jonathan.nir@mail.huji.ac.il"},
 ]
 description = "A package for eye tracking data analysis and visualization"
 readme = "README.md"
+requires-python = ">=3.12"
 dependencies = [
-    "numpy~=1.2",
-    "pandas~=2.2",
-    "scipy~=1.1",
-    "plotly~=5.2",
-    "opencv-python~=4.1",
-    "overrides~=7.7",
-    "requests~=2.32",
-    "scikit-learn~=1.5",
-    "statsmodels~=0.1",
-    "scikit_posthocs~=0.9",
-    "tqdm~=4.6",
-    "python-Levenshtein~=0.2",
-    "remodnav~=1.1",
-    "liac-arff~=2.4",
-    # "kaleido~=0.2",   # TODO: kaleido has a bug in the current version, see https://github.com/huji-hcnl/pEYES/issues/15
+    "numpy>=1.26,<3",
+    "pandas>=2.2,<4",
+    "scipy>=1.11,<2",
+    "plotly>=5.20,<8",
+    "opencv-python>=4.9",
+    "overrides>=7.7,<8",
+    "requests>=2.32,<3",
+    "scikit-learn>=1.5,<2",
+    # statsmodels is not imported by peyes directly, but plotly's `trendline="ols"`
+    # (used by visualize.feature_relationship / main_sequence) requires it at runtime.
+    "statsmodels>=0.14,<1",
+    "tqdm>=4.66,<5",
+    "python-Levenshtein>=0.25,<1",
+    "remodnav>=1.1,<2",
+    "liac-arff>=2.4,<3",
+    # kaleido 0.2 hangs forever in fig.write_image(); see
+    # https://github.com/huji-hcnl/pEYES/issues/15
     "kaleido==0.1.0post1",
 ]
 classifiers = [
@@ -30,10 +34,45 @@ classifiers = [
     "License :: OSI Approved :: MIT License",
 ]
 
+[project.optional-dependencies]
+# Needed only by the scripts in analysis/, which are not part of the installed package.
+analysis = [
+    "scikit_posthocs>=0.9,<1",
+]
+dev = [
+    "ruff>=0.6",
+]
+
 [project.urls]
 "Homepage" = "https://github.com/huji-hcnl/pEYES"
 "Bug Tracker" = "https://github.com/huji-hcnl/pEYES/issues"
+"Lab" = "https://www.hcnl.org/"
 
 [build-system]
 requires = ["hatchling"]
 build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["peyes"]
+
+[tool.ruff]
+line-length = 120
+target-version = "py312"
+
+[tool.ruff.lint]
+# Start with the checks that would have caught real bugs in this package:
+#   F821/F841 undefined & unused names, F541 f-string without placeholders (D-9),
+#   B006 mutable defaults, E711/E712 identity comparisons.
+select = ["E4", "E7", "E9", "F", "B"]
+ignore = [
+    "E741",  # ambiguous variable name `l` - pervasive in this codebase
+    "F403",  # `from ... import *` - see code review C-25, tracked separately
+    "F405",  # name may be undefined from star imports - same
+    "B905",  # zip(strict=) - adding it would change behaviour on unequal lengths
+]
+
+[tool.ruff.lint.per-file-ignores]
+# __init__.py files are the public API surface: the "unused" imports are re-exports.
+"peyes/**/__init__.py" = ["F401"]
+"peyes/__init__.py" = ["F401"]
+"tests/*" = ["F403", "F405"]

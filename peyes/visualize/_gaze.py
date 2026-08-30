@@ -153,7 +153,8 @@ def gaze_over_time(
     if vert_lines is not None:
         vert_line_color = kwargs.get("vert_line_color", ["#000000"] * len(vert_lines))
         vert_line_color = [vert_line_color] * len(vert_lines) if isinstance(vert_line_color, str) else vert_line_color
-        assert len(vert_lines) == len(vert_line_color), "Length mismatch: `vert_lines` and `vert_line_color`"
+        if len(vert_lines) != len(vert_line_color):
+            raise ValueError("Length mismatch: `vert_lines` and `vert_line_color`")
         vert_line_width = kwargs.get("vert_line_width", 1)
         for v, c in zip(vert_lines, vert_line_color):
             fig.add_vline(x=v, line=dict(color=c, width=vert_line_width, dash="dash"))
@@ -274,5 +275,8 @@ def __pixel_counts(
     for (y_, x_), count in counter.items():
         if not np.isfinite(x_) or not np.isfinite(y_):
             continue
-        counts[int(y_), int(x_)] = count
+        row, col = int(y_), int(x_)
+        if not (0 <= row < h and 0 <= col < w):
+            continue    # off-screen sample: drop it rather than let a negative index wrap
+        counts[row, col] = count
     return counts

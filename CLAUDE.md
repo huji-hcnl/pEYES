@@ -14,14 +14,16 @@ Published on PyPI as `peyes`; source of truth for behavior is [Nir & Deouell (20
 - Use the project's local venv at `C:\Users\nirjo\Documents\University\PhD\Projects\pEYES\.venv` for all Python
   commands in this repo (including from worktrees) — do not create a new venv or use a global/system Python.
 - Install (editable, dev): `pip install -e .`
-- Run the whole test suite: `python -m unittest discover -s tests` — note this currently fails on this repo because
-  `tests/` and its subpackages have no `__init__.py`, so `unittest discover` reports the start dir as "not
-  importable". Until that's fixed, run tests by dotted module path instead, e.g.:
-  `python -m unittest tests.unit_tests.data_models.test_event`
+- Run the whole test suite: `python -m unittest discover -s tests`
+- Run a single module by dotted path, e.g.: `python -m unittest tests.unit_tests.data_models.test_event`
 - Run a single test case/method: append `.ClassName` or `.ClassName.test_method` to the dotted path above, e.g.
   `python -m unittest tests.unit_tests.utils.test_vector_utils.TestVectorUtils.test_some_method`
 - Tests use the stdlib `unittest` framework (`unittest.TestCase`), not pytest.
-- No linter/formatter config or CI workflow is defined in this repo.
+- Lint with `ruff check peyes tests` (configured in [pyproject.toml](pyproject.toml)); CI in
+  [.github/workflows/ci.yml](.github/workflows/ci.yml) runs ruff plus the test suite on 3.12.
+- NOTE: the shared venv's editable `peyes` install points at one specific worktree, so `import peyes`
+  from a different worktree silently loads that worktree's code. Prefix commands with
+  `PYTHONPATH=<this worktree>` and confirm with `python -c "import peyes; print(peyes.__file__)"`.
 
 ## Architecture
 

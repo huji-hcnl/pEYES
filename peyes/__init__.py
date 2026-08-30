@@ -1,3 +1,5 @@
+__version__ = "0.2.0"   # keep in sync with [project].version in pyproject.toml
+
 import peyes._utils.constants as constants
 
 from peyes._utils.event_utils import parse_label

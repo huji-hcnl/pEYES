@@ -1,5 +1,5 @@
 from abc import ABC
-from typing import Sequence, Dict, Union, Callable
+from typing import Dict, Union, Callable
 
 from peyes._DataModels.Event import BaseEvent, EventSequenceType
 
@@ -9,7 +9,7 @@ EventMatchesType = Union[OneToOneEventMatchesType, OneToManyEventMatchesType]
 EventMatchingFunctionType = Callable[[EventSequenceType, EventSequenceType], EventMatchesType]
 
 
-class EventMatcher(ABC):
+class EventMatcher(ABC):  # noqa: B024  # see code review B-6: a module of statics, not really an ABC
     """
     Implementation of different methods to match two sequences of gaze-events, that may have been detected by different
     human annotators or detection algorithms, as discussed in section "Event Matching Methods" in the article:
@@ -157,7 +157,7 @@ class EventMatcher(ABC):
     def l2_timing(
             ground_truth: EventSequenceType,
             predictions: EventSequenceType,
-            max_l2: float = 0,
+            max_l2: float = float("inf"),
             allow_cross_matching: bool = True
     ) -> OneToOneEventMatchesType:
         """
@@ -171,7 +171,7 @@ class EventMatcher(ABC):
     def onset_difference(
             ground_truth: EventSequenceType,
             predictions: EventSequenceType,
-            max_onset_difference: float = 0,
+            max_onset_difference: float = float("inf"),
             allow_cross_matching: bool = True
     ) -> OneToOneEventMatchesType:
         """
@@ -186,7 +186,7 @@ class EventMatcher(ABC):
     def offset_difference(
             ground_truth: EventSequenceType,
             predictions: EventSequenceType,
-            max_offset_difference: float = 0,
+            max_offset_difference: float = float("inf"),
             allow_cross_matching: bool = True
     ) -> OneToOneEventMatchesType:
         """
@@ -201,8 +201,8 @@ class EventMatcher(ABC):
     def window_based(
             ground_truth: EventSequenceType,
             predictions: EventSequenceType,
-            max_onset_difference: float = 0,
-            max_offset_difference: float = 0,
+            max_onset_difference: float = float("inf"),
+            max_offset_difference: float = float("inf"),
             allow_cross_matching: bool = True,
             reduction: str = "onset difference"
     ) -> OneToOneEventMatchesType:

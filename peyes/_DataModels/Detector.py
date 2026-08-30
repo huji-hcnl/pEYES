@@ -5,6 +5,7 @@ import logging
 
 import remodnav
 from overrides import override
+from scipy.ndimage import binary_dilation
 from scipy.signal import savgol_filter
 
 import peyes._DataModels.config as cnfg
@@ -204,13 +205,10 @@ class BaseDetector(ABC):
         pad_samples = self.pad_blinks_samples
         if pad_samples == 0:
             return is_blink
-        new_is_blink = is_blink.copy()      # avoid overwriting the original array
-        for i, val in enumerate(is_blink):  # read the original array, write to the new one
-            if val:
-                start = max(0, i - pad_samples)
-                end = min(len(is_blink), i + pad_samples)
-                new_is_blink[start:end] = True
-        return new_is_blink
+        # `binary_dilation` with a (2 * pad + 1)-wide structure pads symmetrically; the previous
+        # loop used an exclusive slice end, so it added `pad_samples` before but only
+        # `pad_samples - 1` after each blink sample.
+        return binary_dilation(is_blink, structure=np.ones(2 * pad_samples + 1, dtype=bool))
 
     def _reshape_vectors(self, t: np.ndarray, x: np.ndarray, y: np.ndarray) -> (np.ndarray, np.ndarray, np.ndarray):
         if not is_one_dimensional(t):
@@ -242,7 +240,7 @@ class BaseDetector(ABC):
         return self.name
 
 
-class IGlobalThresholdDetector(ABC):
+class IGlobalThresholdDetector(ABC):  # noqa: B024  # mixin: shares a helper, defines no abstract methods
 
     @staticmethod
     def _get_global_threshold(threshold_deg: float, unit: str, vd: float, ps: float) -> float:
@@ -595,6 +593,10 @@ class IDVTDetector(IDTDetector, IVTDetector):
         super(IDVTDetector, self).__init__(
             missing_value, min_event_duration, pad_blinks_ms, name, dispersion_threshold, window_duration
         )
+        # assigned directly rather than through IVTDetector.__init__, which the MRO reaches with defaults,
+        # so the validation that constructor performs has to be repeated here
+        if saccade_velocity_threshold <= 0:
+            raise ValueError("Saccade velocity threshold must be positive")
         self._saccade_velocity_threshold = saccade_velocity_threshold
 
     @classmethod
@@ -1415,6 +1417,23 @@ class REMoDNaVDetector(BaseDetector):
         self._savgol_duration_ms = savgol_filter_duration_ms
         self._max_velocity = max_velocity
         self.show_warnings = show_warnings
+        # every other detector validates its arguments; this one accepted anything and let the
+        # failure surface somewhere inside the remodnav library, or not at all.
+        for name, value in [
+            ("median_filter_duration_ms", self._median_filter_length),
+            ("savgol_filter_duration_ms", self._savgol_duration_ms),
+            ("max_velocity", self._max_velocity),
+            ("saccade_initial_velocity_threshold", self._saccade_initial_velocity_threshold),
+            ("saccade_context_window_duration", self._saccade_context_window_duration),
+            ("saccade_initial_max_freq", self._saccade_initial_max_freq),
+            ("saccade_onset_threshold_noise_factor", self._saccade_onset_threshold_noise_factor),
+            ("smooth_pursuits_lowpass_cutoff_freq", self._smooth_pursuit_lowpass_cutoff_freq),
+            ("smooth_pursuit_drift_velocity_threshold", self._smooth_pursuit_drift_velocity_threshold),
+        ]:
+            if value <= 0:
+                raise ValueError(f"{name} must be positive")
+        if self._savgol_polyorder <= 0:
+            raise ValueError("savgol_filter_polyorder must be positive")
 
     @classmethod
     def get_default_params(cls) -> Dict[str, float]:
@@ -1446,9 +1465,24 @@ class REMoDNaVDetector(BaseDetector):
             viewer_distance_cm: float,
             pixel_size_cm: float,
     ) -> np.ndarray:
+        lgr = logging.getLogger('remodnav.clf')
+        previous_level = lgr.level
         if not self.show_warnings:
-            lgr = logging.getLogger('remodnav.clf')
             lgr.setLevel(logging.WARNING + 1)   # ignore warnings from the REMoDNaV library
+        try:
+            return self._detect_impl_inner(t, x, y, labels, viewer_distance_cm, pixel_size_cm)
+        finally:
+            lgr.setLevel(previous_level)        # do not leave the level raised process-wide
+
+    def _detect_impl_inner(
+            self,
+            t: np.ndarray,
+            x: np.ndarray,
+            y: np.ndarray,
+            labels: np.ndarray,
+            viewer_distance_cm: float,
+            pixel_size_cm: float,
+    ) -> np.ndarray:
         classifier = remodnav.EyegazeClassifier(
             px2deg=pixels_to_visual_angle(1, viewer_distance_cm, pixel_size_cm, use_radians=False),
             sampling_rate=self.sr,
@@ -1476,7 +1510,7 @@ class REMoDNaVDetector(BaseDetector):
         )
         detected_events = classifier(pp, classify_isp=True, sort_events=True)   # returns a list of dicts, each dict is a single gaze event
         labels = np.asarray(copy.deepcopy(labels), dtype=EventLabelEnum)
-        for i, event in enumerate(detected_events):
+        for i, event in enumerate(detected_events):  # noqa: B007  # `i` unused; left as-is, REMoDNaV is article-facing
             start_sample = round(event["start_time"] * self.sr)
             end_sample = round(event["end_time"] * self.sr)
             label = self.__LABEL_MAPPING[event["label"]]
