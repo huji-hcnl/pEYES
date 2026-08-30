@@ -3,7 +3,9 @@ import unittest
 import numpy as np
 
 import peyes._utils.constants as cnst
-from peyes._DataModels.Event import FixationEvent, SaccadeEvent
+from peyes._DataModels.Event import (
+    BaseEvent, FixationEvent, SaccadeEvent, PSOEvent, SmoothPursuitEvent, BlinkEvent
+)
 from peyes._DataModels.EventLabelEnum import EventLabelEnum
 from peyes._utils.pixel_utils import pixels_to_visual_angle
 
@@ -23,11 +25,33 @@ class TestEvent(unittest.TestCase):
         f3 = FixationEvent(t=t, x=x, y=y, pixel_size=self._PS, viewer_distance=self._VD)
         self.assertTrue(f1 == f2)
         self.assertFalse(f1 == f3)
-        self.assertEqual(str(f1), "FIXATION(19.00ms)")
+        self.assertEqual(str(f1), "FIXATION(19.0ms)")
 
     def test_make(self):
-        # TODO
-        self.assertTrue(True)
+        t = np.arange(10)
+        self.assertIsNone(BaseEvent.make(EventLabelEnum.UNDEFINED, t=t))
+        for label, cls in [
+            (EventLabelEnum.FIXATION, FixationEvent), (EventLabelEnum.SACCADE, SaccadeEvent),
+            (EventLabelEnum.PSO, PSOEvent), (EventLabelEnum.SMOOTH_PURSUIT, SmoothPursuitEvent),
+            (EventLabelEnum.BLINK, BlinkEvent),
+        ]:
+            event = BaseEvent.make(label, t=t)
+            self.assertIsInstance(event, cls)
+            self.assertEqual(event.label, label)
+            self.assertEqual(len(event), len(t))
+
+    def test_make_multiple(self):
+        t = np.arange(6)
+        labels = np.array([
+            EventLabelEnum.FIXATION, EventLabelEnum.FIXATION, EventLabelEnum.SACCADE,
+            EventLabelEnum.SACCADE, EventLabelEnum.UNDEFINED, EventLabelEnum.BLINK,
+        ])
+        events = BaseEvent.make_multiple(labels, t=t)
+        # UNDEFINED chunks are dropped, contiguous same-label samples become one event
+        self.assertEqual([e.label for e in events],
+                         [EventLabelEnum.FIXATION, EventLabelEnum.SACCADE, EventLabelEnum.BLINK])
+        self.assertEqual([len(e) for e in events], [2, 2, 1])
+        self.assertRaises(ValueError, BaseEvent.make_multiple, labels, t[:-1])
 
     def test_properties(self):
         fix_x, fix_y = np.full(21, 40), np.hstack([np.arange(50, 0, -5), np.arange(0, 51, 5)])
