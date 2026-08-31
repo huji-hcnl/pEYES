@@ -81,8 +81,14 @@ class BaseDetector(ABC):
         if not np.isfinite(pixel_size_cm) or pixel_size_cm <= 0:
             raise ValueError("Pixel size must be a positive finite number")
         t, x, y = self._reshape_vectors(t, x, y)
+        if np.any(np.diff(t) <= 0):
+            warnings.warn("`t` is not strictly monotonically increasing; sampling-rate-derived values may be off")
+        # reset rather than update-only, so metadata from a previous detect() call on this instance can't
+        # leak into this call's result (D-20) - currently a no-op in practice since every _detect_impl only
+        # ever writes a fixed, unconditional set of keys, but that's incidental, not guaranteed.
+        self._metadata = {}
         self._sr = calculate_sampling_rate(t)
-        labels = np.full_like(t, EventLabelEnum.UNDEFINED, dtype=EventLabelEnum)
+        labels = np.full_like(t, EventLabelEnum.UNDEFINED, dtype=object)
         is_blink = self._detect_blinks(x, y)
         # detect blinks and replace blink-samples with NaN
         labels[is_blink] = EventLabelEnum.BLINK
@@ -320,7 +326,7 @@ class IVTDetector(BaseDetector, IGlobalThresholdDetector):
             raise ValueError("Viewer distance must be a positive finite number")
         if not np.isfinite(pixel_size_cm) or pixel_size_cm <= 0:
             raise ValueError("Pixel size must be a positive finite number")
-        labels = np.asarray(copy.deepcopy(labels), dtype=EventLabelEnum)
+        labels = np.asarray(copy.deepcopy(labels), dtype=object)
         px_velocities = calculate_velocities(x, y, t)
         px_threshold = self._get_global_threshold(self.saccade_velocity_threshold_deg, "px", viewer_distance_cm,
                                                   pixel_size_cm)
@@ -488,7 +494,7 @@ class IDTDetector(BaseDetector, IGlobalThresholdDetector):
             viewer_distance_cm: float,
             pixel_size_cm: float,
     ) -> np.ndarray:
-        labels = np.asarray(copy.deepcopy(labels), dtype=EventLabelEnum)
+        labels = np.asarray(copy.deepcopy(labels), dtype=object)
         ws = self._calculate_window_size_samples(t)
         px_threshold = self._get_global_threshold(self.dispersion_threshold_deg, "px", viewer_distance_cm,
                                                   pixel_size_cm)
@@ -533,11 +539,6 @@ class IDTDetector(BaseDetector, IGlobalThresholdDetector):
             raise ValueError(f"window_duration={ws}ms is too long for the given input data")
         return ws
 
-    @staticmethod
-    def _calculate_dispersion_length_px(xs: np.ndarray, ys: np.ndarray) -> float:
-        """ Calculates the dispersion length of the gaze points (px units) """
-        return max(xs) - min(xs) + max(ys) - min(ys)
-
 
 class IDVTDetector(IDTDetector, IVTDetector):
     """
@@ -573,8 +574,9 @@ class IDVTDetector(IDTDetector, IVTDetector):
     :param saccade_velocity_threshold: the threshold for angular velocity, in degrees per second. Default is 45 degrees
         per-second, as suggested in the paper "One algorithm to rule them all? An evaluation and discussion of ten eye
         movement event-detection algorithms" (2016), Andersson et al.
-    :param dispersion_threshold: the threshold for dispersion, in degrees. Default is 2.0 DVA, as used in the original
-        paper by Komogortsev & Karpov (2013). In the  Andersson et al. (2016), they suggested threshold is 2.7 DVA.
+    :param dispersion_threshold: the threshold for dispersion, in degrees. Default is 0.5 DVA (inherited from
+        IDTDetector); the original I-DVT paper by Komogortsev & Karpov (2013) suggests 2.0 DVA, and
+        Andersson et al. (2016) suggest 2.7 DVA.
     :param window_duration: the duration of the window in milliseconds. Default is the minimal fixation duration from
         the configuration file. The original Komogortsev & Karpov (2013) paper suggest a threshold of 110-150 ms.
     """
@@ -631,7 +633,7 @@ class IDVTDetector(IDTDetector, IVTDetector):
         is_saccade = (ivt_labels == EventLabelEnum.SACCADE) & ~is_fixation
         is_smooth_pursuit = ~is_fixation & ~is_saccade
 
-        labels = np.asarray(copy.deepcopy(labels), dtype=EventLabelEnum)
+        labels = np.asarray(copy.deepcopy(labels), dtype=object)
         labels[(labels == EventLabelEnum.UNDEFINED) & is_fixation] = EventLabelEnum.FIXATION
         labels[(labels == EventLabelEnum.UNDEFINED) & is_saccade] = EventLabelEnum.SACCADE
         labels[(labels == EventLabelEnum.UNDEFINED) & is_smooth_pursuit] = EventLabelEnum.SMOOTH_PURSUIT
@@ -711,7 +713,7 @@ class EngbertDetector(BaseDetector):
             viewer_distance_cm: float,
             pixel_size_cm: float,
     ) -> np.ndarray:
-        labels = np.asarray(copy.deepcopy(labels), dtype=EventLabelEnum)
+        labels = np.asarray(copy.deepcopy(labels), dtype=object)
         x_velocity = self._axial_velocities_px(x, self.sr, self.deriv_window_size)
         y_velocity = self._axial_velocities_px(y, self.sr, self.deriv_window_size)
         x_thresh = self._median_standard_deviation(x_velocity) * self.lambda_param
@@ -720,7 +722,7 @@ class EngbertDetector(BaseDetector):
         labels[ellipse < 1] = EventLabelEnum.FIXATION
         labels[ellipse >= 1] = EventLabelEnum.SACCADE
         self._metadata.update({
-            f"{cnst.X}_{self.__THRESHOLD_VELOCITY_STR}_pxs": x_thresh,
+            f"{cnst.X}_{self.__THRESHOLD_VELOCITY_STR}_px": x_thresh,
             f"{cnst.Y}_{self.__THRESHOLD_VELOCITY_STR}_px": y_thresh,
         })
         return labels
@@ -1271,7 +1273,7 @@ class NHDetector(BaseDetector):
         :param pso_info: dict of saccade -> (PSO start-idx, PSO end-idx and PSO type (high or low))
         :return: array of classified samples
         """
-        labels = np.asarray(copy.deepcopy(labels), dtype=EventLabelEnum)
+        labels = np.asarray(copy.deepcopy(labels), dtype=object)
         for val in saccade_info.values():
             onset_idx, _, offset_idx, _ = val
             labels[onset_idx: offset_idx] = EventLabelEnum.SACCADE
@@ -1532,7 +1534,7 @@ class REMoDNaVDetector(BaseDetector):
             dilate_nan=self.pad_blinks_ms / cnst.MILLISECONDS_PER_SECOND,
         )
         detected_events = classifier(pp, classify_isp=True, sort_events=True)   # returns a list of dicts, each dict is a single gaze event
-        labels = np.asarray(copy.deepcopy(labels), dtype=EventLabelEnum)
+        labels = np.asarray(copy.deepcopy(labels), dtype=object)
         for i, event in enumerate(detected_events):  # noqa: B007  # `i` unused; left as-is, REMoDNaV is article-facing
             start_sample = round(event["start_time"] * self.sr)
             end_sample = round(event["end_time"] * self.sr)
