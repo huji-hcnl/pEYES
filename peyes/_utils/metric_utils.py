@@ -38,6 +38,9 @@ def normalized_levenshtein_distance(gt: Sequence, pred: Sequence) -> float:
     This is the same as the Word Error Rate (WER) used in speech recognition.
     For more information on using 1-NLD in eye-tracking, see https://doi.org/10.3758/s13428-021-01763-7
     """
+    if len(gt) == 0:
+        # matches the zero_division=np.nan convention used elsewhere in this package (e.g. sample_metrics)
+        return np.nan
     d = Levenshtein.distance(gt, pred)
     normalized_d = d / len(gt)
     return normalized_d

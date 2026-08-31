@@ -28,7 +28,8 @@ def onset_differences(
     :param sampling_rate: sampling rate of the channels; only used if `ground_truth` or `prediction` are Event objects
     :param min_num_samples: if not None, marks the minimal the number of samples in the channels; only used if
         `ground_truth` or `prediction` are Event objects
-    :return: array of timing differences between matched onsets (differences are in sample units)
+    :return: array of timing differences between matched onsets, as `prediction_idx - ground_truth_idx`
+        (positive means the predicted onset came after the ground-truth onset), in sample units
     """
     return timing_differences(ground_truth, prediction, "onset", max_diff, sampling_rate, min_num_samples)
 
@@ -52,7 +53,8 @@ def offset_differences(
     :param sampling_rate: sampling rate of the channels; only used if `ground_truth` or `prediction` are Event objects
     :param min_num_samples: if not None, marks the minimal the number of samples in the channels; only used if
         `ground_truth` or `prediction` are Event objects
-    :return: array of timing differences between matched offsets (differences are in sample units)
+    :return: array of timing differences between matched offsets, as `prediction_idx - ground_truth_idx`
+        (positive means the predicted offset came after the ground-truth offset), in sample units
     """
     return timing_differences(ground_truth, prediction, "offset", max_diff, sampling_rate, min_num_samples)
 
@@ -78,7 +80,8 @@ def timing_differences(
     :param min_num_samples: if not None, marks the minimal the number of samples in the channels; only used if
         `ground_truth` or `prediction` are Event objects
 
-    :return: array of timing differences between matched onsets/offsets (differences are in samples)
+    :return: array of timing differences between matched onsets/offsets, as `prediction_idx - ground_truth_idx`
+        (positive means the prediction came after the ground truth), in samples
     """
     gt_channel = create_boolean_channel(
         data=ground_truth, channel_type=channel_type, sampling_rate=sampling_rate, min_num_samples=min_num_samples
