@@ -28,7 +28,7 @@ def calculate(
         pos_labels: Optional[Union[UnparsedEventLabelType, UnparsedEventLabelSequenceType]] = None,
         verbose: bool = False,
         **kwargs,
-) -> Union[float, Dict[str, float]]:
+) -> Dict[str, float]:
     """
     Calculate the specified metrics between the ground truth and prediction sequences.
     :param ground_truth: sequence of ground truth labels
@@ -52,8 +52,7 @@ def calculate(
         See information on correction methods at https://stats.stackexchange.com/a/134802/288290.
         See implementation details at https://lindeloev.net/calculating-d-in-python-and-php/.
 
-    :return: the calculated metric(s) as a single float (if only one metric is specified) or a dictionary of metric
-        names to values
+    :return: a dictionary mapping each requested metric name to its calculated value
     """
     with warnings.catch_warnings():
         warnings.simplefilter("ignore", category=UserWarning)
@@ -74,8 +73,6 @@ def calculate(
                 )
             else:
                 raise NotImplementedError(f"Unknown metric:\t{metric}")
-        if len(results) == 1:
-            return next(iter(results.values()))
         return results
 
 

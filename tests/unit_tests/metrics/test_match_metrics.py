@@ -67,3 +67,28 @@ class TestMatchRatio(unittest.TestCase):
         matches = peyes.match(self.GT, self.PRED, "generic")
         with self.assertRaises(TypeError):
             peyes.match_metrics.match_ratio(self.PRED, matches)
+
+
+class TestGetFeatures(unittest.TestCase):
+    """ M-10: get_features() used to return a bare array for one feature and a dict for several. """
+
+    GT = [_event(0.0), _event(50.0)]
+    PRED = [_event(1.0), _event(51.0)]
+
+    def _matches(self):
+        return peyes.match(self.GT, self.PRED, "onset")
+
+    def test_single_feature_still_returns_a_dict(self):
+        result = peyes.match_metrics.features(self._matches(), "onset", verbose=False)
+        self.assertIsInstance(result, dict)
+        self.assertEqual({"onset"}, set(result.keys()))
+
+    def test_multiple_features_return_a_dict(self):
+        result = peyes.match_metrics.features(self._matches(), "onset", "offset", verbose=False)
+        self.assertIsInstance(result, dict)
+        self.assertEqual({"onset", "offset"}, set(result.keys()))
+
+    def test_named_wrapper_still_returns_a_bare_array(self):
+        """ Per-feature convenience functions (e.g. onset_difference) must keep returning a plain array. """
+        result = peyes.match_metrics.onset_difference(self._matches())
+        self.assertIsInstance(result, np.ndarray)

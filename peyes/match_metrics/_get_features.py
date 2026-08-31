@@ -1,4 +1,4 @@
-from typing import Dict, Union
+from typing import Dict
 
 import numpy as np
 from tqdm import tqdm
@@ -9,7 +9,7 @@ from peyes._DataModels.EventMatcher import OneToOneEventMatchesType
 
 def get_features(
         matches: OneToOneEventMatchesType, *features: str, verbose: bool = False
-) -> Union[np.ndarray, Dict[str, np.ndarray]]:
+) -> Dict[str, np.ndarray]:
     """
     Calculates the difference in the specified features within each pair of matched events.
     :param matches: a one-to-one mapping from (subset of) ground truth events to (subset_of) predicted events
@@ -24,14 +24,11 @@ def get_features(
         - 'time_iou': the intersection over union in time between the events
         - 'time_l2': the L2 norm of time differences (onset, offset) between the events
     :param verbose: if True, display a progress bar while calculating the features
-    :return: the calculated feature differences as a numpy array (for a single feature) or a dictionary of numpy arrays
-        (for multiple features).
+    :return: a dictionary mapping each requested feature name to its numpy array of differences
     """
     results: Dict[str, np.ndarray] = {}
     for feat in tqdm(features, desc="Match Features", disable=not verbose):
         results[feat] = _get_features_impl(matches, feat)
-    if len(results) == 1:
-        return next(iter(results.values()))
     return results
 
 
