@@ -3,7 +3,6 @@ from typing import Optional, Union, Sequence, Tuple, Dict
 import numpy as np
 import pandas as pd
 import plotly.graph_objects as go
-from charset_normalizer import detect
 from plotly.subplots import make_subplots
 
 import peyes

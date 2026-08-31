@@ -10,7 +10,9 @@ from peyes._DataModels.UnparsedEventLabel import UnparsedEventLabelType, Unparse
 
 ###########################
 
-BASE_DIR = r'S:\Lab-Shared\Experiments\pEYES'   # lab-shared directory
+# lab-shared directory; override with the PEYES_ANALYSIS_BASE_DIR environment variable to run analysis/
+# outside the lab network (e.g. a fresh clone, or CI) - see code review A-1
+BASE_DIR = os.environ.get("PEYES_ANALYSIS_BASE_DIR", r'S:\Lab-Shared\Experiments\pEYES')
 DATASETS_DIR = os.path.join(BASE_DIR, "datasets")
 OUTPUT_DIR = os.path.join(BASE_DIR, peyes.constants.OUTPUT_STR)
 
@@ -130,7 +132,7 @@ def get_labeler_color(labeler: str, idx: int, colors) -> str:
         return colors[idx % len(colors)]
     elif isinstance(colors, dict):
         possibilities = [
-            labeler, labeler.strip().lower(), labeler.strip().lower().removesuffix("detector"),
+            labeler, labeler.strip().lower(), labeler.strip().lower().removesuffix("detector").strip(),
         ]
         for p in possibilities:
             if p in colors:

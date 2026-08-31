@@ -9,11 +9,14 @@ import analysis.utils as u
 
 DATASET_NAME = "hfc"
 STIMULUS_TYPE = "free_viewing"
-GT1 = "IH"      # 24 years of experience; lab "Exp Psy Utrecht"
-GT2 = "DN"      # 10 years of experience; lab "Humlab Lund"
-GT3 = "JV"      # 10 years of experience; lab "Exp Psy Utrecht"
-GT4, GT5 = "RA", "MN"   # annotators of the lund2013 dataset; lab "Humlab Lund"
-GT1, GT2 = GT4, GT5     # for now, use the same annotators as in lund2013 dataset   # TODO: remove this line
+# HFC has 4 documented annotators (IH: 24y experience, lab "Exp Psy Utrecht"; DN: 10y, lab "Humlab Lund";
+# JV: 10y, lab "Exp Psy Utrecht"; plus RA/MN, who also annotated lund2013, lab "Humlab Lund"). RA and MN are
+# the deliberate, correct ground-truth pair for HFC figures/analyses (confirmed with the maintainer - not a
+# placeholder, despite this file's earlier history). GT4/GT5 are RA/MN again, kept because
+# `GT_LABELERS = [GT1, GT2, GT3, GT4, GT5]` in some rater-analysis notebooks lists all five by name - note
+# that specific list currently double-counts RA and MN under two names each (code review, item pending).
+GT1, GT2, GT3 = "RA", "MN", "JV"
+GT4, GT5 = GT1, GT2
 
 MULTI_COMP = "bonferroni"   # method for multiple comparisons correction: bonferroni, fdr_bh, holm, etc.
 ALPHA, MARGINAL_ALPHA = 0.05, 0.075
