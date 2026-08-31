@@ -180,6 +180,8 @@ def _create_single_event_figure(
 
     :return: the figure.
     """
+    if len(events) == 0:
+        raise ValueError("`events` must not be empty")
     event_label = events[0].label
     if not all(e.label == event_label for e in events):
         raise ValueError("All events must have the same label.")
@@ -212,7 +214,7 @@ def _create_single_event_figure(
             ),
             marker_size=kwargs.get("marker_size", 5),
             nbins_polar=kwargs.get(f"{cnst.AZIMUTH_STR}_nbins", 16),
-            show_legend=i == 1,  # show legend on top-right figure only
+            show_legend=(r == 0 and c == num_cols - 1),  # show legend on top-right figure only, any num_cols
         ))
         if kwargs.get("show_outliers", False):
             fig.add_trace(row=r + 1, col=c + 1, trace=__create_single_event_trace(
@@ -225,7 +227,7 @@ def _create_single_event_figure(
                 outlier_opacity=kwargs.get("outlier_opacity", 0.5),
                 marker_size=kwargs.get("marker_size", 5),
                 nbins_polar=kwargs.get(f"{cnst.AZIMUTH_STR}_nbins", 16),
-                show_legend=i == 1,  # show legend on top-right figure only
+                show_legend=(r == 0 and c == num_cols - 1),  # show legend on top-right figure only, any num_cols
             ))
         fig.update_xaxes(title_text=measure, row=r + 1, col=c + 1)
         if metric == cnst.CENTER_PIXEL_STR:

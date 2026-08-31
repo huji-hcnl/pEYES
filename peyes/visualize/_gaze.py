@@ -54,7 +54,12 @@ def gaze_heatmap(
     scale = kwargs.get("scale", sig**2)
     counts = scale * __pixel_counts(x, y, resolution)
     filtered_counts = gaussian_filter(counts, sigma=sig)
-    heatmap = (filtered_counts - np.nanmin(filtered_counts)) / (np.nanmax(filtered_counts) - np.nanmin(filtered_counts))
+    counts_min, counts_max = np.nanmin(filtered_counts), np.nanmax(filtered_counts)
+    if counts_max > counts_min:
+        heatmap = (filtered_counts - counts_min) / (counts_max - counts_min)
+    else:
+        # flat input (e.g. all-zero counts): every cell is masked out below anyway, skip the 0/0 division (V-11)
+        heatmap = np.full_like(filtered_counts, np.nan)
     heatmap[(~np.isfinite(heatmap)) | (heatmap <= np.nanmedian(heatmap))] = np.nan    # remove low values
     fig.add_trace(go.Heatmap(
         z=heatmap,
@@ -148,19 +153,20 @@ def gaze_over_time(
         # align y-axis scales on (0_1, 0_2) and (max-val_1, max-val_2)
         v_max = np.nanmax(v)
         xy_max = max(np.nanmax(x), np.nanmax(y))
-        fig.update_layout(yaxis2=dict(scaleanchor='y', scaleratio=xy_max/v_max, constraintoward='bottom'))
+        scaleratio = xy_max / v_max if v_max else 1  # avoid a division by zero for constant/zero velocity (V-11)
+        fig.update_layout(yaxis2=dict(scaleanchor='y', scaleratio=scaleratio, constraintoward='bottom'))
 
     else:
         y_axis2_title = None
 
     if vert_lines is not None:
-        vert_line_color = kwargs.get("vert_line_color", ["#000000"] * len(vert_lines))
-        vert_line_color = [vert_line_color] * len(vert_lines) if isinstance(vert_line_color, str) else vert_line_color
-        if len(vert_lines) != len(vert_line_color):
-            raise ValueError("Length mismatch: `vert_lines` and `vert_line_color`")
+        vert_line_colors = kwargs.get("vert_line_colors", ["#000000"] * len(vert_lines))
+        vert_line_colors = [vert_line_colors] * len(vert_lines) if isinstance(vert_line_colors, str) else vert_line_colors
+        if len(vert_lines) != len(vert_line_colors):
+            raise ValueError("Length mismatch: `vert_lines` and `vert_line_colors`")
         vert_line_width = kwargs.get("vert_line_width", 1)
-        for v, c in zip(vert_lines, vert_line_color):
-            fig.add_vline(x=v, line=dict(color=c, width=vert_line_width, dash="dash"))
+        for vline, c in zip(vert_lines, vert_line_colors):
+            fig.add_vline(x=vline, line=dict(color=c, width=vert_line_width, dash="dash"))
 
     fig.update_layout(
         title=title,
@@ -213,7 +219,9 @@ def _visualize_gaze_trajectory(
         marker_colorbar_title: str = None,
 ) -> go.Figure:
     if isinstance(marker_color, str):
-        marker_color = np.full_like(x, marker_color)
+        # np.full_like(x, marker_color) tries to cast the color string into x's own (numeric) dtype and
+        # raises; build a plain object array of the color string instead (V-9).
+        marker_color = np.full(len(x), marker_color, dtype=object)
     if isinstance(marker_size, int) or isinstance(marker_size, float):
         marker_size = np.full_like(x, marker_size)
     if isinstance(marker_alpha, int) or isinstance(marker_alpha, float):
