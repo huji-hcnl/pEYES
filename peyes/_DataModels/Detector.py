@@ -1,16 +1,21 @@
+import copy
 import time
 from abc import ABC, abstractmethod
-from typing import final, Dict
+from typing import final, Dict, List, Tuple
 import logging
 
+import numpy as np
 import remodnav
 from overrides import override
 from scipy.ndimage import binary_dilation
 from scipy.signal import savgol_filter
 
+import peyes._utils.constants as cnst
 import peyes._DataModels.config as cnfg
-from peyes._utils.vector_utils import *
-from peyes._utils.pixel_utils import *
+from peyes._utils.vector_utils import get_chunk_indices, is_one_dimensional, merge_chunks, reset_short_chunks
+from peyes._utils.pixel_utils import (
+    calculate_velocities, line_dispersion, pixels_to_visual_angle, visual_angle_to_pixels
+)
 from peyes._utils.event_utils import calculate_sampling_rate, parse_label
 from peyes._DataModels.EventLabelEnum import EventLabelEnum, EventLabelSequenceType
 

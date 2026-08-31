@@ -1,3 +1,4 @@
+import warnings
 from typing import Tuple
 
 import numpy as np
@@ -5,22 +6,27 @@ import numpy as np
 import peyes._utils.constants as cnst
 
 
-def cast_to_integers(xs: np.ndarray, ys: np.ndarray) -> Tuple[np.ndarray, np.ndarray]:
+def cast_to_integers(
+        xs: np.ndarray, ys: np.ndarray, silence_warnings: bool = False
+) -> Tuple[np.ndarray, np.ndarray]:
     """
     Casts the given x and y coordinates to integers, rounding down to the nearest smaller integer.
     :param xs: 1D array of x coordinates
     :param ys: 1D array of y coordinates
+    :param silence_warnings: if False (default), warns when negative coordinates are encountered
 
     :return: 1D arrays of x and y coordinates, cast to integers
     """
-    def cast_finites_to_integers(arr: np.ndarray) -> np.ndarray:
+    def cast_finites_to_integers(arr: np.ndarray, name: str) -> np.ndarray:
         new_arr = arr.copy()
         is_finite = np.isfinite(arr)
-        new_arr[is_finite] = new_arr[is_finite].astype(int)
+        if not silence_warnings and np.any(arr[is_finite] < 0):
+            warnings.warn(f"`{name}` contains negative coordinates", UserWarning)
+        new_arr[is_finite] = np.floor(new_arr[is_finite]).astype(int)
         return new_arr
 
-    x_int = cast_finites_to_integers(xs)
-    y_int = cast_finites_to_integers(ys)
+    x_int = cast_finites_to_integers(xs, "xs")
+    y_int = cast_finites_to_integers(ys, "ys")
     return x_int, y_int
 
 

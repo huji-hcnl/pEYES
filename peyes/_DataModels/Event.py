@@ -1,11 +1,13 @@
 import warnings
 from abc import ABC
-from typing import final, List, Optional, Sequence
+from typing import final, List, Optional, Sequence, Tuple
 
+import numpy as np
 import pandas as pd
 
+import peyes._utils.constants as cnst
 import peyes._DataModels.config as cnfg
-from peyes._utils.pixel_utils import *
+from peyes._utils.pixel_utils import calculate_azimuth, calculate_velocities, pixels_to_visual_angle
 from peyes._utils.vector_utils import get_chunk_indices
 from peyes._DataModels.EventLabelEnum import EventLabelEnum
 
@@ -90,6 +92,10 @@ class BaseEvent(ABC):
             viewer_distance: Optional[float] = None,
             pixel_size: Optional[float] = None,
     ) -> list["BaseEvent"]:
+        labels, t = np.asarray(labels), np.asarray(t)
+        x = np.asarray(x) if x is not None else None
+        y = np.asarray(y) if y is not None else None
+        pupil = np.asarray(pupil) if pupil is not None else None
         if len(labels) != len(t):
             raise ValueError("Length of `labels` and `t` must be the same")
         same_label_chunk_idxs = get_chunk_indices(labels)
@@ -412,7 +418,7 @@ class BaseEvent(ABC):
     @property
     def peak_velocity(self) -> float:
         """  Returns the maximum velocity during the event (visual degree / second)  """
-        return np.nanmax(self.velocities(unit='deg'))
+        return float(np.nanmax(self.velocities(unit='deg')))
 
     @final
     @property
@@ -424,7 +430,7 @@ class BaseEvent(ABC):
     @property
     def min_velocity(self) -> float:
         """  Returns the minimum velocity during the event (visual degree / second)  """
-        return np.nanmin(self.velocities(unit='deg'))
+        return float(np.nanmin(self.velocities(unit='deg')))
 
     def __hash__(self):
         return hash((
