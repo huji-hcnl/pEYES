@@ -1,5 +1,6 @@
 import copy
 import time
+import warnings
 from abc import ABC, abstractmethod
 from typing import final, Dict, List, Tuple
 import logging
@@ -946,7 +947,7 @@ class NHDetector(BaseDetector):
         is_noise = self._detect_noise(v, a)
 
         # denoise the data:
-        x_copy, y_copy, v_copy, a_copy = x.copy(), y.copy(), v.copy(), v.copy()
+        x_copy, y_copy, v_copy, a_copy = x.copy(), y.copy(), v.copy(), a.copy()
         x_copy[is_noise] = np.nan
         y_copy[is_noise] = np.nan
         v_copy[is_noise] = np.nan
@@ -1031,9 +1032,14 @@ class NHDetector(BaseDetector):
         px_to_deg_constant = pixels_to_visual_angle(1, vd, ps, False)
         ws = self._calc_num_samples(self.filter_duration_ms, self.sr)
         if ws <= self.filter_polyorder:
+            # D-6: growing `ws` here (and forcing it odd, since scipy accepts even windows but computes a
+            # genuinely different result) would change NHDetector's output at the article's actual sampling
+            # rates (500/300/200 Hz all yield an even `ws` with the default filter duration) - confirmed via
+            # direct testing, not assumed. Left as a hard failure rather than silently adjusted; the low-rate
+            # fix belongs with D-1/D-2/D-16 in a single article-impact-reviewed pass, not this one.
             raise RuntimeError(
-                f"Cannot compute {self.filter_polyorder}-order Savitzky-Golay filter with window of duration {ws}ms " +
-                "and sampling rate of {self.sr}Hz"
+                f"Cannot compute {self.filter_polyorder}-order Savitzky-Golay filter with window of duration "
+                f"{ws} samples and sampling rate of {self.sr}Hz"
             )
         # calculate angular velocity (deg/s): v = sqrt((x')^2 + (y')^2) * pixel-to-angle-constant:
         dx = savgol_filter(x, ws, self._filter_polyorder, deriv=1, delta=1/self.sr)
@@ -1107,8 +1113,10 @@ class NHDetector(BaseDetector):
                 chunks_below_pt = [
                     ch for ch in get_chunk_indices(is_below_pt) if  is_below_pt[ch[0]] and len(ch) >= min_chunk_size
                 ]
-                # drop samples at the edges of each chunk to avoid contamination from saccades:
-                chunks_below_pt = [ch[num_edge_sample_to_drop: -num_edge_sample_to_drop] for ch in chunks_below_pt]
+                # drop samples at the edges of each chunk to avoid contamination from saccades (D-1: at low
+                # sampling rates num_edge_sample_to_drop can be 0, which would otherwise empty every chunk):
+                if num_edge_sample_to_drop > 0:
+                    chunks_below_pt = [ch[num_edge_sample_to_drop: -num_edge_sample_to_drop] for ch in chunks_below_pt]
                 if len(chunks_below_pt) > 0:
                     # concatenate the chunks to get the final boolean array:
                     is_below_pt = np.concatenate(chunks_below_pt)
@@ -1117,6 +1125,8 @@ class NHDetector(BaseDetector):
             pt = mu + 6 * sigma
         if max_iters == 0:
             raise RuntimeError("Failed to converge on PT_1 value for saccade detection")
+        if not np.isfinite(pt):
+            raise RuntimeError("PT_1 did not converge to a finite value for saccade detection")
         ont = np.nanmean(v[is_below_pt]) + 3 * np.nanstd(v[is_below_pt])
         return pt, ont
 
@@ -1145,6 +1155,10 @@ class NHDetector(BaseDetector):
         for i, chunk in enumerate(chunks_above_pt):
             peak_idx: int = int(chunk[0])
             # find the onset of the saccade: the 1st local minimum preceding the peak with v<=OnT
+            # D-8: skipping saccades whose onset search falls back to index 0 (unverified, not a real local
+            # minimum) would change which saccades NHDetector emits for any trial where a real saccade's
+            # onset search legitimately runs to the start of the recording - can't rule that out for the
+            # article's actual trials without the real data, so left as-is pending the same review as D-2/D-16.
             onset_idx = self.__find_local_minimum_index(v, peak_idx, ont, move_back=True)
             # calculate the offset threshold: OfT = a * OnT + b * OtT
             # note the locally adaptive term: OtT = mean(v) + 3 * std(v) for the min_fixation_samples before the onset
@@ -1206,6 +1220,10 @@ class NHDetector(BaseDetector):
             if any(is_peak_in_window):
                 last_peak = np.where(is_peak_in_window)[0][-1]
                 last_offset_idx = saccade_offset_idxs[last_peak]
+                # D-7: switching .max() to np.nanmax() here changes the outcome whenever either window
+                # contains NaN (v_copy is the denoised array, so noise-masked samples can fall inside a
+                # saccade/PSO-adjacent window) - confirmed via direct testing this is not a no-op, so it
+                # needs the same article-impact review as the rest of the NH cluster, not a quick fix here.
                 if v[start_idx: last_offset_idx].max() < v[sac_onset_idx: sac_offset_idx].max():
                     # only allow high PSO if its max velocity is below the previous saccade's max velocity
                     is_high_pso = True
@@ -1280,7 +1298,7 @@ class NHDetector(BaseDetector):
         :param move_back: whether to move back or forward from the starting index   (default: False)
         :return: the index of the local minimum
         """
-        while 0 < idx < len(arr):
+        while 0 < idx < len(arr) - 1:
             if arr[idx] < min_thresh and arr[idx] < arr[idx + 1] and arr[idx] < arr[idx - 1]:
                 # idx is a local minimum
                 return idx
