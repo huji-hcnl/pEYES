@@ -10,13 +10,13 @@ import analysis.utils as u
 DATASET_NAME = "hfc"
 STIMULUS_TYPE = "free_viewing"
 # HFC has 4 documented annotators (IH: 24y experience, lab "Exp Psy Utrecht"; DN: 10y, lab "Humlab Lund";
-# JV: 10y, lab "Exp Psy Utrecht"; plus RA/MN, who also annotated lund2013, lab "Humlab Lund"). RA and MN are
-# the deliberate, correct ground-truth pair for HFC figures/analyses (confirmed with the maintainer - not a
-# placeholder, despite this file's earlier history). GT4/GT5 are RA/MN again, kept because
-# `GT_LABELERS = [GT1, GT2, GT3, GT4, GT5]` in some rater-analysis notebooks lists all five by name - note
-# that specific list currently double-counts RA and MN under two names each (code review, item pending).
+# JV: 10y, lab "Exp Psy Utrecht"; plus RA/MN, who also annotated lund2013, lab "Humlab Lund"). RA, MN and JV
+# are the deliberate, correct ground-truth annotators for HFC figures/analyses (confirmed with the maintainer).
+# Hard-coded directly, with no GT4/GT5 aliasing: an earlier version aliased GT4/GT5 = GT1/GT2 so that a
+# couple of rater-analysis notebooks could list "all five" GT names, which silently double-counted RA and MN
+# under two names each in that listing. Removing the aliasing removes the possibility of that bug recurring.
 GT1, GT2, GT3 = "RA", "MN", "JV"
-GT4, GT5 = GT1, GT2
+GT_LABELERS = [GT1, GT2, GT3]   # the correct, deduplicated set of HFC's 3 GT-eligible annotators
 
 MULTI_COMP = "bonferroni"   # method for multiple comparisons correction: bonferroni, fdr_bh, holm, etc.
 ALPHA, MARGINAL_ALPHA = 0.05, 0.075
