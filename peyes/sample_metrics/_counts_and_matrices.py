@@ -63,7 +63,13 @@ def confusion_matrix(
     """
     ground_truth = [_parse_label(l) for l in ground_truth]
     prediction = [_parse_label(l) for l in prediction]
-    labels = list(EventLabelEnum) if labels is None else list(set(_parse_label(l) for l in labels))
+    if labels is None:
+        labels = list(EventLabelEnum)
+    else:
+        # sort by EventLabelEnum's own order rather than `list(set(...))` (unstable) or insertion order
+        # (varies with the caller's argument order) - so matrices from different calls stay comparable (M-9)
+        requested = set(_parse_label(l) for l in labels)
+        labels = [l for l in EventLabelEnum if l in requested]
     conf = met.confusion_matrix(ground_truth, prediction, labels=labels)
     df = pd.DataFrame(conf, index=labels, columns=labels)
     df.index.name = _GROUND_TRUTH_STR

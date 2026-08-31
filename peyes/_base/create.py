@@ -201,7 +201,7 @@ def _labels_to_boolean_channel(
     :return: array of boolean values, where `True` indicates onsets or offsets
     """
     parsed_labels = np.array([parse_label(l) for l in labels])
-    bool_channel = np.zeros_like(labels, dtype=bool)
+    bool_channel = np.zeros_like(parsed_labels, dtype=bool)
     if channel_type.lower() == cnst.START_STR or channel_type.lower() == cnst.ONSET_STR:
         bool_channel[0] = True
         bool_channel[1:] = np.diff(parsed_labels) != 0

@@ -51,7 +51,11 @@ def get_features(
 
 def _get_features_impl(events: EventSequenceType, feature: str) -> np.ndarray:
     feature_lower = feature.lower().strip().replace(" ", "_").replace("-", "_")
-    feature_lower = feature_lower.removesuffix('s')
+    _recognized = {"start_time", "onset", "end_time", "offset", "duration", "amplitude", "azimuth", "center_pixel", "center"}
+    if feature_lower not in _recognized:
+        # only strip a trailing plural "s" as a fallback, so a future feature name that legitimately ends
+        # in "s" isn't silently mangled if it's already an exact match (M-15)
+        feature_lower = feature_lower.removesuffix('s')
     if feature_lower == "start_time" or feature_lower == "onset":
         return np.array([event.start_time for event in events])
     if feature_lower == "end_time" or feature_lower == "offset":

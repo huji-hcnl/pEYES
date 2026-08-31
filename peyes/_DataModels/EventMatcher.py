@@ -55,9 +55,11 @@ class EventMatcher(ABC):  # noqa: B024  # see code review B-6: a module of stati
         """
         reduction = reduction.lower().replace("_", " ").replace("-", " ").strip()
         matches = {}
-        matched_predictions = set()
+        # tracks `id()` of matched predictions, not the objects themselves: BaseEvent has value-based
+        # __eq__/__hash__, so a plain `set` of events would conflate distinct, byte-identical events (B-3)
+        matched_prediction_ids = set()
         for gt in ground_truth:
-            unmatched_predictions = [p for p in predictions if p not in matched_predictions]
+            unmatched_predictions = [p for p in predictions if id(p) not in matched_prediction_ids]
             possible_matches = EventMatcher.__find_matches(
                 gt=gt,
                 predictions=unmatched_predictions,
@@ -69,17 +71,19 @@ class EventMatcher(ABC):  # noqa: B024  # see code review B-6: a module of stati
                 max_offset_latency=max_offset_difference
             )
             p = EventMatcher.__choose_match(gt, possible_matches, reduction)
-            if len(p):
+            if p:
                 matches[gt] = p
             if reduction != "all":
                 # If reduction is not 'all', cannot allow multiple matches for the same prediction
-                matched_predictions.update(p)
+                matched_prediction_ids.update(id(pred) for pred in p)
 
         # verify output integrity
         if reduction != "all":
-            assert all(len(v) == 1 for v in matches.values()), "Multiple matches for a GT event"
+            if not all(len(v) == 1 for v in matches.values()):
+                raise ValueError("Multiple matches for a GT event")
             matches = {k: v[0] for k, v in matches.items()}
-            assert len(matches.values()) == len(set(matches.values())), "Matched predictions are not unique"
+            if len(matches.values()) != len(set(matches.values())):
+                raise ValueError("Matched predictions are not unique")
         return matches
 
     @staticmethod

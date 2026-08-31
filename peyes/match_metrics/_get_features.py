@@ -34,7 +34,14 @@ def get_features(
 
 def _get_features_impl(matches: OneToOneEventMatchesType, feature: str,) -> np.ndarray:
     feature_name = feature.lower().strip().replace(" ", "_").replace("-", "_")
-    feature_name = feature_name.removesuffix("s").removesuffix("_difference")   # remove _difference(s)
+    _recognized = {
+        "onset", "offset", cnst.DURATION_STR, cnst.AMPLITUDE_STR, cnst.AZIMUTH_STR,
+        "center_pixel_distance", "time_overlap", "time_iou", "time_l2",
+    }
+    if feature_name not in _recognized:
+        # only strip trailing "s"/"_difference(s)" as a fallback, so a future feature name that legitimately
+        # ends in one of these isn't silently mangled if it's already an exact match (M-15)
+        feature_name = feature_name.removesuffix("s").removesuffix("_difference")   # remove _difference(s)
     if feature_name == "onset":
         return np.array([gt.start_time - pred.start_time for gt, pred in matches.items()])
     if feature_name == "offset":

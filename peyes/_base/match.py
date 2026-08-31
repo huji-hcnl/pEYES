@@ -116,7 +116,7 @@ def match_multiple(
     matching criteria and the specified parameters. If `verbose` is True, a progress bar tracks the matching process for
     predicted sequences.
     Returns a dictionary mapping prediction names to their respective matching results.
-    See `match_events` function for more details on the matching criteria and parameters.
+    See the `match` function for more details on the matching criteria and parameters.
     """
     matches = {}
     for name, pred in tqdm(predictions.items(), desc="Matching", disable=not verbose):

@@ -9,6 +9,7 @@ from plotly.subplots import make_subplots
 
 from peyes._DataModels.EventLabelEnum import EventLabelEnum as _EventLabelEnum
 from peyes._DataModels.UnparsedEventLabel import UnparsedEventLabelType as _UnparsedEventLabelType
+from peyes._utils.event_utils import parse_label as _parse_label
 
 ColorType = Union[str, Tuple[int, int, int]]
 LabelColormapType = Dict[_UnparsedEventLabelType, ColorType]
@@ -118,7 +119,11 @@ def get_label_colormap(
     default_colors_rgb = {k: to_rgb(v) for k, v in _DEFAULT_COLORMAP.items()}
     if label_colors is None:
         return default_colors_rgb
-    event_colors_rgb = {k: to_rgb(v) if isinstance(v, str) else v for k, v in label_colors.items()}
+    # parse keys through parse_label (V-15): otherwise a caller-supplied key like "fixation" (a plain string)
+    # doesn't collide with the EventLabelEnum-keyed defaults, and the override is silently dropped.
+    event_colors_rgb = {
+        _parse_label(k): (to_rgb(v) if isinstance(v, str) else v) for k, v in label_colors.items()
+    }
     return {**default_colors_rgb, **event_colors_rgb}
 
 

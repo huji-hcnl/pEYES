@@ -1,4 +1,3 @@
-import warnings
 from typing import Dict, Union, Optional
 
 import numpy as np
@@ -54,26 +53,28 @@ def calculate(
 
     :return: a dictionary mapping each requested metric name to its calculated value
     """
-    with warnings.catch_warnings():
-        warnings.simplefilter("ignore", category=UserWarning)
-        if len(ground_truth) != len(prediction):
-            raise ValueError("Ground Truth and Prediction must have the same length.")
-        ground_truth = [parse_label(label) for label in ground_truth]
-        prediction = [parse_label(label) for label in prediction]
-        results: Dict[str, float] = {}
-        for metric in tqdm(metrics, desc="Calculating Metrics", disable=not verbose):
-            metric_lower = metric.lower().strip().replace(" ", "_").replace("-", "_").removesuffix("_score")
-            if metric_lower in _GLOBAL_METRICS:
-                results[metric] = _calculate_global_metrics(ground_truth, prediction, metric_lower)
-            elif metric_lower in _SDT_METRICS:
-                average = kwargs.get("average", "weighted").lower().strip()
-                correction = kwargs.get("correction", "loglinear").lower().strip()
-                results[metric] = _calculate_sdt_metrics(
-                    ground_truth, prediction, metric_lower, pos_labels, average, correction
-                )
-            else:
-                raise NotImplementedError(f"Unknown metric:\t{metric}")
-        return results
+    # M-11: no longer blanket-suppresses all UserWarnings - that hid sklearn's "ill-defined metric" warnings
+    # (e.g. from matthews_corrcoef/cohen_kappa_score in degenerate cases) along with whatever this was
+    # originally meant to silence. recall/precision/f1 already suppress their own zero-division warning by
+    # passing an explicit `zero_division=np.nan` below, so they're unaffected either way.
+    if len(ground_truth) != len(prediction):
+        raise ValueError("Ground Truth and Prediction must have the same length.")
+    ground_truth = [parse_label(label) for label in ground_truth]
+    prediction = [parse_label(label) for label in prediction]
+    results: Dict[str, float] = {}
+    for metric in tqdm(metrics, desc="Calculating Metrics", disable=not verbose):
+        metric_lower = metric.lower().strip().replace(" ", "_").replace("-", "_").removesuffix("_score")
+        if metric_lower in _GLOBAL_METRICS:
+            results[metric] = _calculate_global_metrics(ground_truth, prediction, metric_lower)
+        elif metric_lower in _SDT_METRICS:
+            average = kwargs.get("average", "weighted").lower().strip()
+            correction = kwargs.get("correction", "loglinear").lower().strip()
+            results[metric] = _calculate_sdt_metrics(
+                ground_truth, prediction, metric_lower, pos_labels, average, correction
+            )
+        else:
+            raise NotImplementedError(f"Unknown metric:\t{metric}")
+    return results
 
 
 def _calculate_global_metrics(
