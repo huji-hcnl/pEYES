@@ -9,27 +9,27 @@ from peyes.event_metrics._rates_and_transitions import microsaccade_rate, micros
 
 
 def start_times(events: _EventSequenceType):
-    return _features(events, _cnst.START_TIME_STR, verbose=False)
+    return _features(events, _cnst.START_TIME_STR, verbose=False)[_cnst.START_TIME_STR]
 
 
 def end_times(events: _EventSequenceType):
-    return _features(events, _cnst.END_TIME_STR, verbose=False)
+    return _features(events, _cnst.END_TIME_STR, verbose=False)[_cnst.END_TIME_STR]
 
 
 def durations(events: _EventSequenceType):
-    return _features(events, _cnst.DURATION_STR, verbose=False)
+    return _features(events, _cnst.DURATION_STR, verbose=False)[_cnst.DURATION_STR]
 
 
 def amplitudes(events: _EventSequenceType):
-    return _features(events, _cnst.AMPLITUDE_STR, verbose=False)
+    return _features(events, _cnst.AMPLITUDE_STR, verbose=False)[_cnst.AMPLITUDE_STR]
 
 
 def azimuths(events: _EventSequenceType):
-    return _features(events, _cnst.AZIMUTH_STR, verbose=False)
+    return _features(events, _cnst.AZIMUTH_STR, verbose=False)[_cnst.AZIMUTH_STR]
 
 
 def center_pixels(events: _EventSequenceType):
-    return _features(events, _cnst.CENTER_PIXEL_STR, verbose=False)
+    return _features(events, _cnst.CENTER_PIXEL_STR, verbose=False)[_cnst.CENTER_PIXEL_STR]
 
 
 def counts(events: _EventSequenceType):

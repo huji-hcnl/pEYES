@@ -1,4 +1,4 @@
-from typing import Dict, Union
+from typing import Dict
 
 import numpy as np
 import pandas as pd
@@ -29,7 +29,7 @@ def features_by_labels(events: EventSequenceType) -> pd.DataFrame:
 
 def get_features(
         events: EventSequenceType, *features: str, verbose: bool = False
-) -> Union[np.ndarray, Dict[str, np.ndarray]]:
+) -> Dict[str, np.ndarray]:
     """
     Extracts the specified features from the given events.
     :param events: the events to extract features from
@@ -41,14 +41,11 @@ def get_features(
         - 'azimuth': the azimuth of the event (deg)
         - 'center_pixel' or 'center': the center pixel of the event
     :param verbose: if True, display a progress bar while extracting the features
-    :return: the extracted features as a numpy array (for a single feature) or a dictionary of numpy arrays (for
-        multiple features).
+    :return: a dictionary mapping each requested feature name to its numpy array of values
     """
     results: Dict[str, np.ndarray] = {}
     for feat in tqdm(features, desc="Event Features", disable=not verbose):
         results[feat] = _get_features_impl(events, feat)
-    if len(results) == 1:
-        return next(iter(results.values()))
     return results
 
 

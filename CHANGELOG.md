@@ -3,6 +3,18 @@
 All notable changes to pEYES are documented here. This project uses [semantic versioning](https://semver.org);
 while the major version is `0`, breaking changes bump the **minor** version.
 
+## [Unreleased]
+
+### Breaking changes
+
+| What changed | Before | After |
+|---|---|---|
+| `sample_metrics.calculate`, `event_metrics.get_features`, `match_metrics.get_features` | returned a bare value when one metric/feature was requested, a dict when several were | always return a `Dict[str, ...]`, even for one requested metric/feature |
+
+The single-metric/feature convenience functions (`sample_metrics.accuracy`, `event_metrics.durations`,
+`match_metrics.onset_difference`, and their siblings) are unaffected and still return a bare
+`float`/`np.ndarray` as before - only the lower-level `calculate`/`get_features` entry points changed.
+
 ## [0.2.0] - 2026-08-31
 
 A correctness release. It fixes 47 findings from a full review of the package, several of which change
