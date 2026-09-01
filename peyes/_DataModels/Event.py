@@ -7,7 +7,7 @@ import pandas as pd
 
 import peyes._utils.constants as cnst
 import peyes._DataModels.config as cnfg
-from peyes._utils.pixel_utils import calculate_azimuth, calculate_velocities, pixels_to_visual_angle
+from peyes._utils.pixel_utils import calculate_accelerations, calculate_azimuth, calculate_velocities, pixels_to_visual_angle
 from peyes._utils.vector_utils import get_chunk_indices
 from peyes._DataModels.EventLabelEnum import EventLabelEnum
 
@@ -136,6 +136,30 @@ class BaseEvent(ABC):
             return px_to_visual_angle_vec(px_velocities, self._viewer_distance, self._pixel_size, use_radians=True)
         raise ValueError(f"unit must be one of `px`, `deg`, or `rad`, not `{unit}`")
 
+    @final
+    def accelerations(self, unit: str = 'px') -> np.ndarray:
+        """
+        Calculates the acceleration (change in velocity per second) of each sample within the event.
+        :param unit: determines the nominator units
+        :return: np.ndarray of accelerations (units are one of px/s^2, deg/s^2, rad/s^2)
+        """
+        px_accelerations = calculate_accelerations(self._x, self._y, self._t)
+        unit = unit.lower()
+        if unit in {"px", "pixel", "pixels", "px/sec"}:
+            return px_accelerations
+        px_to_visual_angle_vec = np.vectorize(pixels_to_visual_angle)
+        if unit in {"deg", "degree", "degrees", "deg/sec"}:
+            return px_to_visual_angle_vec(px_accelerations, self._viewer_distance, self._pixel_size)
+        if unit in {"rad", "radian", "radians", "rad/sec"}:
+            return px_to_visual_angle_vec(px_accelerations, self._viewer_distance, self._pixel_size, use_radians=True)
+        raise ValueError(f"unit must be one of `px`, `deg`, or `rad`, not `{unit}`")
+
+    @final
+    @property
+    def peak_acceleration(self) -> float:
+        """  Returns the maximum (absolute) acceleration during the event (visual degree / second^2)  """
+        return float(np.nanmax(self.accelerations(unit='deg')))
+
     def get_outlier_reasons(self) -> List[str]:
         reasons = []
         if self.duration < cnfg.EVENT_MAPPING[self._LABEL][cnst.MIN_DURATION_STR]:
@@ -149,7 +173,26 @@ class BaseEvent(ABC):
                 np.any(self._y > cnfg.SCREEN_MONITOR[cnst.RESOLUTION_STR][1])
         ):
             reasons.append("pixel_outside_screen")
-        # TODO: check min, max velocity, acceleration, dispersion, etc.
+        reasons.extend(self._out_of_range_reasons(self.peak_velocity, cnst.MIN_VELOCITY_STR, cnst.MAX_VELOCITY_STR))
+        reasons.extend(self._out_of_range_reasons(
+            self.peak_acceleration, cnst.MIN_ACCELERATION_STR, cnst.MAX_ACCELERATION_STR
+        ))
+        # TODO: check dispersion
+        return reasons
+
+    def _out_of_range_reasons(self, value: float, min_key: str, max_key: str) -> List[str]:
+        """
+        Checks `value` against this event's configured min/max thresholds (`cnfg.EVENT_MAPPING[self._LABEL]`) for
+        `min_key`/`max_key`. A threshold that's missing, None, or NaN is a no-op (that check is disabled).
+        """
+        reasons = []
+        label_config = cnfg.EVENT_MAPPING[self._LABEL]
+        min_threshold = label_config.get(min_key)
+        if min_threshold is not None and not np.isnan(min_threshold) and value < min_threshold:
+            reasons.append(min_key)
+        max_threshold = label_config.get(max_key)
+        if max_threshold is not None and not np.isnan(max_threshold) and value > max_threshold:
+            reasons.append(max_key)
         return reasons
 
     @staticmethod

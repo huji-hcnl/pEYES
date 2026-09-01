@@ -87,6 +87,26 @@ def calculate_velocities(xs: np.ndarray, ys: np.ndarray, ts: np.ndarray) -> np.n
     return velocities
 
 
+def calculate_accelerations(xs: np.ndarray, ys: np.ndarray, ts: np.ndarray) -> np.ndarray:
+    """
+    Calculates the acceleration between subsequent pixels in the given x and y coordinates, in pixels per second
+    squared. This is the magnitude of the 2nd derivative of position (matches how NHDetector defines acceleration:
+    sqrt((x'')^2 + (y'')^2)), computed via simple finite differences rather than a smoothed derivative.
+    :param xs: 1D array of x coordinates
+    :param ys: 1D array of y coordinates
+    :param ts: 1D array of timestamps (in milliseconds)
+    :return: acceleration (pixel / second^2) between subsequent pixels
+    """
+    if not len(xs) == len(ys) == len(ts):
+        raise ValueError("`xs`, `ys` and `ts` arrays must be of the same length")
+    time_diff = np.diff(ts) / cnst.MILLISECONDS_PER_SECOND  # convert from milliseconds to seconds
+    vx = np.diff(xs) / time_diff
+    vy = np.diff(ys) / time_diff
+    accelerations = np.sqrt(np.power(np.diff(vx), 2) + np.power(np.diff(vy), 2)) / time_diff[1:]
+    accelerations = np.concatenate(([np.nan, np.nan], accelerations))  # first two accelerations are NaN
+    return accelerations
+
+
 def pixels_to_visual_angle(num_px: float, d: float, pixel_size: float, use_radians=False) -> float:
     """
     Calculates the visual angle that corresponds to `num_px` pixels, given that the viewer is sitting at a distance of

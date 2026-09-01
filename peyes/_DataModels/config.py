@@ -23,12 +23,18 @@ EVENT_MAPPING = {
         cnst.COLOR_STR: "#1f78b4",
         cnst.MIN_DURATION_STR: 55,
         cnst.MAX_DURATION_STR: 2500,
+        cnst.MAX_ACCELERATION_STR: 50000,  # deg/s^2; https://doi.org/10.1167/tvst.11.2.35
     },
     EventLabelEnum.SACCADE: {
         cnst.LABEL_STR: EventLabelEnum.SACCADE.name,
         cnst.COLOR_STR: "#33a02c",
         cnst.MIN_DURATION_STR: 10,
         cnst.MAX_DURATION_STR: 200,
+        cnst.MAX_VELOCITY_STR: 1000,  # deg/s; https://doi.org/10.1186/s41235-025-00657-y
+        # cnst.MAX_VELOCITY_STR: 500,  # deg/s; https://doi.org/10.1371/journal.pone.0229177
+        # cnst.MAX_VELOCITY_STR: 1500,  # deg/s; macaques, https://doi.org/10.1523/ENEURO.0086-23.2023
+        # cnst.MAX_ACCELERATION_STR: 120000,  # deg/s^2; macaques, https://doi.org/10.1523/ENEURO.0086-23.2023
+        # max amplitude 20 deg; https://doi.org/10.1037/pag0000718 (no amplitude-threshold check implemented yet)
     },
     EventLabelEnum.PSO: {
         cnst.LABEL_STR: EventLabelEnum.PSO.name,
