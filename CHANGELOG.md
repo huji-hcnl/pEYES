@@ -5,20 +5,11 @@ while the major version is `0`, breaking changes bump the **minor** version.
 
 ## [Unreleased]
 
-### Breaking changes
+## [0.2.0] - not yet released
 
-| What changed | Before | After |
-|---|---|---|
-| `sample_metrics.calculate`, `event_metrics.get_features`, `match_metrics.get_features` | returned a bare value when one metric/feature was requested, a dict when several were | always return a `Dict[str, ...]`, even for one requested metric/feature |
-
-The single-metric/feature convenience functions (`sample_metrics.accuracy`, `event_metrics.durations`,
-`match_metrics.onset_difference`, and their siblings) are unaffected and still return a bare
-`float`/`np.ndarray` as before - only the lower-level `calculate`/`get_features` entry points changed.
-
-## [0.2.0] - 2026-08-31
-
-A correctness release. It fixes 47 findings from a full review of the package, several of which change
-values that previous versions returned.
+A correctness release, still in progress on `dev` (no `v0.2.0` tag or PyPI release yet - everything below is
+what `dev` currently contains, not a shipped version). Fixes dozens of findings from a full review of the
+package plus several follow-up passes, some of which change values that previous versions returned.
 **Read the breaking changes before upgrading**: some of them alter results silently rather than raising.
 
 ### Breaking changes
@@ -40,10 +31,15 @@ values that previous versions returned.
 | `match_metrics.*` with `positive_label=None` | `TypeError` from iterating `None` | `ValueError` stating the argument is required |
 | Invalid arguments to `Event(...)`, `set_viewer_distance`, `set_screen_monitor`, `calculate_velocities`, `sample_metrics.calculate` | `AssertionError`, and nothing at all under `python -O` | `ValueError`, including under `-O` |
 | `events_to_labels([])` | `ValueError` from `min()` on an empty generator | `ValueError` naming the problem |
+| `sample_metrics.calculate`, `event_metrics.get_features`, `match_metrics.get_features` | returned a bare value when one metric/feature was requested, a dict when several were | always return a `Dict[str, ...]`, even for one requested metric/feature |
 
 `match_metrics` true-positive counts now require **both** the ground-truth event and its matched prediction to
 carry a positive label. This only changes results when cross-matching is enabled (`allow_xmatch=True`); with
 the default `False`, matched predictions already share their ground-truth label and the counts are identical.
+
+The single-metric/feature convenience functions (`sample_metrics.accuracy`, `event_metrics.durations`,
+`match_metrics.onset_difference`, and their siblings) are unaffected by the `calculate`/`get_features` change
+and still return a bare `float`/`np.ndarray` as before - only the lower-level entry points changed.
 
 ### Added
 
@@ -53,6 +49,14 @@ the default `False`, matched predictions already share their ground-truth label 
 - `peyes.__version__`.
 - Optional dependency extras: `analysis` (for the scripts under `analysis/`) and `dev`.
 - Ruff configuration and a GitHub Actions workflow running lint plus the test suite.
+- `BaseEvent.get_outlier_reasons()` now also checks peak velocity and peak acceleration against configurable
+  per-label thresholds (`set_event_configurations(..., min_velocity=, max_velocity=, min_acceleration=,
+  max_acceleration=)`), in addition to the existing duration and screen-bounds checks. Defaults: saccade
+  `max_velocity=1000` deg/s, fixation `max_acceleration=50000` deg/s^2 (both literature-sourced; see
+  `_DataModels/config.py` for the alternative thresholds considered and their references). A threshold that's
+  `None`/`NaN` disables that specific check. Closes [#26]. Note: given the "angular velocity is computed with
+  the wrong transform" known issue below, these particular default values aren't reachable in practice yet -
+  the mechanism itself is correct and works with any threshold actually within the current 0-180 deg range.
 
 ### Fixed
 
@@ -118,8 +122,7 @@ This release does **not** fix everything found in the review. The most important
   for a future release.
 - `NHDetector` raises at sampling rates of roughly 120 Hz and below, and produces an all-fixation result with
   no warning in a band around 150-166 Hz.
-- `is_outlier` checks only event duration and screen bounds, not velocity, acceleration or dispersion, so it
-  is narrower than its name suggests ([#26]).
+- `is_outlier` still doesn't check dispersion (velocity and acceleration were added - see Added, [#26]).
 
 ## [0.1.0] - 2026
 

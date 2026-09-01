@@ -18,6 +18,14 @@ OUTPUT_DIR = os.path.join(BASE_DIR, peyes.constants.OUTPUT_STR)
 
 ###########################
 
+# C-6: `BaseEvent.get_outlier_reasons()` gained velocity/acceleration outlier checks (on by default for
+# fixations/saccades), but the article's figures/analyses were computed under duration-and-screen-bounds-only
+# outlier detection. Disable the new checks here, once, for all of analysis/, to keep that behavior unchanged.
+peyes.set_event_configurations("fixation", max_acceleration=np.nan)
+peyes.set_event_configurations("saccade", max_velocity=np.nan)
+
+###########################
+
 GLOBAL_STR = "global"
 SDT_STR = "sdt"
 GT_STR, PRED_STR = "gt", "pred"

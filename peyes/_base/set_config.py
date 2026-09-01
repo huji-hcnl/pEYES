@@ -1,3 +1,5 @@
+import numpy as np
+
 import peyes._utils.constants as cnst
 import peyes._DataModels.config as cnfg
 from peyes._utils.pixel_utils import calculate_pixel_size as calc_ps
@@ -45,12 +47,19 @@ def set_event_configurations(
         min_duration: float = None,
         max_duration: float = None,
         hex_color: str = None,
+        min_velocity: float = None,
+        max_velocity: float = None,
+        min_acceleration: float = None,
+        max_acceleration: float = None,
 ) -> None:
     """
     Sets the event-type's default configuration:
-    - minimum duration (in milliseconds)
-    - maximum duration (in milliseconds)
+    - minimum/maximum duration (in milliseconds)
+    - minimum/maximum peak velocity (in degrees/second), used for outlier detection
+    - minimum/maximum peak acceleration (in degrees/second^2), used for outlier detection
     - plotting color (in hex format)
+
+    Pass `np.nan` for a velocity/acceleration threshold to explicitly disable that specific outlier check.
     """
     if min_duration is not None:
         _set_min_duration(event_type, min_duration)
@@ -58,6 +67,23 @@ def set_event_configurations(
         _set_max_duration(event_type, max_duration)
     if hex_color is not None:
         set_event_color(event_type, hex_color)
+    if min_velocity is not None:
+        _set_outlier_threshold(event_type, cnst.MIN_VELOCITY_STR, min_velocity)
+    if max_velocity is not None:
+        _set_outlier_threshold(event_type, cnst.MAX_VELOCITY_STR, max_velocity)
+    if min_acceleration is not None:
+        _set_outlier_threshold(event_type, cnst.MIN_ACCELERATION_STR, min_acceleration)
+    if max_acceleration is not None:
+        _set_outlier_threshold(event_type, cnst.MAX_ACCELERATION_STR, max_acceleration)
+
+
+def _set_outlier_threshold(event_type: UnparsedEventLabelType, key: str, value: float) -> None:
+    """ Sets a min/max velocity or acceleration outlier threshold for the specified event type. `np.nan` disables
+    that specific check (a missing/None/NaN threshold is a no-op in `BaseEvent.get_outlier_reasons`). """
+    if not np.isnan(value) and value < 0:
+        raise ValueError(f"`{key}` must be non-negative, or NaN to disable this check")
+    label = parse_label(event_type, safe=False)
+    cnfg.EVENT_MAPPING[label][key] = value
 
 
 def _set_min_duration(event_type: UnparsedEventLabelType, duration: float) -> None:
