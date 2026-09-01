@@ -15,6 +15,17 @@ The single-metric/feature convenience functions (`sample_metrics.accuracy`, `eve
 `match_metrics.onset_difference`, and their siblings) are unaffected and still return a bare
 `float`/`np.ndarray` as before - only the lower-level `calculate`/`get_features` entry points changed.
 
+### Added
+
+- `BaseEvent.get_outlier_reasons()` now also checks peak velocity and peak acceleration against configurable
+  per-label thresholds (`set_event_configurations(..., min_velocity=, max_velocity=, min_acceleration=,
+  max_acceleration=)`), in addition to the existing duration and screen-bounds checks. Defaults: saccade
+  `max_velocity=1000` deg/s, fixation `max_acceleration=50000` deg/s^2 (both literature-sourced; see
+  `_DataModels/config.py` for the alternative thresholds considered and their references). A threshold that's
+  `None`/`NaN` disables that specific check. Closes [#26]. Note: given `0.2.0`'s "Angular velocity is computed
+  with the wrong transform" known issue, these particular default values aren't reachable in practice yet - the
+  mechanism itself is correct and works with any threshold actually within the current 0-180 deg range.
+
 ## [0.2.0] - 2026-08-31
 
 A correctness release. It fixes 47 findings from a full review of the package, several of which change
