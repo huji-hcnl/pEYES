@@ -85,3 +85,8 @@ respective documentation (retrieved using the `dataset.load()` call).
 We are grateful for the support of the [Center for Interdisciplinary Data Science Research (CIDR)](https://cidr.huji.ac.il/) at the
 [Hebrew University of Jerusalem](https://new.huji.ac.il/). In particular, we would like to thank Haimasree Bhattacharya from CIDR for
 her assistance in publishing this package.
+
+## Versioning
+[Nir & Deouell (2026)](https://doi.org/10.3758/s13428-026-02983-5) is based on pEYES v0.1.0. The current release,
+v0.2.0, includes bug fixes and efficiency improvements (see [CHANGELOG.md](CHANGELOG.md) for details) and does not
+change the paper's conclusions.
