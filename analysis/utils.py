@@ -151,7 +151,7 @@ def get_labeler_color(labeler: str, idx: int, colors) -> str:
 
 
 def sort_labelers(labelers: Sequence[str]) -> List[str]:
-    labelers = list(set(labelers))
+    labelers = sorted(set(labelers))
     return sorted(labelers, key=lambda l: _get_labeler_index(l, labelers))
 
 
