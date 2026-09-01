@@ -82,7 +82,9 @@ class BaseDetector(ABC):
             raise ValueError("Pixel size must be a positive finite number")
         t, x, y = self._reshape_vectors(t, x, y)
         if np.any(np.diff(t) <= 0):
-            warnings.warn("`t` is not strictly monotonically increasing; sampling-rate-derived values may be off")
+            warnings.warn(
+                "`t` is not strictly monotonically increasing; sampling-rate-derived values may be off", stacklevel=2
+            )
         # reset rather than update-only, so metadata from a previous detect() call on this instance can't
         # leak into this call's result (D-20) - currently a no-op in practice since every _detect_impl only
         # ever writes a fixed, unconditional set of keys, but that's incidental, not guaranteed.

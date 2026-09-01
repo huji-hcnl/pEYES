@@ -21,7 +21,7 @@ def cast_to_integers(
         new_arr = arr.copy()
         is_finite = np.isfinite(arr)
         if not silence_warnings and np.any(arr[is_finite] < 0):
-            warnings.warn(f"`{name}` contains negative coordinates", UserWarning)
+            warnings.warn(f"`{name}` contains negative coordinates", UserWarning, stacklevel=3)
         new_arr[is_finite] = np.floor(new_arr[is_finite]).astype(int)
         return new_arr
 
