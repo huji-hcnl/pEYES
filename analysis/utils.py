@@ -10,9 +10,19 @@ from peyes._DataModels.UnparsedEventLabel import UnparsedEventLabelType, Unparse
 
 ###########################
 
-BASE_DIR = r'S:\Lab-Shared\Experiments\pEYES'   # lab-shared directory
+# lab-shared directory; override with the PEYES_ANALYSIS_BASE_DIR environment variable to run analysis/
+# outside the lab network (e.g. a fresh clone, or CI) - see code review A-1
+BASE_DIR = os.environ.get("PEYES_ANALYSIS_BASE_DIR", r'S:\Lab-Shared\Experiments\pEYES')
 DATASETS_DIR = os.path.join(BASE_DIR, "datasets")
 OUTPUT_DIR = os.path.join(BASE_DIR, peyes.constants.OUTPUT_STR)
+
+###########################
+
+# C-6: `BaseEvent.get_outlier_reasons()` gained velocity/acceleration outlier checks (on by default for
+# fixations/saccades), but the article's figures/analyses were computed under duration-and-screen-bounds-only
+# outlier detection. Disable the new checks here, once, for all of analysis/, to keep that behavior unchanged.
+peyes.set_event_configurations("fixation", max_acceleration=np.nan)
+peyes.set_event_configurations("saccade", max_velocity=np.nan)
 
 ###########################
 
@@ -130,7 +140,7 @@ def get_labeler_color(labeler: str, idx: int, colors) -> str:
         return colors[idx % len(colors)]
     elif isinstance(colors, dict):
         possibilities = [
-            labeler, labeler.strip().lower(), labeler.strip().lower().removesuffix("detector"),
+            labeler, labeler.strip().lower(), labeler.strip().lower().removesuffix("detector").strip(),
         ]
         for p in possibilities:
             if p in colors:
@@ -141,7 +151,7 @@ def get_labeler_color(labeler: str, idx: int, colors) -> str:
 
 
 def sort_labelers(labelers: Sequence[str]) -> List[str]:
-    labelers = list(set(labelers))
+    labelers = sorted(set(labelers))
     return sorted(labelers, key=lambda l: _get_labeler_index(l, labelers))
 
 

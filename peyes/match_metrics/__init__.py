@@ -7,36 +7,36 @@ from peyes.match_metrics._match_evaluation import (
 
 
 def onset_difference(matches: _OneToOneEventMatchesType):
-    return features(matches, 'onset', verbose=False)
+    return features(matches, 'onset', verbose=False)['onset']
 
 
 def offset_difference(matches: _OneToOneEventMatchesType):
-    return features(matches, 'offset', verbose=False)
+    return features(matches, 'offset', verbose=False)['offset']
 
 
 def duration_difference(matches: _OneToOneEventMatchesType):
-    return features(matches, 'duration', verbose=False)
+    return features(matches, 'duration', verbose=False)['duration']
 
 
 def amplitude_difference(matches: _OneToOneEventMatchesType):
-    return features(matches, 'amplitude', verbose=False)
+    return features(matches, 'amplitude', verbose=False)['amplitude']
 
 
 def azimuth_difference(matches: _OneToOneEventMatchesType):
-    return features(matches, 'azimuth', verbose=False)
+    return features(matches, 'azimuth', verbose=False)['azimuth']
 
 
 def center_pixel_distance(matches: _OneToOneEventMatchesType):
-    return features(matches, 'center_pixel_distance', verbose=False)
+    return features(matches, 'center_pixel_distance', verbose=False)['center_pixel_distance']
 
 
 def time_overlap(matches: _OneToOneEventMatchesType):
-    return features(matches, 'time_overlap', verbose=False)
+    return features(matches, 'time_overlap', verbose=False)['time_overlap']
 
 
 def time_iou(matches: _OneToOneEventMatchesType):
-    return features(matches, 'time_iou', verbose=False)
+    return features(matches, 'time_iou', verbose=False)['time_iou']
 
 
 def time_l2(matches: _OneToOneEventMatchesType):
-    return features(matches, 'time_l2', verbose=False)
+    return features(matches, 'time_l2', verbose=False)['time_l2']

@@ -22,4 +22,4 @@ def check_labelers(data: pd.DataFrame, labelers: List[str] = None) -> List[str]:
     unknown_labelers = labelers - set(available_labelers)
     if unknown_labelers:
         raise ValueError(f"Unknown labelers: {unknown_labelers}")
-    return list(labelers)
+    return u.sort_labelers(labelers)

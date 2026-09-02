@@ -13,6 +13,16 @@ _GROUND_TRUTH_STR = "Ground Truth"
 _PREDICTION_STR = "Prediction"
 
 
+def _reindex_to_all_labels(matrix: pd.DataFrame) -> pd.DataFrame:
+    """
+    Pads a transition matrix out to every EventLabelEnum, so matrices built from different sequences share a
+    shape and can be compared, stacked or subtracted. Missing transitions are 0 (or NaN for an all-zero row
+    that has been row-normalised).
+    """
+    labels = list(EventLabelEnum)
+    return matrix.reindex(index=labels, columns=labels, fill_value=0)
+
+
 def label_counts(
         seq: UnparsedEventLabelSequenceType
 ) -> pd.Series:
@@ -39,7 +49,7 @@ def transition_matrix(
     Returns a DataFrame where rows indicate the origin label and columns indicate the destination label.
     """
     seq = [_parse_label(l) for l in seq]
-    return _transition_matrix(seq, normalize_rows)
+    return _reindex_to_all_labels(_transition_matrix(seq, normalize_rows))
 
 
 def confusion_matrix(
@@ -53,7 +63,13 @@ def confusion_matrix(
     """
     ground_truth = [_parse_label(l) for l in ground_truth]
     prediction = [_parse_label(l) for l in prediction]
-    labels = list(EventLabelEnum) if labels is None else list(set(_parse_label(l) for l in labels))
+    if labels is None:
+        labels = list(EventLabelEnum)
+    else:
+        # sort by EventLabelEnum's own order rather than `list(set(...))` (unstable) or insertion order
+        # (varies with the caller's argument order) - so matrices from different calls stay comparable (M-9)
+        requested = set(_parse_label(l) for l in labels)
+        labels = [l for l in EventLabelEnum if l in requested]
     conf = met.confusion_matrix(ground_truth, prediction, labels=labels)
     df = pd.DataFrame(conf, index=labels, columns=labels)
     df.index.name = _GROUND_TRUTH_STR

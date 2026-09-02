@@ -49,12 +49,14 @@ def full_pipeline(
             dataset, detectors, annotators, num_iterations, iterations_overwrite_label, verbose
         )
 
-        # replace non-fixation labels with 'undefined' label as HFC only includes fixation labels
+        # HFC's ground truth only includes fixation labels; other datasets (e.g. lund2013) have real
+        # saccade/blink/etc. annotations that must not be collapsed.
         labels.to_pickle(os.path.join(output_dir, f"raw_{peyes.constants.LABELS_STR}.pkl"))
-        labels = labels.replace({
-            lbl: peyes.parse_label("undef", safe=True) for lbl in np.unique(labels.values)
-            if lbl != peyes.parse_label("fixation", safe=False) or pd.isna(lbl)
-        })
+        if dataset_name == "hfc":
+            labels = labels.replace({
+                lbl: peyes.parse_label("undef", safe=True) for lbl in np.unique(labels.values)
+                if lbl != peyes.parse_label("fixation", safe=False) or pd.isna(lbl)
+            })
 
         labels.to_pickle(os.path.join(output_dir, f"{peyes.constants.LABELS_STR}.pkl"))
         metadata.to_pickle(os.path.join(output_dir, f"{peyes.constants.METADATA_STR}.pkl"))

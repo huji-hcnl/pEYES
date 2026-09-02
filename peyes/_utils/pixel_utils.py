@@ -6,22 +6,27 @@ import numpy as np
 import peyes._utils.constants as cnst
 
 
-def cast_to_integers(xs: np.ndarray, ys: np.ndarray) -> Tuple[np.ndarray, np.ndarray]:
+def cast_to_integers(
+        xs: np.ndarray, ys: np.ndarray, silence_warnings: bool = False
+) -> Tuple[np.ndarray, np.ndarray]:
     """
     Casts the given x and y coordinates to integers, rounding down to the nearest smaller integer.
     :param xs: 1D array of x coordinates
     :param ys: 1D array of y coordinates
+    :param silence_warnings: if False (default), warns when negative coordinates are encountered
 
     :return: 1D arrays of x and y coordinates, cast to integers
     """
-    def cast_finites_to_integers(arr: np.ndarray) -> np.ndarray:
+    def cast_finites_to_integers(arr: np.ndarray, name: str) -> np.ndarray:
         new_arr = arr.copy()
         is_finite = np.isfinite(arr)
-        new_arr[is_finite] = new_arr[is_finite].astype(int)
+        if not silence_warnings and np.any(arr[is_finite] < 0):
+            warnings.warn(f"`{name}` contains negative coordinates", UserWarning, stacklevel=3)
+        new_arr[is_finite] = np.floor(new_arr[is_finite]).astype(int)
         return new_arr
 
-    x_int = cast_finites_to_integers(xs)
-    y_int = cast_finites_to_integers(ys)
+    x_int = cast_finites_to_integers(xs, "xs")
+    y_int = cast_finites_to_integers(ys, "ys")
     return x_int, y_int
 
 
@@ -73,12 +78,33 @@ def calculate_velocities(xs: np.ndarray, ys: np.ndarray, ts: np.ndarray) -> np.n
     :param ts: 1D array of timestamps (in milliseconds)
     :return: velocity (pixel / second) between subsequent pixels
     """
-    assert len(xs) == len(ys) == len(ts), "`xs`, `ys` and `ts` arrays must be of the same length"
+    if not len(xs) == len(ys) == len(ts):
+        raise ValueError("`xs`, `ys` and `ts` arrays must be of the same length")
     time_diff = np.diff(ts) / cnst.MILLISECONDS_PER_SECOND  # convert from milliseconds to seconds
     px_distance = np.sqrt(np.power(np.diff(xs), 2) + np.power(np.diff(ys), 2))
     velocities = px_distance / time_diff
     velocities = np.concatenate(([np.nan], velocities))  # first velocity is NaN
     return velocities
+
+
+def calculate_accelerations(xs: np.ndarray, ys: np.ndarray, ts: np.ndarray) -> np.ndarray:
+    """
+    Calculates the acceleration between subsequent pixels in the given x and y coordinates, in pixels per second
+    squared. This is the magnitude of the 2nd derivative of position (matches how NHDetector defines acceleration:
+    sqrt((x'')^2 + (y'')^2)), computed via simple finite differences rather than a smoothed derivative.
+    :param xs: 1D array of x coordinates
+    :param ys: 1D array of y coordinates
+    :param ts: 1D array of timestamps (in milliseconds)
+    :return: acceleration (pixel / second^2) between subsequent pixels
+    """
+    if not len(xs) == len(ys) == len(ts):
+        raise ValueError("`xs`, `ys` and `ts` arrays must be of the same length")
+    time_diff = np.diff(ts) / cnst.MILLISECONDS_PER_SECOND  # convert from milliseconds to seconds
+    vx = np.diff(xs) / time_diff
+    vy = np.diff(ys) / time_diff
+    accelerations = np.sqrt(np.power(np.diff(vx), 2) + np.power(np.diff(vy), 2)) / time_diff[1:]
+    accelerations = np.concatenate(([np.nan, np.nan], accelerations))  # first two accelerations are NaN
+    return accelerations
 
 
 def pixels_to_visual_angle(num_px: float, d: float, pixel_size: float, use_radians=False) -> float:

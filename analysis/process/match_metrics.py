@@ -97,7 +97,7 @@ def calculate_matched_features(
                         for feat in features:
                             curr_results[(ms, feat)] = peyes.match_metrics.features(
                                 curr_matches, feat, verbose=False
-                            )
+                            )[feat]
                     if curr_results:
                         results[(tr, gt_labeler, pred_labeler, pred_it)] = curr_results
     results = pd.DataFrame.from_dict(results, orient="columns")

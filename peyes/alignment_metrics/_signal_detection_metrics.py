@@ -94,6 +94,11 @@ def _signal_detection_metrics(
     than the window-size.
     # TODO: Consider adding a "correction" parameter to handle this case.
 
+    Note: N (the number of negative "windows") is `(len(channel) - (2*threshold+1)*P) / (2*threshold+1)`, and is
+    deliberately left as a float rather than rounded/truncated to an int - this is by design, not an oversight.
+    It feeds directly into the false-alarm-rate and d-prime/criterion arithmetic below, so rounding it would change
+    those values; the fractional value is the intended one.
+
     :param ground_truth: array-like of ground-truth labels or Event objects
     :param prediction: array-like of predicted labels or Event objects
     :param threshold: int or array-like of int; threshold values to determine if a pairing is valid
@@ -112,6 +117,12 @@ def _signal_detection_metrics(
         data=prediction, channel_type=channel_type, sampling_rate=sampling_rate, min_num_samples=min_num_samples
     )
     p, pp = gt_channel.sum(), pred_channel.sum()  # number of positive samples in GT and prediction
+    if isinstance(threshold, (int, np.integer)):
+        threshold = [int(threshold)]
+    else:
+        threshold = [int(t) for t in threshold]
+    if len(threshold) == 0:
+        raise ValueError("`threshold` must contain at least one value")
     all_matched_diffs = timing_differences(
         ground_truth, prediction,
         max_diff=max(threshold) + 1,
@@ -119,15 +130,13 @@ def _signal_detection_metrics(
         sampling_rate=sampling_rate,
         min_num_samples=min_num_samples
     )
-    if isinstance(threshold, int):
-        threshold = [threshold]
     results = {}
     for thresh in threshold:
         thresh_results = {"P": p, "PP": pp}
         tp = np.sum(np.abs(all_matched_diffs) <= thresh)
         thresh_results["TP"] = tp
         double_thresh = 2 * thresh + 1  # threshold can be before or after a particular sample
-        n = max(0, (len(gt_channel) - double_thresh * p) / double_thresh)  # number of negative "windows" in GT channel
+        n = max(0, (len(gt_channel) - double_thresh * p) / double_thresh)  # negative "windows"; float by design, see docstring
         thresh_results["N"] = n
 
         # true positive rate (TPR), sensitivity, hit-rate
