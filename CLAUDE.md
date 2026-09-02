@@ -20,7 +20,13 @@ Published on PyPI as `peyes`; source of truth for behavior is [Nir & Deouell (20
   `python -m unittest tests.unit_tests.utils.test_vector_utils.TestVectorUtils.test_some_method`
 - Tests use the stdlib `unittest` framework (`unittest.TestCase`), not pytest.
 - Lint with `ruff check peyes tests` (configured in [pyproject.toml](pyproject.toml)); CI in
-  [.github/workflows/ci.yml](.github/workflows/ci.yml) runs ruff plus the test suite on 3.12.
+  [.github/workflows/ci.yml](.github/workflows/ci.yml) runs ruff plus the test suite on Python 3.12
+  (floor-pinned dependencies) and Python 3.14 (latest dependencies).
+- `tests/regression_tests/` guards against dependency-version drift: it runs the real detect → match → metrics
+  pipeline (several detector algorithms) on a small, real, checked-in Lund2013 slice and compares the result
+  against a golden reference generated under floor-pinned dependencies. See its module docstrings
+  (`_harness.py`, `fixtures/build_fixture.py`, `fixtures/generate_golden.py`) for how/when to regenerate the
+  fixtures.
 - NOTE: the shared venv's editable `peyes` install points at one specific worktree, so `import peyes`
   from a different worktree silently loads that worktree's code. Prefix commands with
   `PYTHONPATH=<this worktree>` and confirm with `python -c "import peyes; print(peyes.__file__)"`.
