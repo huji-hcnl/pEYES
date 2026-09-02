@@ -6,7 +6,8 @@ meaningful - this module is the single source of truth for that.
 Mirrors `analysis/_article_results/lund2013/_helpers.py`'s real detector configs and
 `analysis/process/full_pipeline.py`'s call graph (detect -> events -> match -> metrics), trimmed to a subset
 of detectors/schemes that span the risk spectrum identified in Part B's Phase 1 audit: IVT (cheap baseline),
-Engbert (common case), NH and REMoDNaV (scipy/external-package-heavy, highest drift risk).
+Engbert (common case), NH and REMoDNaV (scipy/external-package-heavy, highest drift risk), plus IDT/IDVT
+(dispersion-threshold logic, the one detection strategy the other four don't exercise at all).
 """
 from typing import Dict
 
@@ -31,6 +32,8 @@ _DEFAULT_DETECTOR_PARAMS = dict(missing_value=np.nan, min_event_duration=4, pad_
 def build_detectors() -> Dict[str, BaseDetector]:
     detectors = {
         "ivt": peyes.create_detector(algorithm="ivt", saccade_velocity_threshold=45, **_DEFAULT_DETECTOR_PARAMS),
+        "idt": peyes.create_detector(algorithm="idt", dispersion_threshold=2.7, **_DEFAULT_DETECTOR_PARAMS),
+        "idvt": peyes.create_detector(algorithm="idvt", dispersion_threshold=2.7, **_DEFAULT_DETECTOR_PARAMS),
         "engbert": peyes.create_detector(algorithm="engbert", lambda_param=6, **_DEFAULT_DETECTOR_PARAMS),
         "nh": peyes.create_detector(algorithm="nh", **_DEFAULT_DETECTOR_PARAMS),
         "remodnav": peyes.create_detector(algorithm="remodnav", show_warnings=False, **_DEFAULT_DETECTOR_PARAMS),

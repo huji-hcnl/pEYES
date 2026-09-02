@@ -23,11 +23,11 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        # floor-pinned deps have no Python 3.14 wheels (confirmed via PyPI), so this is an explicit
-        # `include` list rather than a python-version x deps cross-product.
+        # floor-pinned deps have no Python 3.14 wheels (confirmed via PyPI), so 3.12+floor and 3.14+latest
+        # are the two cells that matter - the declared minimum, and the actual modern target. A 3.12+latest
+        # cell would just retest the same "latest" versions as 3.14+latest on an older interpreter, with no
+        # extra signal.
         include:
-          - python-version: "3.12"
-            deps: latest
           - python-version: "3.12"
             deps: floor
           - python-version: "3.14"
