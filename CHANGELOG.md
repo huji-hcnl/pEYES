@@ -5,6 +5,26 @@ while the major version is `0`, breaking changes bump the **minor** version.
 
 ## [Unreleased]
 
+## [0.2.1] - not yet released
+
+Declares and validates Python 3.14 support alongside the existing 3.12 floor. No breaking changes, no
+dependency floor changes, and no functional code changes at all relative to 0.2.0 - confirmed by diff: only
+`peyes/__init__.py`'s version string, `tests/`, CI configuration, and documentation changed. Publication
+results ([Nir & Deouell, 2026](https://doi.org/10.3758/s13428-026-02983-5)) are therefore still unchanged from
+v0.1.0, exactly as in 0.2.0 (which was independently verified bit-for-bit against real article data - see that
+entry below). A dedicated regression harness (see Added below) additionally confirmed the floor-pinned and
+latest dependency versions produce identical detection/matching/metrics output on real data. Safe upgrade from
+either 0.1.0 or 0.2.0 - no new caveats beyond what's already documented for 0.2.0 below.
+
+### Added
+- `tests/regression_tests/`: runs the real detect/match/metrics pipeline (IVT, IDT, IDVT, Engbert, NH,
+  REMoDNaV) on a small, real, checked-in Lund2013 slice and compares against a golden reference generated
+  under floor-pinned dependencies - guards against a future dependency bump silently changing results.
+- CI now tests Python 3.14 (latest dependencies) alongside Python 3.12 (floor-pinned dependencies).
+
+### Changed
+- `README.md` now states tested support for both Python 3.12 and 3.14.
+
 ## [0.2.0] - 2026-09-02
 
 A correctness release. Fixes dozens of findings from a full review of the package plus several follow-up
