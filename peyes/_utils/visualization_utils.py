@@ -9,6 +9,7 @@ from plotly.subplots import make_subplots
 
 from peyes._DataModels.EventLabelEnum import EventLabelEnum as _EventLabelEnum
 from peyes._DataModels.UnparsedEventLabel import UnparsedEventLabelType as _UnparsedEventLabelType
+from peyes._utils.event_utils import parse_label as _parse_label
 
 ColorType = Union[str, Tuple[int, int, int]]
 LabelColormapType = Dict[_UnparsedEventLabelType, ColorType]
@@ -48,6 +49,12 @@ def save_figure(
         width: int = None, height: int = None, scale: float = 1,
         as_json: bool = False, as_html: bool = False, as_png: bool = False
 ):
+    """
+    :param as_png: uses kaleido to rasterize the figure. If this hangs or raises, call
+        `kaleido.get_chrome_sync()` once per environment first - kaleido drives whatever Chrome/Chromium is
+        already on the system, which isn't always compatible with its automation protocol;
+        `get_chrome_sync()` downloads and pins a known-good build instead (see huji-hcnl/pEYES#15).
+    """
     os.makedirs(output_dir, exist_ok=True)
     if as_json:
         fig.write_json(os.path.join(output_dir, f"{fig_name}.json"))
@@ -79,8 +86,8 @@ def create_image(
     """
     if not resolution or len(resolution) != 2 or resolution[0] <= 0 or resolution[1] <= 0:
         raise ValueError("resolution must be a tuple of two positive integers")
-    if image.ndim != 4 and (alpha < 0 or alpha > 1):
-        raise ValueError("bg_alpha must be in the range [0, 1]")
+    if not 0 <= alpha <= 1:
+        raise ValueError("alpha must be in the range [0, 1]")
 
     # If bg_image is not provided or invalid, create an image with the specified RGB background color
     if image is None or image.size == 0 or image.ndim not in (2, 3, 4):
@@ -118,7 +125,11 @@ def get_label_colormap(
     default_colors_rgb = {k: to_rgb(v) for k, v in _DEFAULT_COLORMAP.items()}
     if label_colors is None:
         return default_colors_rgb
-    event_colors_rgb = {k: to_rgb(v) if isinstance(v, str) else v for k, v in label_colors.items()}
+    # parse keys through parse_label (V-15): otherwise a caller-supplied key like "fixation" (a plain string)
+    # doesn't collide with the EventLabelEnum-keyed defaults, and the override is silently dropped.
+    event_colors_rgb = {
+        _parse_label(k): (to_rgb(v) if isinstance(v, str) else v) for k, v in label_colors.items()
+    }
     return {**default_colors_rgb, **event_colors_rgb}
 
 

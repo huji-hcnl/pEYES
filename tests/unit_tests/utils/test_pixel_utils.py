@@ -41,8 +41,9 @@ class TestPixelUtils(unittest.TestCase):
     def test_calculate_pixel_size(self):
         self.assertEqual(1, calculate_pixel_size(width=1, height=1, resolution=(1, 1)))
         self.assertEqual(0.5, calculate_pixel_size(width=1, height=1, resolution=(2, 2)))
+        # 53.1 x 30.0 cm -> 60.9886 cm diagonal; 1920 x 1080 px -> 2202.907 px diagonal; 60.9886 / 2202.907
         self.assertTrue(np.isclose(
-            0.027844,
+            0.0276855,
             calculate_pixel_size(width=cnst.TOBII_WIDTH, height=cnst.TOBII_HEIGHT, resolution=cnst.TOBII_RESOLUTION)
         ))
 
@@ -71,15 +72,13 @@ class TestPixelUtils(unittest.TestCase):
         y_coords3 = y_coords1.copy().astype(float)
         y_coords3[2] = np.nan
 
-        print(calculate_velocities(x_coords, y_coords3, t_coords1))
-
         self.assertTrue(np.allclose(
             np.array([np.nan, sqrt2, np.nan, np.nan, sqrt2]) * cnst.MILLISECONDS_PER_SECOND,
             calculate_velocities(x_coords, y_coords3, t_coords1),
             equal_nan=True
         ))
         t_coords3 = t_coords1[:-1].copy()
-        self.assertRaises(AssertionError, calculate_velocities, x_coords, y_coords1, t_coords3)
+        self.assertRaises(ValueError, calculate_velocities, x_coords, y_coords1, t_coords3)
 
     def test_pixels_to_visual_angle(self):
         self.assertEqual(0, pixels_to_visual_angle(num_px=0, d=1, pixel_size=1))

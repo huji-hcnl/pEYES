@@ -1,15 +1,22 @@
+import copy
 import time
+import warnings
 from abc import ABC, abstractmethod
-from typing import final, Dict
+from typing import final, Dict, List, Tuple
 import logging
 
+import numpy as np
 import remodnav
 from overrides import override
+from scipy.ndimage import binary_dilation
 from scipy.signal import savgol_filter
 
+import peyes._utils.constants as cnst
 import peyes._DataModels.config as cnfg
-from peyes._utils.vector_utils import *
-from peyes._utils.pixel_utils import *
+from peyes._utils.vector_utils import get_chunk_indices, is_one_dimensional, merge_chunks, reset_short_chunks
+from peyes._utils.pixel_utils import (
+    calculate_velocities, line_dispersion, pixels_to_visual_angle, visual_angle_to_pixels
+)
 from peyes._utils.event_utils import calculate_sampling_rate, parse_label
 from peyes._DataModels.EventLabelEnum import EventLabelEnum, EventLabelSequenceType
 
@@ -74,8 +81,16 @@ class BaseDetector(ABC):
         if not np.isfinite(pixel_size_cm) or pixel_size_cm <= 0:
             raise ValueError("Pixel size must be a positive finite number")
         t, x, y = self._reshape_vectors(t, x, y)
+        if np.any(np.diff(t) <= 0):
+            warnings.warn(
+                "`t` is not strictly monotonically increasing; sampling-rate-derived values may be off", stacklevel=2
+            )
+        # reset rather than update-only, so metadata from a previous detect() call on this instance can't
+        # leak into this call's result (D-20) - currently a no-op in practice since every _detect_impl only
+        # ever writes a fixed, unconditional set of keys, but that's incidental, not guaranteed.
+        self._metadata = {}
         self._sr = calculate_sampling_rate(t)
-        labels = np.full_like(t, EventLabelEnum.UNDEFINED, dtype=EventLabelEnum)
+        labels = np.full_like(t, EventLabelEnum.UNDEFINED, dtype=object)
         is_blink = self._detect_blinks(x, y)
         # detect blinks and replace blink-samples with NaN
         labels[is_blink] = EventLabelEnum.BLINK
@@ -204,13 +219,10 @@ class BaseDetector(ABC):
         pad_samples = self.pad_blinks_samples
         if pad_samples == 0:
             return is_blink
-        new_is_blink = is_blink.copy()      # avoid overwriting the original array
-        for i, val in enumerate(is_blink):  # read the original array, write to the new one
-            if val:
-                start = max(0, i - pad_samples)
-                end = min(len(is_blink), i + pad_samples)
-                new_is_blink[start:end] = True
-        return new_is_blink
+        # `binary_dilation` with a (2 * pad + 1)-wide structure pads symmetrically; the previous
+        # loop used an exclusive slice end, so it added `pad_samples` before but only
+        # `pad_samples - 1` after each blink sample.
+        return binary_dilation(is_blink, structure=np.ones(2 * pad_samples + 1, dtype=bool))
 
     def _reshape_vectors(self, t: np.ndarray, x: np.ndarray, y: np.ndarray) -> (np.ndarray, np.ndarray, np.ndarray):
         if not is_one_dimensional(t):
@@ -242,7 +254,7 @@ class BaseDetector(ABC):
         return self.name
 
 
-class IGlobalThresholdDetector(ABC):
+class IGlobalThresholdDetector(ABC):  # noqa: B024  # mixin: shares a helper, defines no abstract methods
 
     @staticmethod
     def _get_global_threshold(threshold_deg: float, unit: str, vd: float, ps: float) -> float:
@@ -316,7 +328,7 @@ class IVTDetector(BaseDetector, IGlobalThresholdDetector):
             raise ValueError("Viewer distance must be a positive finite number")
         if not np.isfinite(pixel_size_cm) or pixel_size_cm <= 0:
             raise ValueError("Pixel size must be a positive finite number")
-        labels = np.asarray(copy.deepcopy(labels), dtype=EventLabelEnum)
+        labels = np.asarray(copy.deepcopy(labels), dtype=object)
         px_velocities = calculate_velocities(x, y, t)
         px_threshold = self._get_global_threshold(self.saccade_velocity_threshold_deg, "px", viewer_distance_cm,
                                                   pixel_size_cm)
@@ -484,7 +496,7 @@ class IDTDetector(BaseDetector, IGlobalThresholdDetector):
             viewer_distance_cm: float,
             pixel_size_cm: float,
     ) -> np.ndarray:
-        labels = np.asarray(copy.deepcopy(labels), dtype=EventLabelEnum)
+        labels = np.asarray(copy.deepcopy(labels), dtype=object)
         ws = self._calculate_window_size_samples(t)
         px_threshold = self._get_global_threshold(self.dispersion_threshold_deg, "px", viewer_distance_cm,
                                                   pixel_size_cm)
@@ -529,11 +541,6 @@ class IDTDetector(BaseDetector, IGlobalThresholdDetector):
             raise ValueError(f"window_duration={ws}ms is too long for the given input data")
         return ws
 
-    @staticmethod
-    def _calculate_dispersion_length_px(xs: np.ndarray, ys: np.ndarray) -> float:
-        """ Calculates the dispersion length of the gaze points (px units) """
-        return max(xs) - min(xs) + max(ys) - min(ys)
-
 
 class IDVTDetector(IDTDetector, IVTDetector):
     """
@@ -569,8 +576,9 @@ class IDVTDetector(IDTDetector, IVTDetector):
     :param saccade_velocity_threshold: the threshold for angular velocity, in degrees per second. Default is 45 degrees
         per-second, as suggested in the paper "One algorithm to rule them all? An evaluation and discussion of ten eye
         movement event-detection algorithms" (2016), Andersson et al.
-    :param dispersion_threshold: the threshold for dispersion, in degrees. Default is 2.0 DVA, as used in the original
-        paper by Komogortsev & Karpov (2013). In the  Andersson et al. (2016), they suggested threshold is 2.7 DVA.
+    :param dispersion_threshold: the threshold for dispersion, in degrees. Default is 0.5 DVA (inherited from
+        IDTDetector); the original I-DVT paper by Komogortsev & Karpov (2013) suggests 2.0 DVA, and
+        Andersson et al. (2016) suggest 2.7 DVA.
     :param window_duration: the duration of the window in milliseconds. Default is the minimal fixation duration from
         the configuration file. The original Komogortsev & Karpov (2013) paper suggest a threshold of 110-150 ms.
     """
@@ -595,6 +603,10 @@ class IDVTDetector(IDTDetector, IVTDetector):
         super(IDVTDetector, self).__init__(
             missing_value, min_event_duration, pad_blinks_ms, name, dispersion_threshold, window_duration
         )
+        # assigned directly rather than through IVTDetector.__init__, which the MRO reaches with defaults,
+        # so the validation that constructor performs has to be repeated here
+        if saccade_velocity_threshold <= 0:
+            raise ValueError("Saccade velocity threshold must be positive")
         self._saccade_velocity_threshold = saccade_velocity_threshold
 
     @classmethod
@@ -623,7 +635,7 @@ class IDVTDetector(IDTDetector, IVTDetector):
         is_saccade = (ivt_labels == EventLabelEnum.SACCADE) & ~is_fixation
         is_smooth_pursuit = ~is_fixation & ~is_saccade
 
-        labels = np.asarray(copy.deepcopy(labels), dtype=EventLabelEnum)
+        labels = np.asarray(copy.deepcopy(labels), dtype=object)
         labels[(labels == EventLabelEnum.UNDEFINED) & is_fixation] = EventLabelEnum.FIXATION
         labels[(labels == EventLabelEnum.UNDEFINED) & is_saccade] = EventLabelEnum.SACCADE
         labels[(labels == EventLabelEnum.UNDEFINED) & is_smooth_pursuit] = EventLabelEnum.SMOOTH_PURSUIT
@@ -703,7 +715,7 @@ class EngbertDetector(BaseDetector):
             viewer_distance_cm: float,
             pixel_size_cm: float,
     ) -> np.ndarray:
-        labels = np.asarray(copy.deepcopy(labels), dtype=EventLabelEnum)
+        labels = np.asarray(copy.deepcopy(labels), dtype=object)
         x_velocity = self._axial_velocities_px(x, self.sr, self.deriv_window_size)
         y_velocity = self._axial_velocities_px(y, self.sr, self.deriv_window_size)
         x_thresh = self._median_standard_deviation(x_velocity) * self.lambda_param
@@ -712,7 +724,7 @@ class EngbertDetector(BaseDetector):
         labels[ellipse < 1] = EventLabelEnum.FIXATION
         labels[ellipse >= 1] = EventLabelEnum.SACCADE
         self._metadata.update({
-            f"{cnst.X}_{self.__THRESHOLD_VELOCITY_STR}_pxs": x_thresh,
+            f"{cnst.X}_{self.__THRESHOLD_VELOCITY_STR}_px": x_thresh,
             f"{cnst.Y}_{self.__THRESHOLD_VELOCITY_STR}_px": y_thresh,
         })
         return labels
@@ -939,7 +951,7 @@ class NHDetector(BaseDetector):
         is_noise = self._detect_noise(v, a)
 
         # denoise the data:
-        x_copy, y_copy, v_copy, a_copy = x.copy(), y.copy(), v.copy(), v.copy()
+        x_copy, y_copy, v_copy, a_copy = x.copy(), y.copy(), v.copy(), a.copy()
         x_copy[is_noise] = np.nan
         y_copy[is_noise] = np.nan
         v_copy[is_noise] = np.nan
@@ -1024,9 +1036,14 @@ class NHDetector(BaseDetector):
         px_to_deg_constant = pixels_to_visual_angle(1, vd, ps, False)
         ws = self._calc_num_samples(self.filter_duration_ms, self.sr)
         if ws <= self.filter_polyorder:
+            # D-6: growing `ws` here (and forcing it odd, since scipy accepts even windows but computes a
+            # genuinely different result) would change NHDetector's output at the article's actual sampling
+            # rates (500/300/200 Hz all yield an even `ws` with the default filter duration) - confirmed via
+            # direct testing, not assumed. Left as a hard failure rather than silently adjusted; the low-rate
+            # fix belongs with D-1/D-2/D-16 in a single article-impact-reviewed pass, not this one.
             raise RuntimeError(
-                f"Cannot compute {self.filter_polyorder}-order Savitzky-Golay filter with window of duration {ws}ms " +
-                "and sampling rate of {self.sr}Hz"
+                f"Cannot compute {self.filter_polyorder}-order Savitzky-Golay filter with window of duration "
+                f"{ws} samples and sampling rate of {self.sr}Hz"
             )
         # calculate angular velocity (deg/s): v = sqrt((x')^2 + (y')^2) * pixel-to-angle-constant:
         dx = savgol_filter(x, ws, self._filter_polyorder, deriv=1, delta=1/self.sr)
@@ -1100,8 +1117,10 @@ class NHDetector(BaseDetector):
                 chunks_below_pt = [
                     ch for ch in get_chunk_indices(is_below_pt) if  is_below_pt[ch[0]] and len(ch) >= min_chunk_size
                 ]
-                # drop samples at the edges of each chunk to avoid contamination from saccades:
-                chunks_below_pt = [ch[num_edge_sample_to_drop: -num_edge_sample_to_drop] for ch in chunks_below_pt]
+                # drop samples at the edges of each chunk to avoid contamination from saccades (D-1: at low
+                # sampling rates num_edge_sample_to_drop can be 0, which would otherwise empty every chunk):
+                if num_edge_sample_to_drop > 0:
+                    chunks_below_pt = [ch[num_edge_sample_to_drop: -num_edge_sample_to_drop] for ch in chunks_below_pt]
                 if len(chunks_below_pt) > 0:
                     # concatenate the chunks to get the final boolean array:
                     is_below_pt = np.concatenate(chunks_below_pt)
@@ -1110,6 +1129,8 @@ class NHDetector(BaseDetector):
             pt = mu + 6 * sigma
         if max_iters == 0:
             raise RuntimeError("Failed to converge on PT_1 value for saccade detection")
+        if not np.isfinite(pt):
+            raise RuntimeError("PT_1 did not converge to a finite value for saccade detection")
         ont = np.nanmean(v[is_below_pt]) + 3 * np.nanstd(v[is_below_pt])
         return pt, ont
 
@@ -1138,6 +1159,10 @@ class NHDetector(BaseDetector):
         for i, chunk in enumerate(chunks_above_pt):
             peak_idx: int = int(chunk[0])
             # find the onset of the saccade: the 1st local minimum preceding the peak with v<=OnT
+            # D-8: skipping saccades whose onset search falls back to index 0 (unverified, not a real local
+            # minimum) would change which saccades NHDetector emits for any trial where a real saccade's
+            # onset search legitimately runs to the start of the recording - can't rule that out for the
+            # article's actual trials without the real data, so left as-is pending the same review as D-2/D-16.
             onset_idx = self.__find_local_minimum_index(v, peak_idx, ont, move_back=True)
             # calculate the offset threshold: OfT = a * OnT + b * OtT
             # note the locally adaptive term: OtT = mean(v) + 3 * std(v) for the min_fixation_samples before the onset
@@ -1199,6 +1224,10 @@ class NHDetector(BaseDetector):
             if any(is_peak_in_window):
                 last_peak = np.where(is_peak_in_window)[0][-1]
                 last_offset_idx = saccade_offset_idxs[last_peak]
+                # D-7: switching .max() to np.nanmax() here changes the outcome whenever either window
+                # contains NaN (v_copy is the denoised array, so noise-masked samples can fall inside a
+                # saccade/PSO-adjacent window) - confirmed via direct testing this is not a no-op, so it
+                # needs the same article-impact review as the rest of the NH cluster, not a quick fix here.
                 if v[start_idx: last_offset_idx].max() < v[sac_onset_idx: sac_offset_idx].max():
                     # only allow high PSO if its max velocity is below the previous saccade's max velocity
                     is_high_pso = True
@@ -1246,7 +1275,7 @@ class NHDetector(BaseDetector):
         :param pso_info: dict of saccade -> (PSO start-idx, PSO end-idx and PSO type (high or low))
         :return: array of classified samples
         """
-        labels = np.asarray(copy.deepcopy(labels), dtype=EventLabelEnum)
+        labels = np.asarray(copy.deepcopy(labels), dtype=object)
         for val in saccade_info.values():
             onset_idx, _, offset_idx, _ = val
             labels[onset_idx: offset_idx] = EventLabelEnum.SACCADE
@@ -1273,7 +1302,7 @@ class NHDetector(BaseDetector):
         :param move_back: whether to move back or forward from the starting index   (default: False)
         :return: the index of the local minimum
         """
-        while 0 < idx < len(arr):
+        while 0 < idx < len(arr) - 1:
             if arr[idx] < min_thresh and arr[idx] < arr[idx + 1] and arr[idx] < arr[idx - 1]:
                 # idx is a local minimum
                 return idx
@@ -1415,6 +1444,23 @@ class REMoDNaVDetector(BaseDetector):
         self._savgol_duration_ms = savgol_filter_duration_ms
         self._max_velocity = max_velocity
         self.show_warnings = show_warnings
+        # every other detector validates its arguments; this one accepted anything and let the
+        # failure surface somewhere inside the remodnav library, or not at all.
+        for name, value in [
+            ("median_filter_duration_ms", self._median_filter_length),
+            ("savgol_filter_duration_ms", self._savgol_duration_ms),
+            ("max_velocity", self._max_velocity),
+            ("saccade_initial_velocity_threshold", self._saccade_initial_velocity_threshold),
+            ("saccade_context_window_duration", self._saccade_context_window_duration),
+            ("saccade_initial_max_freq", self._saccade_initial_max_freq),
+            ("saccade_onset_threshold_noise_factor", self._saccade_onset_threshold_noise_factor),
+            ("smooth_pursuits_lowpass_cutoff_freq", self._smooth_pursuit_lowpass_cutoff_freq),
+            ("smooth_pursuit_drift_velocity_threshold", self._smooth_pursuit_drift_velocity_threshold),
+        ]:
+            if value <= 0:
+                raise ValueError(f"{name} must be positive")
+        if self._savgol_polyorder <= 0:
+            raise ValueError("savgol_filter_polyorder must be positive")
 
     @classmethod
     def get_default_params(cls) -> Dict[str, float]:
@@ -1446,9 +1492,24 @@ class REMoDNaVDetector(BaseDetector):
             viewer_distance_cm: float,
             pixel_size_cm: float,
     ) -> np.ndarray:
+        lgr = logging.getLogger('remodnav.clf')
+        previous_level = lgr.level
         if not self.show_warnings:
-            lgr = logging.getLogger('remodnav.clf')
             lgr.setLevel(logging.WARNING + 1)   # ignore warnings from the REMoDNaV library
+        try:
+            return self._detect_impl_inner(t, x, y, labels, viewer_distance_cm, pixel_size_cm)
+        finally:
+            lgr.setLevel(previous_level)        # do not leave the level raised process-wide
+
+    def _detect_impl_inner(
+            self,
+            t: np.ndarray,
+            x: np.ndarray,
+            y: np.ndarray,
+            labels: np.ndarray,
+            viewer_distance_cm: float,
+            pixel_size_cm: float,
+    ) -> np.ndarray:
         classifier = remodnav.EyegazeClassifier(
             px2deg=pixels_to_visual_angle(1, viewer_distance_cm, pixel_size_cm, use_radians=False),
             sampling_rate=self.sr,
@@ -1475,8 +1536,8 @@ class REMoDNaVDetector(BaseDetector):
             dilate_nan=self.pad_blinks_ms / cnst.MILLISECONDS_PER_SECOND,
         )
         detected_events = classifier(pp, classify_isp=True, sort_events=True)   # returns a list of dicts, each dict is a single gaze event
-        labels = np.asarray(copy.deepcopy(labels), dtype=EventLabelEnum)
-        for i, event in enumerate(detected_events):
+        labels = np.asarray(copy.deepcopy(labels), dtype=object)
+        for i, event in enumerate(detected_events):  # noqa: B007  # `i` unused; left as-is, REMoDNaV is article-facing
             start_sample = round(event["start_time"] * self.sr)
             end_sample = round(event["end_time"] * self.sr)
             label = self.__LABEL_MAPPING[event["label"]]

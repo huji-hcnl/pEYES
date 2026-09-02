@@ -1,11 +1,13 @@
 import warnings
 from abc import ABC
-from typing import final, List, Optional, Sequence
+from typing import final, List, Optional, Sequence, Tuple
 
+import numpy as np
 import pandas as pd
 
+import peyes._utils.constants as cnst
 import peyes._DataModels.config as cnfg
-from peyes._utils.pixel_utils import *
+from peyes._utils.pixel_utils import calculate_accelerations, calculate_azimuth, calculate_velocities, pixels_to_visual_angle
 from peyes._utils.vector_utils import get_chunk_indices
 from peyes._DataModels.EventLabelEnum import EventLabelEnum
 
@@ -21,15 +23,25 @@ class BaseEvent(ABC):
             x: np.ndarray = None,
             y: np.ndarray = None,
             pupil: np.ndarray = None,
-            viewer_distance: float = cnfg.VIEWER_DISTANCE,
-            pixel_size: float = cnfg.SCREEN_MONITOR[cnst.PIXEL_SIZE_STR],
+            viewer_distance: Optional[float] = None,
+            pixel_size: Optional[float] = None,
     ):
+        # Resolved here rather than bound as default values: `cnfg.VIEWER_DISTANCE` and
+        # `cnfg.SCREEN_MONITOR[...]` in a signature are evaluated once at import, so
+        # `set_viewer_distance` / `set_screen_monitor` would never reach them.
+        if viewer_distance is None:
+            viewer_distance = cnfg.VIEWER_DISTANCE
+        if pixel_size is None:
+            pixel_size = cnfg.SCREEN_MONITOR[cnst.PIXEL_SIZE_STR]
         _x = x if x is not None else np.full_like(t, np.nan, dtype=float)
         _y = y if y is not None else np.full_like(t, np.nan, dtype=float)
         _pupil = pupil if pupil is not None else np.full_like(t, np.nan, dtype=float)
-        assert len(t) == len(_x) == len(_y) == len(_pupil), "t, x, y, and pupil must have the same length"
-        assert np.isnan(viewer_distance) or viewer_distance > 0, "viewer_distance must be a positive number"
-        assert np.isnan(pixel_size) or pixel_size > 0, "pixel_size must be a positive number"
+        if not len(t) == len(_x) == len(_y) == len(_pupil):
+            raise ValueError("t, x, y, and pupil must have the same length")
+        if not (np.isnan(viewer_distance) or viewer_distance > 0):
+            raise ValueError("viewer_distance must be a positive number")
+        if not (np.isnan(pixel_size) or pixel_size > 0):
+            raise ValueError("pixel_size must be a positive number")
         samples = np.vstack([t, _x, _y, _pupil]).T
         samples = samples[samples[:, 0].argsort()]  # sort by time
         self._t = samples[:, 0]
@@ -47,10 +59,14 @@ class BaseEvent(ABC):
             x: np.ndarray = None,
             y: np.ndarray = None,
             pupil: np.ndarray = None,
-            viewer_distance: float = cnfg.VIEWER_DISTANCE,
-            pixel_size: float = cnfg.SCREEN_MONITOR[cnst.PIXEL_SIZE_STR],
+            viewer_distance: Optional[float] = None,
+            pixel_size: Optional[float] = None,
     ) -> Optional["BaseEvent"]:
-        """  Creates a single Event from the given data.  """
+        """
+        Creates a single Event from the given data.
+        `viewer_distance` and `pixel_size` default to the current values in `peyes.set_viewer_distance` /
+        `peyes.set_screen_monitor`, resolved when the event is constructed rather than at import.
+        """
         if label == EventLabelEnum.UNDEFINED:
             return None
         if label == EventLabelEnum.FIXATION:
@@ -73,9 +89,13 @@ class BaseEvent(ABC):
             x: np.ndarray = None,
             y: np.ndarray = None,
             pupil: np.ndarray = None,
-            viewer_distance: float = cnfg.VIEWER_DISTANCE,
-            pixel_size: float = cnfg.SCREEN_MONITOR[cnst.PIXEL_SIZE_STR],
+            viewer_distance: Optional[float] = None,
+            pixel_size: Optional[float] = None,
     ) -> list["BaseEvent"]:
+        labels, t = np.asarray(labels), np.asarray(t)
+        x = np.asarray(x) if x is not None else None
+        y = np.asarray(y) if y is not None else None
+        pupil = np.asarray(pupil) if pupil is not None else None
         if len(labels) != len(t):
             raise ValueError("Length of `labels` and `t` must be the same")
         same_label_chunk_idxs = get_chunk_indices(labels)
@@ -116,6 +136,30 @@ class BaseEvent(ABC):
             return px_to_visual_angle_vec(px_velocities, self._viewer_distance, self._pixel_size, use_radians=True)
         raise ValueError(f"unit must be one of `px`, `deg`, or `rad`, not `{unit}`")
 
+    @final
+    def accelerations(self, unit: str = 'px') -> np.ndarray:
+        """
+        Calculates the acceleration (change in velocity per second) of each sample within the event.
+        :param unit: determines the nominator units
+        :return: np.ndarray of accelerations (units are one of px/s^2, deg/s^2, rad/s^2)
+        """
+        px_accelerations = calculate_accelerations(self._x, self._y, self._t)
+        unit = unit.lower()
+        if unit in {"px", "pixel", "pixels", "px/sec"}:
+            return px_accelerations
+        px_to_visual_angle_vec = np.vectorize(pixels_to_visual_angle)
+        if unit in {"deg", "degree", "degrees", "deg/sec"}:
+            return px_to_visual_angle_vec(px_accelerations, self._viewer_distance, self._pixel_size)
+        if unit in {"rad", "radian", "radians", "rad/sec"}:
+            return px_to_visual_angle_vec(px_accelerations, self._viewer_distance, self._pixel_size, use_radians=True)
+        raise ValueError(f"unit must be one of `px`, `deg`, or `rad`, not `{unit}`")
+
+    @final
+    @property
+    def peak_acceleration(self) -> float:
+        """  Returns the maximum (absolute) acceleration during the event (visual degree / second^2)  """
+        return float(np.nanmax(self.accelerations(unit='deg')))
+
     def get_outlier_reasons(self) -> List[str]:
         reasons = []
         if self.duration < cnfg.EVENT_MAPPING[self._LABEL][cnst.MIN_DURATION_STR]:
@@ -129,10 +173,55 @@ class BaseEvent(ABC):
                 np.any(self._y > cnfg.SCREEN_MONITOR[cnst.RESOLUTION_STR][1])
         ):
             reasons.append("pixel_outside_screen")
-        # TODO: check min, max velocity, acceleration, dispersion, etc.
+        reasons.extend(self._out_of_range_reasons(self.peak_velocity, cnst.MIN_VELOCITY_STR, cnst.MAX_VELOCITY_STR))
+        reasons.extend(self._out_of_range_reasons(
+            self.peak_acceleration, cnst.MIN_ACCELERATION_STR, cnst.MAX_ACCELERATION_STR
+        ))
+        # TODO: check dispersion
         return reasons
 
+    def _out_of_range_reasons(self, value: float, min_key: str, max_key: str) -> List[str]:
+        """
+        Checks `value` against this event's configured min/max thresholds (`cnfg.EVENT_MAPPING[self._LABEL]`) for
+        `min_key`/`max_key`. A threshold that's missing, None, or NaN is a no-op (that check is disabled).
+        """
+        reasons = []
+        label_config = cnfg.EVENT_MAPPING[self._LABEL]
+        min_threshold = label_config.get(min_key)
+        if min_threshold is not None and not np.isnan(min_threshold) and value < min_threshold:
+            reasons.append(min_key)
+        max_threshold = label_config.get(max_key)
+        if max_threshold is not None and not np.isnan(max_threshold) and value > max_threshold:
+            reasons.append(max_key)
+        return reasons
+
+    @staticmethod
+    @final
+    def summary_columns() -> List[str]:
+        """
+        Column names produced by `summary()`, in order. Exposed so that callers -- and `summarize_events` for
+        an empty input -- can build a correctly-shaped frame without constructing an Event.
+        """
+        return [
+            f"{cnst.EVENT_STR}_{cnst.TYPE_STR}", cnst.LABEL_STR,
+            cnst.START_TIME_STR, cnst.END_TIME_STR, cnst.DURATION_STR,
+            cnst.DISTANCE_STR, cnst.AMPLITUDE_STR, cnst.AZIMUTH_STR,
+            cnst.PEAK_VELOCITY_STR, cnst.MEDIAN_VELOCITY_STR, cnst.MIN_VELOCITY_STR,
+            cnst.CUMULATIVE_DISTANCE_STR, cnst.CUMULATIVE_AMPLITUDE_STR,
+            cnst.START_X_STR, cnst.START_Y_STR, cnst.END_X_STR, cnst.END_Y_STR,
+            cnst.CENTER_PIXEL_STR, cnst.PIXEL_STD_STR,
+            cnst.DISPERSION_STR, cnst.ELLIPSE_AREA_STR,
+            cnst.IS_OUTLIER_STR, BaseEvent._OUTLIER_REASONS_STR,
+        ]
+
     def summary(self) -> pd.Series:
+        """
+        One-row summary of the event's features.
+
+        Note `is_outlier` and `outlier_reasons` are derived at call time from the mutable module-level
+        configuration (`peyes.set_event_configurations`), not fixed when the event was constructed, so the
+        same Event can summarise differently before and after a config change.
+        """
         with warnings.catch_warnings():
             # ignore warnings about NaN values in the event summary
             warnings.simplefilter("ignore", category=RuntimeWarning)
@@ -150,6 +239,10 @@ class BaseEvent(ABC):
                 cnst.MIN_VELOCITY_STR: self.min_velocity,
                 cnst.CUMULATIVE_DISTANCE_STR: self.cumulative_distance,
                 cnst.CUMULATIVE_AMPLITUDE_STR: self.cumulative_amplitude,
+                cnst.START_X_STR: self.start_pixel[0],
+                cnst.START_Y_STR: self.start_pixel[1],
+                cnst.END_X_STR: self.end_pixel[0],
+                cnst.END_Y_STR: self.end_pixel[1],
                 cnst.CENTER_PIXEL_STR: self.center_pixel,
                 cnst.PIXEL_STD_STR: self.pixel_std,
                 cnst.DISPERSION_STR: self.dispersion,
@@ -241,6 +334,14 @@ class BaseEvent(ABC):
     @final
     @property
     def duration(self) -> float:
+        """
+        Duration of the event in milliseconds, measured as `end_time - start_time`.
+
+        Note this is the span *between* the first and last samples, not the time they occupy: an event of
+        `n` samples recorded at interval `dt` has a duration of `(n - 1) * dt`, and a single-sample event has
+        a duration of 0. Code converting between durations and sample counts must add one accordingly
+        (see `peyes.events_to_labels` and `peyes.create_boolean_channel`).
+        """
         return float(self.end_time - self.start_time)
 
     @final
@@ -296,32 +397,39 @@ class BaseEvent(ABC):
             return x_std, y_std
 
     @final
+    def _extremum_pixel(self, values: np.ndarray, take_max: bool) -> Tuple[float, float]:
+        """
+        Returns the (x, y) pixel at the minimum or maximum of `values`, ignoring NaNs.
+        Returns (nan, nan) if every sample is NaN.
+        """
+        if np.all(np.isnan(values)):
+            return float("nan"), float("nan")
+        idx = int(np.nanargmax(values)) if take_max else int(np.nanargmin(values))
+        return float(self._x[idx]), float(self._y[idx])
+
+    @final
     @property
     def top_pixel(self) -> Tuple[float, float]:
         """  Returns the top pixel of the event (assuming the screen's top-left corner is (0,0))  """
-        min_y_idx = np.argmin(self._y)
-        return float(self._x[min_y_idx]), float(self._y[min_y_idx])
+        return self._extremum_pixel(self._y, take_max=False)
 
     @final
     @property
     def bottom_pixel(self) -> Tuple[float, float]:
         """  Returns the bottom pixel of the event (assuming the screen's top-left corner is (0,0))  """
-        max_y_idx = np.argmax(self._y)
-        return float(self._x[max_y_idx]), float(self._y[max_y_idx])
+        return self._extremum_pixel(self._y, take_max=True)
 
     @final
     @property
     def left_pixel(self) -> Tuple[float, float]:
         """  Returns the leftmost pixel of the event (assuming the screen's top-left corner is (0,0))  """
-        min_x_idx = np.argmin(self._x)
-        return float(self._x[min_x_idx]), float(self._y[min_x_idx])
+        return self._extremum_pixel(self._x, take_max=False)
 
     @final
     @property
     def right_pixel(self) -> Tuple[float, float]:
         """  Returns the rightmost pixel of the event (assuming the screen's top-left corner is (0,0))  """
-        max_x_idx = np.argmax(self._x)
-        return float(self._x[max_x_idx]), float(self._y[max_x_idx])
+        return self._extremum_pixel(self._x, take_max=True)
 
     @final
     @property
@@ -353,7 +461,7 @@ class BaseEvent(ABC):
     @property
     def peak_velocity(self) -> float:
         """  Returns the maximum velocity during the event (visual degree / second)  """
-        return np.nanmax(self.velocities(unit='deg'))
+        return float(np.nanmax(self.velocities(unit='deg')))
 
     @final
     @property
@@ -365,7 +473,7 @@ class BaseEvent(ABC):
     @property
     def min_velocity(self) -> float:
         """  Returns the minimum velocity during the event (visual degree / second)  """
-        return np.nanmin(self.velocities(unit='deg'))
+        return float(np.nanmin(self.velocities(unit='deg')))
 
     def __hash__(self):
         return hash((

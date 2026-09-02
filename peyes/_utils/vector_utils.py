@@ -50,6 +50,7 @@ def get_chunk_indices(arr) -> List[np.ndarray]:
     """
     if not is_one_dimensional(arr):
         raise ValueError("arr must be one-dimensional")
+    arr = np.asarray(arr).reshape(-1)   # is_one_dimensional also accepts (1, n) and (n, 1)
     indices = np.arange(len(arr))
     split_on = np.nonzero(np.diff(arr))[0] + 1  # +1 because we want to include the last index of each chunk
     chunk_indices = np.split(indices, split_on)
@@ -67,7 +68,7 @@ def merge_chunks(arr: np.ndarray, max_samples_between: int) -> np.ndarray:
         raise ValueError("input array must be one-dimensional")
     if max_samples_between < 0:
         raise ValueError("max_samples_between must be non-negative")
-    arr_copy = copy.deepcopy(arr)
+    arr_copy = np.asarray(copy.deepcopy(arr)).reshape(-1)
     chunk_indices = get_chunk_indices(arr_copy)
     for i, middle_chunk in enumerate(chunk_indices[1:-1], start=1):
         if len(middle_chunk) > max_samples_between:
@@ -91,7 +92,7 @@ def reset_short_chunks(arr: np.ndarray, min_samples: int, default_value: int) ->
         raise ValueError("input array must be one-dimensional")
     if min_samples < 0:
         raise ValueError("min_samples must be non-negative")
-    arr_copy = copy.deepcopy(arr)
+    arr_copy = np.asarray(copy.deepcopy(arr)).reshape(-1)
     chunk_indices = get_chunk_indices(arr_copy)
     for chunk in chunk_indices:
         if len(chunk) < min_samples:

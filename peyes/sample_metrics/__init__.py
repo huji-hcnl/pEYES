@@ -10,19 +10,19 @@ from peyes.sample_metrics._calculate_metrics import calculate
 
 
 def accuracy(ground_truth: _EventLabelSequenceType, prediction: _EventLabelSequenceType,) -> float:
-    return calculate(ground_truth, prediction, _cnst.ACCURACY_STR)
+    return calculate(ground_truth, prediction, _cnst.ACCURACY_STR)[_cnst.ACCURACY_STR]
 
 
 def balanced_accuracy(ground_truth: _EventLabelSequenceType, prediction: _EventLabelSequenceType,) -> float:
-    return calculate(ground_truth, prediction, _cnst.BALANCED_ACCURACY_STR)
+    return calculate(ground_truth, prediction, _cnst.BALANCED_ACCURACY_STR)[_cnst.BALANCED_ACCURACY_STR]
 
 
 def cohen_kappa(ground_truth: _EventLabelSequenceType, prediction: _EventLabelSequenceType,) -> float:
-    return calculate(ground_truth, prediction, _cnst.COHENS_KAPPA_STR)
+    return calculate(ground_truth, prediction, _cnst.COHENS_KAPPA_STR)[_cnst.COHENS_KAPPA_STR]
 
 
 def mcc(ground_truth: _EventLabelSequenceType, prediction: _EventLabelSequenceType,) -> float:
-    return calculate(ground_truth, prediction, _cnst.MCC_STR)
+    return calculate(ground_truth, prediction, _cnst.MCC_STR)[_cnst.MCC_STR]
 
 
 def complement_nld(ground_truth: _EventLabelSequenceType, prediction: _EventLabelSequenceType) -> float:
@@ -34,7 +34,7 @@ def complement_nld(ground_truth: _EventLabelSequenceType, prediction: _EventLabe
     (1-NLD) may be negative.
     For more information on using 1-NLD in eye-tracking, see https://doi.org/10.3758/s13428-021-01763-7
     """
-    return calculate(ground_truth, prediction, _cnst.COMPLEMENT_NLD_STR)
+    return calculate(ground_truth, prediction, _cnst.COMPLEMENT_NLD_STR)[_cnst.COMPLEMENT_NLD_STR]
 
 
 def precision(
@@ -50,7 +50,7 @@ def precision(
     :param pos_labels: the positive label(s) to consider. Other labels (if exist) are considered negative.
     :param average: the averaging strategy for precision. default is "weighted"
     """
-    return calculate(ground_truth, prediction, _cnst.PRECISION_STR, pos_labels=pos_labels, average=average)
+    return calculate(ground_truth, prediction, _cnst.PRECISION_STR, pos_labels=pos_labels, average=average)[_cnst.PRECISION_STR]
 
 
 def recall(
@@ -66,7 +66,7 @@ def recall(
     :param pos_labels: the positive label(s) to consider. Other labels (if exist) are considered negative.
     :param average: the averaging strategy for recall. default is "weighted"
     """
-    return calculate(ground_truth, prediction, _cnst.RECALL_STR, pos_labels=pos_labels, average=average)
+    return calculate(ground_truth, prediction, _cnst.RECALL_STR, pos_labels=pos_labels, average=average)[_cnst.RECALL_STR]
 
 
 def f1_score(
@@ -82,7 +82,7 @@ def f1_score(
     :param pos_labels: the positive label(s) to consider. Other labels (if exist) are considered negative.
     :param average: the averaging strategy for F1-score. default is "weighted"
     """
-    return calculate(ground_truth, prediction, _cnst.F1_STR, pos_labels=pos_labels, average=average)
+    return calculate(ground_truth, prediction, _cnst.F1_STR, pos_labels=pos_labels, average=average)[_cnst.F1_STR]
 
 
 def d_prime(
@@ -101,7 +101,7 @@ def d_prime(
         See information on correction methods at https://stats.stackexchange.com/a/134802/288290.
         See implementation details at https://lindeloev.net/calculating-d-in-python-and-php/.
     """
-    return calculate(ground_truth, prediction, _cnst.D_PRIME_STR, pos_labels=pos_labels, correction=correction)
+    return calculate(ground_truth, prediction, _cnst.D_PRIME_STR, pos_labels=pos_labels, correction=correction)[_cnst.D_PRIME_STR]
 
 
 def criterion(
@@ -122,4 +122,4 @@ def criterion(
     """
     return calculate(
         ground_truth, prediction, _cnst.CRITERION_STR, pos_labels=pos_labels, correction=correction
-    )
+    )[_cnst.CRITERION_STR]

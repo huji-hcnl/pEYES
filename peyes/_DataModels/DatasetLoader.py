@@ -1,6 +1,7 @@
 import os
 import io
 import itertools
+import warnings
 import zipfile as zp
 import posixpath as psx
 from typing import final, List, Tuple, Dict, Union
@@ -29,6 +30,7 @@ class BaseDatasetLoader(ABC):
     _INDEXERS: List[str] = [
         cnst.TRIAL_ID_STR, cnst.SUBJECT_ID_STR, cnst.STIMULUS_TYPE_STR, cnst.STIMULUS_NAME_STR
     ]
+    _DOWNLOAD_TIMEOUT_SEC: float = 60.0     # without this, a stalled connection hangs indefinitely
 
     @classmethod
     @final
@@ -42,9 +44,14 @@ class BaseDatasetLoader(ABC):
         """
         if save and not directory:
             raise ValueError("Directory must be specified to save the dataset")
-        try:
-            dataset = pd.read_pickle(os.path.join(directory, f"{cls.name()}.pkl"))
-        except (FileNotFoundError, TypeError) as _e:
+        # S-6: check the cache file exists explicitly, rather than using exception flow (catching
+        # FileNotFoundError/TypeError) for the cache-miss path - a truncated/unpickleable cache file used
+        # to propagate through pd.read_pickle as an opaque, uncaught error; now the download path only
+        # triggers when `directory`/the cache file genuinely aren't there.
+        cache_path = os.path.join(directory, f"{cls.name()}.pkl") if directory else None
+        if cache_path and os.path.isfile(cache_path):
+            dataset = pd.read_pickle(cache_path)
+        else:
             if verbose:
                 if directory:
                     print(f"Dataset {cls.name()} not found in directory {directory}.")
@@ -63,7 +70,7 @@ class BaseDatasetLoader(ABC):
     def download(cls, verbose: bool = False) -> pd.DataFrame:
         """ Downloads the dataset from the internet, parses it and returns a DataFrame with cleaned data """
         url = cls.url()
-        response = req.get(cls._URL)
+        response = req.get(url, timeout=cls._DOWNLOAD_TIMEOUT_SEC)
         code = response.status_code
         if code != 200:
             raise ConnectionError(
@@ -216,6 +223,18 @@ class Lund2013DatasetLoader(BaseDatasetLoader):
                 gaze_data[cnst.STIMULUS_NAME_STR] = stimulus_name
                 dataframes[(subject_id, stimulus_type, stimulus_name)] = gaze_data
             else:
+                if len(existing_df) != len(gaze_data):
+                    # index-alignment below would otherwise silently fill NaN for the length difference
+                    # (S-5), which can mask a truncated/corrupted rater file. Warn rather than raise: this
+                    # loader feeds the article's Lund2013 data, and unlike a crash, the *old* behavior here
+                    # was already silent, so a mismatch (if any exist in the real files) can't be ruled out
+                    # without risking breaking a currently-working load.
+                    warnings.warn(
+                        f"Rater '{rater}' has {len(gaze_data)} samples for trial "
+                        f"{(subject_id, stimulus_type, stimulus_name)}, expected {len(existing_df)} - "
+                        f"the mismatched samples will be NaN-filled by index alignment.",
+                        stacklevel=2,
+                    )
                 existing_df.loc[:, rater] = gaze_data.loc[:, rater]
         return pd.concat(dataframes.values(), ignore_index=True, axis=0)
 
@@ -317,7 +336,7 @@ class IRFDatasetLoader(BaseDatasetLoader):
             (f.startswith(psx.join(cls.__PREFIX, "lookAtPoint_EL_")) and f.endswith('.npy'))
         ]
         gaze_dfs = []
-        for i, f in tqdm(enumerate(gaze_file_names), desc="Processing Files", disable=not verbose):
+        for i, f in enumerate(tqdm(gaze_file_names, desc="Processing Files", disable=not verbose)):
             file = zip_file.open(f)
             _, file_name, _ = cls._extract_filename_and_extension(f)
             gaze_data = pd.DataFrame(np.load(file))
@@ -422,7 +441,7 @@ class HFCDatasetLoader(BaseDatasetLoader):
             (f.startswith(psx.join(cls.__PREFIX, "ETdata")) and f.endswith('.txt'))
         ]
         gaze_dfs = {}
-        for i, f in tqdm(enumerate(gaze_file_names), desc="Processing Files", disable=not verbose):
+        for i, f in enumerate(tqdm(gaze_file_names, desc="Processing Files", disable=not verbose)):
             file = zip_file.open(f)
             gaze_data = pd.read_csv(file, sep='\t')
             gaze_data[cnst.PUPIL] = np.nan  # no pupil data available
@@ -448,7 +467,7 @@ class HFCDatasetLoader(BaseDatasetLoader):
 
         # merge annotations with gaze data:
         merged_dfs = []
-        for key, data in gaze_dfs.items():
+        for key, data in gaze_dfs.items():  # noqa: B007  # false positive: `key` is read by the `@key` in .query() below
             if data is None or len(data) == 0 or data.empty:
                 continue
             l = len(data)
@@ -459,16 +478,20 @@ class HFCDatasetLoader(BaseDatasetLoader):
                 else:
                     # reached here if there are annotations from this rater for this trial
                     labels = np.zeros(l, dtype=int)
-                    for _, row in annotations.iterrows():
-                        f = interp1d(
-                            data["time"], range(l), kind="nearest", bounds_error=False, fill_value="extrapolate"
-                        )
-                        fixation_samples = itertools.chain(
-                            *[range(int(s), int(e + 1)) for s, e in zip(
-                                f(annotations["FixStart"]), f(annotations["FixEnd"])
-                            )]
-                        )
-                        labels[list(fixation_samples)] = 1
+                    # S-1: hoisted out of a per-row loop that recomputed the exact same thing len(annotations)
+                    # times (the loop never used its own row); this now runs once.
+                    f = interp1d(
+                        data["time"], range(l), kind="nearest", bounds_error=False, fill_value="extrapolate"
+                    )
+                    # `f` extrapolates (bounds_error=False), so an annotation outside the trial's
+                    # time range yields an index beyond [0, l). A negative index would silently
+                    # wrap to the far end of the trial, so clip rather than index blindly.
+                    fixation_samples = itertools.chain(
+                        *[range(max(0, int(s)), min(l, int(e) + 1)) for s, e in zip(
+                            f(annotations["FixStart"]), f(annotations["FixEnd"])
+                        )]
+                    )
+                    labels[list(fixation_samples)] = 1
                 data[rater_name] = labels
                 data[rater_name] = data[rater_name].apply(lambda x: parse_label(x, safe=True))
             merged_dfs.append(data)
@@ -580,7 +603,7 @@ class GazeComDatasetLoader(BaseDatasetLoader):
         """
         annotated_file_names = [f for f in zf.namelist() if (f.endswith('.arff') and cls.__PREFIX in f)]
         gaze_dfs = []
-        for i, f in tqdm(enumerate(annotated_file_names), desc="Processing Files", disable=not verbose):
+        for i, f in enumerate(tqdm(annotated_file_names, desc="Processing Files", disable=not verbose)):
             file = zf.open(f)
             data = arff.loads(file.read().decode('utf-8'))
 

@@ -14,6 +14,19 @@ from peyes._DataModels.EventLabelEnum import EventLabelEnum
 from peyes import summarize_events
 
 
+def _sequence_color(colors: dict, seq_name, index: int):
+    """
+    Resolves the colour for one event sequence. Falls back to a qualitative palette rather than indexing
+    the label colormap by position, which silently returned event-label colours and ran out at six.
+    """
+    for key in (seq_name, str(seq_name).strip().lower(), str(seq_name).strip().upper()):
+        color = colors.get(key)
+        if color:
+            return color
+    palette = vis_utils._DISCRETE_COLORMAP
+    return vis_utils.to_rgb(palette[index % len(palette)])
+
+
 def feature_comparison(
         features: Union[str, Sequence[str]],
         *event_sequences: EventSequenceType,
@@ -51,10 +64,7 @@ def feature_comparison(
             if not include_outliers:
                 summary_df = summary_df[~summary_df["is_outlier"]]
             for j, feat in enumerate(features):
-                color = (
-                        colors.get(seq_name, None) or colors.get(seq_name.strip().lower(), None) or
-                        colors.get(seq_name.strip().upper(), None) or colors[i]
-                )
+                color = _sequence_color(colors, seq_name, i)
                 color = f"rgb{color}"
                 r, c = (j, 0) if ncols == 1 else divmod(j, ncols)
                 if feat.lower().strip() == peyes.constants.COUNT_STR:

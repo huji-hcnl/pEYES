@@ -44,7 +44,7 @@ class TestMetricUtils(unittest.TestCase):
         ))
         self.assertRaises(ValueError, _dprime_rates, p, n, pp, tp, "foo")
         tp = 15
-        self.assertRaises(AssertionError, _dprime_rates, p, n, pp, tp, None)
+        self.assertRaises(ValueError, _dprime_rates, p, n, pp, tp, None)
         p = tp = 0
         self.assertTrue(np.isnan(_dprime_rates(p, n, pp, tp, None)[0]))
 
