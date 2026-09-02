@@ -103,6 +103,11 @@ and still return a bare `float`/`np.ndarray` as before - only the lower-level en
 - No `requires-python`, so pip would install on 3.8 and fail at import.
 - Dependency pins were near-meaningless (`numpy~=1.2` admits numpy 1.2 while excluding numpy 2.x).
 - `scikit_posthocs` was a runtime dependency but is only used by `analysis/`.
+- `kaleido==0.1.0post1` had no Linux wheel, so `pip install -e .` failed outright on Linux (including CI).
+  Bumped to `kaleido>=1.0,<2` (requires `plotly>=6.1.1`, also bumped); callers of `write_image()`/`save_figure`
+  should call `kaleido.get_chrome_sync()` once per environment first, since kaleido otherwise drives whatever
+  Chrome/Chromium is already installed, which isn't always compatible - see `save_figure()`'s docstring ([#15]).
+- `opencv-python` had no upper version bound (`>=4.9`), unlike every other pinned dependency here; capped at `<6`.
 
 ### Documentation
 
