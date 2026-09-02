@@ -22,6 +22,14 @@ _FIXTURES_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), "fixtur
 _INPUT_PATH = os.path.join(_FIXTURES_DIR, "lund2013_slice.pkl")
 _GOLDEN_PATH = os.path.join(_FIXTURES_DIR, "lund2013_slice_golden.pkl")
 
+# Confirmed empirically (2026-09) against real Linux CI: the golden reference (generated on Windows) and a
+# Linux run of the exact same code/dependency versions disagree in the last representable bit of continuous
+# geometric/kinematic metrics (e.g. 7.397056632564198 vs 7.3970566325641975, a ~4e-16 relative difference) -
+# ordinary cross-platform BLAS/libm non-associativity, not a peyes bug or a floor-vs-latest difference (the
+# same diff appeared identically on the floor and latest jobs). `labels` holds discrete label codes, not
+# floating-point arithmetic results, and stays exact.
+_FLOAT_RTOL = 1e-9
+
 
 def _normalize_string_dtype(index: pd.Index) -> pd.Index:
     """
@@ -89,12 +97,13 @@ class TestDependencyDrift(unittest.TestCase):
     def test_matched_features_match_golden(self):
         pd.testing.assert_frame_equal(
             _normalized(self.actual["matched_features"]), _normalized(self.golden["matched_features"]),
-            check_exact=True,
+            check_exact=False, rtol=_FLOAT_RTOL,
         )
 
     def test_sdt_measures_match_golden(self):
         pd.testing.assert_frame_equal(
-            _normalized(self.actual["sdt_measures"]), _normalized(self.golden["sdt_measures"]), check_exact=True
+            _normalized(self.actual["sdt_measures"]), _normalized(self.golden["sdt_measures"]),
+            check_exact=False, rtol=_FLOAT_RTOL,
         )
 
 
