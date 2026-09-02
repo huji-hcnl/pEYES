@@ -5,12 +5,13 @@ while the major version is `0`, breaking changes bump the **minor** version.
 
 ## [Unreleased]
 
-## [0.2.0] - not yet released
+## [0.2.0] - 2026-09-02
 
-A correctness release, still in progress on `dev` (no `v0.2.0` tag or PyPI release yet - everything below is
-what `dev` currently contains, not a shipped version). Fixes dozens of findings from a full review of the
-package plus several follow-up passes, some of which change values that previous versions returned.
-**Read the breaking changes before upgrading**: some of them alter results silently rather than raising.
+A correctness release. Fixes dozens of findings from a full review of the package plus several follow-up
+passes, some of which change values that previous versions returned. **Read the breaking changes before
+upgrading**: some of them alter results silently rather than raising. Publication results
+([Nir & Deouell, 2026](https://doi.org/10.3758/s13428-026-02983-5)) are unchanged - verified bit-for-bit
+against real article data.
 
 ### Breaking changes
 
