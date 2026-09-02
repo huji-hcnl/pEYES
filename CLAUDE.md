@@ -7,10 +7,17 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 pEYES is a Python package for quantitatively comparing eye-tracking event-detection (fixation/saccade/etc.)
 algorithms against human-annotated ground truth. See [README.md](README.md) for the full description and citation.
 Published on PyPI as `peyes`; source of truth for behavior is [Nir & Deouell (2026)](https://doi.org/10.3758/s13428-026-02983-5).
+**v0.2.0 and v0.2.1 are verified to reproduce v0.1.0's exact article results**, bit-for-bit, on the real
+Lund2013/HFC datasets and pipeline the article used (see `docs/CODE_REVIEW.md` §13 in the main checkout for
+the audit, or `CHANGELOG.md` for the summary). Any change to `peyes/` or `analysis/` that could affect a
+computed value needs to be checked against that invariant specifically, not just against the test suite
+passing - the existing tests do not cover this on their own (see T-2, and `tests/regression_tests/` for the
+one narrower guard that does exist: dependency-version drift, not correctness).
 
 ## Environment & commands
 
-- Python 3.12 (per README); dependencies are pinned in [pyproject.toml](pyproject.toml).
+- Python 3.12 and 3.14 (per README); dependencies are pinned in [pyproject.toml](pyproject.toml).
+  `requires-python` itself has no upper bound - only the floor (3.12) is enforced.
 - Use the project's local venv at `C:\Users\nirjo\Documents\University\PhD\Projects\pEYES\.venv` for all Python
   commands in this repo (including from worktrees) — do not create a new venv or use a global/system Python.
 - Install (editable, dev): `pip install -e .`
@@ -20,7 +27,13 @@ Published on PyPI as `peyes`; source of truth for behavior is [Nir & Deouell (20
   `python -m unittest tests.unit_tests.utils.test_vector_utils.TestVectorUtils.test_some_method`
 - Tests use the stdlib `unittest` framework (`unittest.TestCase`), not pytest.
 - Lint with `ruff check peyes tests` (configured in [pyproject.toml](pyproject.toml)); CI in
-  [.github/workflows/ci.yml](.github/workflows/ci.yml) runs ruff plus the test suite on 3.12.
+  [.github/workflows/ci.yml](.github/workflows/ci.yml) runs ruff plus the test suite on Python 3.12
+  (floor-pinned dependencies) and Python 3.14 (latest dependencies).
+- `tests/regression_tests/` guards against dependency-version drift: it runs the real detect → match → metrics
+  pipeline (several detector algorithms) on a small, real, checked-in Lund2013 slice and compares the result
+  against a golden reference generated under floor-pinned dependencies. See its module docstrings
+  (`_harness.py`, `fixtures/build_fixture.py`, `fixtures/generate_golden.py`) for how/when to regenerate the
+  fixtures.
 - NOTE: the shared venv's editable `peyes` install points at one specific worktree, so `import peyes`
   from a different worktree silently loads that worktree's code. Prefix commands with
   `PYTHONPATH=<this worktree>` and confirm with `python -c "import peyes; print(peyes.__file__)"`.

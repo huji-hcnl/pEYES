@@ -31,7 +31,7 @@ eye-tracking data analysis.
 
 
 ## Installation Instructions
-This package has been created and tested with python ```3.12```.
+This package has been created and tested with python ```3.12``` and ```3.14```.
 
 To install this package as a user, use
 ```bash
@@ -88,5 +88,8 @@ her assistance in publishing this package.
 
 ## Versioning
 [Nir & Deouell (2026)](https://doi.org/10.3758/s13428-026-02983-5) is based on pEYES v0.1.0. The current release,
-v0.2.0, includes bug fixes and efficiency improvements (see [CHANGELOG.md](CHANGELOG.md) for details) and does not
-change the paper's conclusions.
+v0.2.1, includes bug fixes, efficiency improvements, and validated Python 3.14 support (see
+[CHANGELOG.md](CHANGELOG.md) for details), but **reproduces v0.1.0's exact detection, matching, and metric
+values on the article's own datasets and pipeline** - verified bit-for-bit against the real data behind the
+publication, not just checked for "no conclusions changed". v0.2.1 changes no package code at all relative to
+v0.2.0 (only tests, CI, and documentation), so this holds for it too.

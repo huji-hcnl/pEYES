@@ -23,7 +23,15 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        python-version: ["3.12"]
+        # floor-pinned deps have no Python 3.14 wheels (confirmed via PyPI), so 3.12+floor and 3.14+latest
+        # are the two cells that matter - the declared minimum, and the actual modern target. A 3.12+latest
+        # cell would just retest the same "latest" versions as 3.14+latest on an older interpreter, with no
+        # extra signal.
+        include:
+          - python-version: "3.12"
+            deps: floor
+          - python-version: "3.14"
+            deps: latest
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
@@ -31,6 +39,13 @@ jobs:
           python-version: ${{ matrix.python-version }}
       - name: Install package
         run: pip install -e .
+      - name: Pin to floor dependency versions
+        if: matrix.deps == 'floor'
+        run: >
+          pip install
+          numpy==1.26.4 pandas==2.2.3 scipy==1.11.4 plotly==6.1.1 opencv-python==4.9.0.80
+          overrides==7.7.0 requests==2.32.5 scikit-learn==1.5.0 statsmodels==0.14.0 tqdm==4.66.6
+          python-Levenshtein==0.25.1 remodnav==1.1.2 liac-arff==2.4.0 kaleido==1.0.0
       - name: Run tests
         run: python -m unittest discover -s tests -v
       - name: Kaleido smoke test (write_image, guards against #15 regressing)
