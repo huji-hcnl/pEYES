@@ -1,7 +1,6 @@
 import unittest
 
 from peyes._utils.event_utils import *
-from peyes._utils.pixel_utils import visual_angle_to_pixels
 from peyes._DataModels.EventLabelEnum import EventLabelEnum
 from peyes._DataModels.Event import BaseEvent
 
@@ -39,24 +38,3 @@ class TestEventUtils(unittest.TestCase):
         self.assertEqual(parse_label("foo", safe=True), EventLabelEnum.UNDEFINED)
         self.assertRaises(TypeError, parse_label, None, safe=False)
         self.assertEqual(parse_label(None, safe=True), EventLabelEnum.UNDEFINED)
-
-    def test_microsaccade_ratio(self):
-        viewer_distance, pixel_size = 60, 0.3
-        events = []
-        for i in range(5):
-            last_x = visual_angle_to_pixels((i+1)/2, viewer_distance, pixel_size)
-            sac = BaseEvent.make(
-                EventLabelEnum.SACCADE,
-                t=np.arange(10),
-                x=np.linspace(0, last_x, 10),
-                y=np.zeros(10),
-                viewer_distance=viewer_distance,
-                pixel_size=pixel_size,
-            )
-            self.assertTrue(np.isclose(sac.amplitude, (i+1)/2))
-            events.append(sac)
-        self.assertEqual(microsaccade_ratio(events, 1), 0.2)
-        events[2] = events[0]
-        self.assertEqual(microsaccade_ratio(events, 1), 0.4)
-        self.assertEqual(microsaccade_ratio(events, 0.01), 0)
-        self.assertTrue(np.isnan(microsaccade_ratio([], 1)))

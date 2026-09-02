@@ -105,6 +105,11 @@ def _calculate_sdt_metrics(
         correction: str = "loglinear",
 ) -> float:
     average = average.lower().strip()
+    is_sdt_metric = metric in {"dprime", "d'", cnst.D_PRIME_STR, cnst.CRITERION_STR}
+    if is_sdt_metric and pos_labels is None:
+        # M-7: unlike recall/precision/f1 (which treat `None` as "all labels" without issue), d-prime/criterion
+        # need a real positive/negative split - `None` collapses `n` to 0 and every SDT rate to NaN, silently.
+        raise ValueError("`pos_labels` is required for dprime/criterion: there is no meaningful default positive class.")
     if pos_labels is None:
         pos_labels = [l for l in EventLabelEnum]
     elif isinstance(pos_labels, UnparsedEventLabelType):
@@ -117,11 +122,13 @@ def _calculate_sdt_metrics(
         return met.precision_score(ground_truth, prediction, labels=pos_labels, average=average, zero_division=np.nan)
     if metric == cnst.F1_STR:
         return met.f1_score(ground_truth, prediction, labels=pos_labels, average=average, zero_division=np.nan)
-    if metric in {"dprime", "d'", cnst.D_PRIME_STR, cnst.CRITERION_STR}:
+    if is_sdt_metric:
         p = np.sum([1 for label in ground_truth if label in pos_labels])
         n = len(ground_truth) - p
         pp = np.sum([1 for label in prediction if label in pos_labels])
-        tp = np.sum([1 for gt, pred in zip(ground_truth, prediction) if pred == gt and gt in pos_labels])
+        # M-6: match `pp`'s set-membership definition of "positive" rather than requiring exact label
+        # equality, so `fp = pp - tp` means what it says (predicted-positive samples that weren't a hit).
+        tp = np.sum([1 for gt, pred in zip(ground_truth, prediction) if pred in pos_labels and gt in pos_labels])
         dprime, crit = _dprime_and_criterion(p, n, pp, tp, correction)
         return dprime if metric == cnst.D_PRIME_STR else crit
     raise NotImplementedError(f"Unknown metric:\t{metric}")

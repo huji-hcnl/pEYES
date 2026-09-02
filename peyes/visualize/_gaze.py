@@ -32,7 +32,10 @@ def gaze_heatmap(
     :keyword bg_color: the background color if no image is provided, defaults to white.
     :keyword bg_alpha: the alpha value of the background image (range [0, 1]), defaults to 1.
     :keyword sigma: standard deviation of the Gaussian filter that smooths the heatmap, defaults to 10.0
-    :keyword scale: scale factor for the pixel counts, defaults to sigma^2 (to match the Gaussian filter)
+    :keyword scale: scale factor for the pixel counts, defaults to sigma^2 (to match the Gaussian filter).
+        Has no effect on the rendered heatmap (V-13): the result is always min-max normalized to [0, 1]
+        afterward, which cancels any uniform positive scale factor exactly. Kept for backward compatibility
+        with existing callers rather than removed.
     :keyword colorscale: name of the color scale to use. Must be one of the named color scales in plotly.express.colors
     :keyword opacity: opacity of the heatmap (0-1). Default is 0.5
 
