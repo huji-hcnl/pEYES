@@ -49,6 +49,12 @@ def save_figure(
         width: int = None, height: int = None, scale: float = 1,
         as_json: bool = False, as_html: bool = False, as_png: bool = False
 ):
+    """
+    :param as_png: uses kaleido to rasterize the figure. If this hangs or raises, call
+        `kaleido.get_chrome_sync()` once per environment first - kaleido drives whatever Chrome/Chromium is
+        already on the system, which isn't always compatible with its automation protocol;
+        `get_chrome_sync()` downloads and pins a known-good build instead (see huji-hcnl/pEYES#15).
+    """
     os.makedirs(output_dir, exist_ok=True)
     if as_json:
         fig.write_json(os.path.join(output_dir, f"{fig_name}.json"))
