@@ -5,6 +5,22 @@ while the major version is `0`, breaking changes bump the **minor** version.
 
 ## [Unreleased]
 
+## [0.2.1] - not yet released
+
+Declares and validates Python 3.14 support alongside the existing 3.12 floor. No breaking changes, no
+dependency floor changes, and no behavior changes: a dedicated regression harness (see Added below) confirmed
+the floor-pinned and latest dependency versions produce identical detection/matching/metrics output on real
+data, so this is a safe upgrade from 0.2.0 with no caveats.
+
+### Added
+- `tests/regression_tests/`: runs the real detect/match/metrics pipeline (IVT, IDT, IDVT, Engbert, NH,
+  REMoDNaV) on a small, real, checked-in Lund2013 slice and compares against a golden reference generated
+  under floor-pinned dependencies - guards against a future dependency bump silently changing results.
+- CI now tests Python 3.14 (latest dependencies) alongside Python 3.12 (floor-pinned dependencies).
+
+### Changed
+- `README.md` now states tested support for both Python 3.12 and 3.14.
+
 ## [0.2.0] - 2026-09-02
 
 A correctness release. Fixes dozens of findings from a full review of the package plus several follow-up

@@ -10,7 +10,8 @@ Published on PyPI as `peyes`; source of truth for behavior is [Nir & Deouell (20
 
 ## Environment & commands
 
-- Python 3.12 (per README); dependencies are pinned in [pyproject.toml](pyproject.toml).
+- Python 3.12 and 3.14 (per README); dependencies are pinned in [pyproject.toml](pyproject.toml).
+  `requires-python` itself has no upper bound - only the floor (3.12) is enforced.
 - Use the project's local venv at `C:\Users\nirjo\Documents\University\PhD\Projects\pEYES\.venv` for all Python
   commands in this repo (including from worktrees) — do not create a new venv or use a global/system Python.
 - Install (editable, dev): `pip install -e .`
