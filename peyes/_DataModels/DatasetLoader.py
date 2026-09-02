@@ -232,7 +232,8 @@ class Lund2013DatasetLoader(BaseDatasetLoader):
                     warnings.warn(
                         f"Rater '{rater}' has {len(gaze_data)} samples for trial "
                         f"{(subject_id, stimulus_type, stimulus_name)}, expected {len(existing_df)} - "
-                        f"the mismatched samples will be NaN-filled by index alignment."
+                        f"the mismatched samples will be NaN-filled by index alignment.",
+                        stacklevel=2,
                     )
                 existing_df.loc[:, rater] = gaze_data.loc[:, rater]
         return pd.concat(dataframes.values(), ignore_index=True, axis=0)

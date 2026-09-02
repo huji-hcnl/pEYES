@@ -13,8 +13,10 @@ dependencies = [
     "numpy>=1.26,<3",
     "pandas>=2.2,<4",
     "scipy>=1.11,<2",
-    "plotly>=5.20,<8",
-    "opencv-python>=4.9",
+    "plotly>=6.1.1,<8",
+    # 5.x is the current major series and what's actually installed/tested here; capped like every other
+    # dependency below, so a future opencv-python 6.0 doesn't install untested.
+    "opencv-python>=4.9,<6",
     "overrides>=7.7,<8",
     "requests>=2.32,<3",
     "scikit-learn>=1.5,<2",
@@ -25,9 +27,12 @@ dependencies = [
     "python-Levenshtein>=0.25,<1",
     "remodnav>=1.1,<2",
     "liac-arff>=2.4,<3",
-    # kaleido 0.2 hangs forever in fig.write_image(); see
-    # https://github.com/huji-hcnl/pEYES/issues/15
-    "kaleido==0.1.0post1",
+    # kaleido 0.2 hung forever in fig.write_image() (huji-hcnl/pEYES#15), root cause traced to plotly/Kaleido#134
+    # / #402: kaleido drives whatever system Chrome is installed, and not every Chrome build is compatible with
+    # its automation protocol. Fix (kaleido>=1.0, requiring plotly>=6.1.1 above): call kaleido.get_chrome_sync()
+    # once to pin a known-good Chromium instead of relying on the system one - see save_figure()'s docstring.
+    # Verified directly on Linux CI (get_chrome_sync() 2.77s, write_image() 1.74s, no hang/error).
+    "kaleido>=1.0,<2",
 ]
 classifiers = [
     "Programming Language :: Python :: 3",
