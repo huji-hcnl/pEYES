@@ -69,3 +69,39 @@ class TestGazeHeatmap(unittest.TestCase):
         x = np.array([10.0, 700.0, -5.0, 320.0])
         y = np.array([10.0, 50.0, 20.0, 240.0])
         self.assertIsNotNone(peyes.visualization.gaze_heatmap(x, y, (640, 480)))
+
+    @staticmethod
+    def _clustered_gaze(seed=0, n=500):
+        rng = np.random.default_rng(seed)
+        x = np.concatenate([rng.normal(60, 15, n * 3 // 5), rng.normal(140, 10, n * 2 // 5)])
+        y = np.concatenate([rng.normal(60, 15, n * 3 // 5), rng.normal(140, 10, n * 2 // 5)])
+        return x, y
+
+    def test_scale_matching_sigma_squared_matches_default(self):
+        """
+        V-13: `scale` used to have no effect at all (cancelled exactly by the min-max normalization that
+        always follows it). Passing exactly sigma**2 - what every pre-existing caller in analysis/ does -
+        must still reproduce the un-scaled default exactly.
+        """
+        x, y = self._clustered_gaze()
+        explicit = peyes.visualization.gaze_heatmap(x, y, (200, 200), sigma=10, scale=100)
+        default = peyes.visualization.gaze_heatmap(x, y, (200, 200), sigma=10)
+        np.testing.assert_array_equal(
+            np.array(explicit.data[1].z, dtype=float), np.array(default.data[1].z, dtype=float),
+        )
+
+    def test_scale_now_has_a_real_monotonic_effect(self):
+        """ V-13: a larger scale must now reveal at least as much of the heatmap as a smaller one. """
+        x, y = self._clustered_gaze()
+        visible_counts = []
+        for scale in (10, 100, 1000):
+            fig = peyes.visualization.gaze_heatmap(x, y, (200, 200), sigma=10, scale=scale)
+            z = np.array(fig.data[1].z, dtype=float)
+            visible_counts.append(np.sum(~np.isnan(z)))
+        self.assertLess(visible_counts[0], visible_counts[1])
+        self.assertLessEqual(visible_counts[1], visible_counts[2])
+
+    def test_rejects_non_positive_scale(self):
+        x, y = self._clustered_gaze()
+        self.assertRaises(ValueError, peyes.visualization.gaze_heatmap, x, y, (200, 200), scale=0)
+        self.assertRaises(ValueError, peyes.visualization.gaze_heatmap, x, y, (200, 200), scale=-1)

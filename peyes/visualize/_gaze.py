@@ -32,10 +32,16 @@ def gaze_heatmap(
     :keyword bg_color: the background color if no image is provided, defaults to white.
     :keyword bg_alpha: the alpha value of the background image (range [0, 1]), defaults to 1.
     :keyword sigma: standard deviation of the Gaussian filter that smooths the heatmap, defaults to 10.0
-    :keyword scale: scale factor for the pixel counts, defaults to sigma^2 (to match the Gaussian filter).
-        Has no effect on the rendered heatmap (V-13): the result is always min-max normalized to [0, 1]
-        afterward, which cancels any uniform positive scale factor exactly. Kept for backward compatibility
-        with existing callers rather than removed.
+    :keyword scale: controls how much of the smoothed density map is masked out as "low value" before
+        display, relative to its own default of sigma^2 (V-13 fix - a uniform scale factor on the raw pixel
+        counts has no effect by itself, since the result is always min-max normalized to [0, 1] regardless;
+        scale instead adjusts the post-normalization masking *percentile*, proportionally to how far it is
+        from sigma^2 - a percentile rather than a value-ratio specifically so this stays meaningful even when
+        the un-scaled threshold would be exactly 0, which is common whenever most of the canvas has no gaze
+        samples nearby). A larger scale reveals more of the map (lower masking percentile, clipped to
+        [1, 99]); a smaller one shows only the most concentrated regions. Passing exactly sigma^2 (or leaving
+        scale unset) reproduces the 50th-percentile (median) threshold every existing caller already sees,
+        unchanged.
     :keyword colorscale: name of the color scale to use. Must be one of the named color scales in plotly.express.colors
     :keyword opacity: opacity of the heatmap (0-1). Default is 0.5
 
@@ -54,8 +60,15 @@ def gaze_heatmap(
         layout=dict(width=resolution[0], height=resolution[1], margin=dict(l=0, r=0, b=0, t=0)),
     )
     sig = kwargs.get("sigma", 10.0)
-    scale = kwargs.get("scale", sig**2)
-    counts = scale * __pixel_counts(x, y, resolution)
+    default_scale = sig ** 2
+    scale = kwargs.get("scale", default_scale)
+    if scale <= 0:
+        raise ValueError("scale must be positive")
+    # __pixel_counts returns an integer array; gaussian_filter preserves input dtype, so without this cast the
+    # "smoothed" density silently truncates to integers (often all-zero for sparse input relative to sigma) -
+    # found while verifying the scale fix below, not a change it depends on, but adjacent enough to fix here
+    # rather than leave a truncated-to-int heatmap next to newly-meaningful threshold arithmetic.
+    counts = __pixel_counts(x, y, resolution).astype(float)
     filtered_counts = gaussian_filter(counts, sigma=sig)
     counts_min, counts_max = np.nanmin(filtered_counts), np.nanmax(filtered_counts)
     if counts_max > counts_min:
@@ -63,7 +76,12 @@ def gaze_heatmap(
     else:
         # flat input (e.g. all-zero counts): every cell is masked out below anyway, skip the 0/0 division (V-11)
         heatmap = np.full_like(filtered_counts, np.nan)
-    heatmap[(~np.isfinite(heatmap)) | (heatmap <= np.nanmedian(heatmap))] = np.nan    # remove low values
+    # remove low values; `scale` (V-13) shifts this threshold's percentile relative to its sigma^2 default -
+    # see docstring. mask_percentile == 50 (median) exactly when scale == default_scale, matching every
+    # existing caller's behavior unchanged.
+    mask_percentile = np.clip(50 * (default_scale / scale), 1, 99)
+    threshold = np.nanpercentile(heatmap, mask_percentile)
+    heatmap[(~np.isfinite(heatmap)) | (heatmap <= threshold)] = np.nan
     fig.add_trace(go.Heatmap(
         z=heatmap,
         colorscale=kwargs.get("colorscale", "Jet"),
