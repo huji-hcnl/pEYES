@@ -7,6 +7,12 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 pEYES is a Python package for quantitatively comparing eye-tracking event-detection (fixation/saccade/etc.)
 algorithms against human-annotated ground truth. See [README.md](README.md) for the full description and citation.
 Published on PyPI as `peyes`; source of truth for behavior is [Nir & Deouell (2026)](https://doi.org/10.3758/s13428-026-02983-5).
+**v0.2.0 and v0.2.1 are verified to reproduce v0.1.0's exact article results**, bit-for-bit, on the real
+Lund2013/HFC datasets and pipeline the article used (see `docs/CODE_REVIEW.md` §13 in the main checkout for
+the audit, or `CHANGELOG.md` for the summary). Any change to `peyes/` or `analysis/` that could affect a
+computed value needs to be checked against that invariant specifically, not just against the test suite
+passing - the existing tests do not cover this on their own (see T-2, and `tests/regression_tests/` for the
+one narrower guard that does exist: dependency-version drift, not correctness).
 
 ## Environment & commands
 
