@@ -15,6 +15,21 @@ from peyes import UnparsedEventLabelType, UnparsedEventLabelSequenceType
 ###################
 
 
+def _parse_threshold(scheme_name: str) -> Union[int, float]:
+    """
+    A-6: matching-scheme names encode their threshold as a suffix (e.g. "window_10", "iou_0.5"). Only the
+    integer-suffixed `window_N` family is currently enabled anywhere (see preprocess.py/hfc _helpers.py's
+    commented-out onset_/iou_/overlap_ families), so a bare `int(...)` has always been enough in practice - but
+    it raises ValueError the moment one of those float-suffixed families is re-enabled. Try int first (matches
+    today's behavior exactly), fall back to float instead of raising.
+    """
+    suffix = scheme_name.split("_")[-1]
+    try:
+        return int(suffix)
+    except ValueError:
+        return float(suffix)
+
+
 def load(
         dataset_name: str,
         output_dir: str,
@@ -124,7 +139,7 @@ def multi_threshold_figures(
 ) -> Dict[str, go.Figure]:
     all_schemes = sorted(
         [ms for ms in matches_sdt.index.get_level_values(u.MATCHING_SCHEME_STR).unique() if ms.startswith(matching_scheme)],
-        key=lambda ms: int(ms.split("_")[-1])
+        key=_parse_threshold
     )
     if metrics is None:
         metrics = [
@@ -166,9 +181,9 @@ def multi_threshold_figures(
                     det_color = "#bab0ac"
                     dash = "dot"
                 met_det_frame = met_frame.xs(det, level=u.PRED_STR, axis=1, drop_level=True)
-                # TODO: the following line is the only difference between this func & the similar one in channel_sdt.py,
-                #  if we change how the thresholds are stored in the index, we could change this line
-                thresholds = met_det_frame.index.to_series(name=peyes.constants.THRESHOLD_STR).apply(lambda ms: int(ms.split("_")[-1]))
+                # the following line is the only difference between this func & the similar one in channel_sdt.py,
+                # if we change how the thresholds are stored in the index, we could change this line
+                thresholds = met_det_frame.index.to_series(name=peyes.constants.THRESHOLD_STR).apply(_parse_threshold)
                 mean = met_det_frame.mean(axis=1)
                 errors = h.calc_error_bars(met_det_frame, error_bars)
                 fig.add_trace(
@@ -216,7 +231,7 @@ def multi_metric_figure(
     all_schemes = sorted(
         [ms for ms in matches_sdt.index.get_level_values(u.MATCHING_SCHEME_STR).unique() if
          ms.startswith(matching_scheme)],
-        key=lambda ms: int(ms.split("_")[-1])
+        key=_parse_threshold
     )
     if metrics is None:
         metrics = [
@@ -261,9 +276,9 @@ def multi_metric_figure(
                     dash = None
 
                 det_data = data.xs(det, level=u.PRED_STR, axis=1)
-                # TODO: the following line is the only difference between this func & the similar one in channel_sdt.py,
-                #  if we change how the thresholds are stored in the index, we could change this line
-                thresholds = det_data.index.to_series(name=peyes.constants.THRESHOLD_STR).apply(lambda ms: int(ms.split("_")[-1]))
+                # the following line is the only difference between this func & the similar one in channel_sdt.py,
+                # if we change how the thresholds are stored in the index, we could change this line
+                thresholds = det_data.index.to_series(name=peyes.constants.THRESHOLD_STR).apply(_parse_threshold)
                 mean = det_data.mean(axis=1)
                 errors = h.calc_error_bars(det_data, error_bars)
                 fig.add_trace(
