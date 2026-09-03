@@ -763,11 +763,16 @@ class EngbertDetector(BaseDetector):
         assert window_size > 0, "Window size must be positive"
         half_ws = window_size // 2 if window_size % 2 == 0 else window_size // 2 + 1
         velocities = np.full_like(arr, np.nan, dtype=float)
-        for idx in range(half_ws, len(arr) - half_ws):
-            sum_before = np.sum(arr[idx - half_ws:idx])
-            sum_after = np.sum(arr[idx + 1:idx + half_ws + 1])
-            diff = sum_after - sum_before
-            velocities[idx] = diff * sr / window_size
+        # D-18: vectorized via a sliding-window sum instead of a per-sample Python loop. Each window's sum must
+        # stay local (NaN in one window shouldn't poison unrelated windows), which rules out a global cumsum -
+        # `sliding_window_view(...).sum(axis=-1)` runs the exact same per-window `np.sum` as the original loop,
+        # just batched, so it reproduces the original NaN placement and float rounding exactly (verified directly).
+        if len(arr) > 2 * half_ws:
+            window_sums = np.lib.stride_tricks.sliding_window_view(arr, half_ws).sum(axis=-1)
+            idx = np.arange(half_ws, len(arr) - half_ws)
+            sum_before = window_sums[idx - half_ws]
+            sum_after = window_sums[idx + 1]
+            velocities[idx] = (sum_after - sum_before) * sr / window_size
         return velocities
 
     @staticmethod

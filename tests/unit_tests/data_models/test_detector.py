@@ -207,6 +207,36 @@ class TestEngbertDetector(unittest.TestCase):
             ValueError, EngbertDetector, missing_value=np.nan, min_event_duration=4, pad_blinks_ms=0, lambda_param=0,
         )
 
+    def test_axial_velocities_matches_hand_computed_values(self):
+        """ D-18: vectorized via sliding_window_view - pin down the exact formula on a hand-checked example. """
+        arr = np.array([0.0, 1.0, 3.0, 6.0, 10.0, 15.0, 21.0])  # window_size=4 -> half_ws=2
+        velocities = EngbertDetector._axial_velocities_px(arr, sr=500.0, window_size=4)
+        self.assertTrue(np.isnan(velocities[0]))
+        self.assertTrue(np.isnan(velocities[1]))
+        self.assertTrue(np.isnan(velocities[-1]))
+        self.assertTrue(np.isnan(velocities[-2]))
+        # idx=2: sum_before=arr[0:2]=0+1=1, sum_after=arr[3:5]=6+10=16, diff=15, v=15*500/4
+        self.assertAlmostEqual(15 * 500.0 / 4, velocities[2])
+        # idx=3: sum_before=arr[1:3]=1+3=4, sum_after=arr[4:6]=10+15=25, diff=21, v=21*500/4
+        self.assertAlmostEqual(21 * 500.0 / 4, velocities[3])
+        # idx=4: sum_before=arr[2:4]=3+6=9, sum_after=arr[5:7]=15+21=36, diff=27, v=27*500/4
+        self.assertAlmostEqual(27 * 500.0 / 4, velocities[4])
+
+    def test_axial_velocities_nan_stays_local_to_its_own_windows(self):
+        """
+        D-18: a NaN must only poison the windows whose sum_before/sum_after actually includes it, not every
+        window from that point on (which a naive global-cumsum vectorization would do instead).
+        """
+        arr = np.array([1.0, 2.0, np.nan, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0, 10.0])  # window_size=2 -> half_ws=1
+        velocities = EngbertDetector._axial_velocities_px(arr, sr=500.0, window_size=2)
+        # idx=1's sum_after and idx=3's sum_before are single-element windows landing exactly on the NaN at
+        # position 2; idx=2 itself and every idx>=4 draw from windows that never touch position 2.
+        self.assertTrue(np.isnan(velocities[1]))
+        self.assertFalse(np.isnan(velocities[2]))
+        self.assertTrue(np.isnan(velocities[3]))
+        self.assertFalse(np.isnan(velocities[4]))
+        self.assertFalse(np.isnan(velocities[8]))
+
     def test_median_standard_deviation_clamps_a_negative_radicand(self):
         """
         D-17: `median(x)**2` can exceed `median(x**2)` by a hair due to floating-point cancellation (confirmed
