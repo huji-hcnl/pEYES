@@ -282,5 +282,75 @@ class TestREMoDNaVDetector(unittest.TestCase):
         self.assertIn(EventLabelEnum.SACCADE, labels)
 
 
+class TestFrozenDefaultsFollowLiveConfig(unittest.TestCase):
+    """
+    D-13: IDTDetector/NHDetector/REMoDNaVDetector's config-derived defaults used to be bound as default values
+    at class-definition time, so `set_event_configurations` silently had no effect on detectors constructed
+    with defaults afterward - same mechanism as C-26 (Event.py), different file, not fixed by that patch.
+    """
+
+    def setUp(self):
+        import copy
+        import peyes._DataModels.config as cnfg
+        self._cnfg = cnfg
+        self._event_mapping = copy.deepcopy(cnfg.EVENT_MAPPING)
+
+    def tearDown(self):
+        self._cnfg.EVENT_MAPPING.clear()
+        self._cnfg.EVENT_MAPPING.update(self._event_mapping)
+
+    def test_idt_window_duration_follows_the_setter(self):
+        import peyes
+        peyes.set_event_configurations(EventLabelEnum.FIXATION, min_duration=12345)
+        det = IDTDetector(missing_value=np.nan, min_event_duration=4, pad_blinks_ms=0)
+        self.assertEqual(12345, det._window_duration)
+        self.assertEqual(12345, IDTDetector.get_default_params()["window_duration"])
+
+    def test_nh_duration_defaults_follow_the_setters(self):
+        import peyes
+        peyes.set_event_configurations(EventLabelEnum.SACCADE, min_duration=111)
+        peyes.set_event_configurations(EventLabelEnum.FIXATION, min_duration=222)
+        peyes.set_event_configurations(EventLabelEnum.PSO, max_duration=333)
+        det = NHDetector(missing_value=np.nan, min_event_duration=4, pad_blinks_ms=0)
+        self.assertEqual(2 * 111, det._filter_duration)
+        self.assertEqual(111, det._min_saccade_duration)
+        self.assertEqual(222, det._min_fixation_duration)
+        self.assertEqual(333, det._max_pso_duration)
+        defaults = NHDetector.get_default_params()
+        self.assertEqual(2 * 111, defaults["filter_duration_ms"])
+        self.assertEqual(111, defaults["min_saccade_duration"])
+        self.assertEqual(222, defaults["min_fixation_duration"])
+        self.assertEqual(333, defaults["max_pso_duration"])
+
+    def test_remodnav_duration_defaults_follow_the_setters(self):
+        import peyes
+        peyes.set_event_configurations(EventLabelEnum.SACCADE, min_duration=111)
+        peyes.set_event_configurations(EventLabelEnum.SMOOTH_PURSUIT, min_duration=222)
+        peyes.set_event_configurations(EventLabelEnum.FIXATION, min_duration=333)
+        peyes.set_event_configurations(EventLabelEnum.BLINK, min_duration=444)
+        peyes.set_event_configurations(EventLabelEnum.PSO, max_duration=555)
+        det = REMoDNaVDetector(
+            missing_value=np.nan, min_event_duration=4, pad_blinks_ms=0, show_warnings=False,
+        )
+        self.assertEqual(111, det._min_saccade_duration_ms)
+        self.assertEqual(222, det._min_smooth_pursuit_duration_ms)
+        self.assertEqual(333, det._min_fixation_duration_ms)
+        self.assertEqual(444, det._min_blink_duration_ms)
+        self.assertEqual(555, det._max_pso_duration_ms)
+        defaults = REMoDNaVDetector.get_default_params()
+        self.assertEqual(111, defaults["min_saccade_duration"])
+        self.assertEqual(222, defaults["min_smooth_pursuit_duration"])
+        self.assertEqual(333, defaults["min_fixation_duration"])
+        self.assertEqual(444, defaults["min_blink_duration"])
+        self.assertEqual(555, defaults["max_pso_duration"])
+
+    def test_explicit_argument_still_overrides_the_live_default(self):
+        """ The None-sentinel resolution must not swallow an explicitly-passed value. """
+        import peyes
+        peyes.set_event_configurations(EventLabelEnum.FIXATION, min_duration=12345)
+        det = IDTDetector(missing_value=np.nan, min_event_duration=4, pad_blinks_ms=0, window_duration=99)
+        self.assertEqual(99, det._window_duration)
+
+
 if __name__ == "__main__":
     unittest.main()
