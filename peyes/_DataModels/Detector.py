@@ -90,7 +90,12 @@ class BaseDetector(ABC):
         # ever writes a fixed, unconditional set of keys, but that's incidental, not guaranteed.
         self._metadata = {}
         self._sr = calculate_sampling_rate(t)
-        labels = np.full_like(t, EventLabelEnum.UNDEFINED, dtype=object)
+        # D-27: a real int dtype instead of `object` (holding EventLabelEnum instances) - int8 covers
+        # EventLabelEnum's 6 values with room to spare. Every array op downstream (==, boolean-mask
+        # assignment, np.diff-based chunking in merge_chunks/reset_short_chunks) works identically either
+        # way; `parse_label` (called at the very end of this method) already normalizes numpy int scalars of
+        # any dtype into real EventLabelEnum objects before this function returns, verified directly.
+        labels = np.full_like(t, EventLabelEnum.UNDEFINED, dtype=np.int8)
         is_blink = self._detect_blinks(x, y)
         # detect blinks and replace blink-samples with NaN
         labels[is_blink] = EventLabelEnum.BLINK
@@ -328,7 +333,7 @@ class IVTDetector(BaseDetector, IGlobalThresholdDetector):
             raise ValueError("Viewer distance must be a positive finite number")
         if not np.isfinite(pixel_size_cm) or pixel_size_cm <= 0:
             raise ValueError("Pixel size must be a positive finite number")
-        labels = np.asarray(copy.deepcopy(labels), dtype=object)
+        labels = np.asarray(copy.deepcopy(labels), dtype=np.int8)
         px_velocities = calculate_velocities(x, y, t)
         px_threshold = self._get_global_threshold(self.saccade_velocity_threshold_deg, "px", viewer_distance_cm,
                                                   pixel_size_cm)
@@ -500,7 +505,7 @@ class IDTDetector(BaseDetector, IGlobalThresholdDetector):
             viewer_distance_cm: float,
             pixel_size_cm: float,
     ) -> np.ndarray:
-        labels = np.asarray(copy.deepcopy(labels), dtype=object)
+        labels = np.asarray(copy.deepcopy(labels), dtype=np.int8)
         ws = self._calculate_window_size_samples(t)
         px_threshold = self._get_global_threshold(self.dispersion_threshold_deg, "px", viewer_distance_cm,
                                                   pixel_size_cm)
@@ -649,7 +654,7 @@ class IDVTDetector(IDTDetector, IVTDetector):
         is_saccade = (ivt_labels == EventLabelEnum.SACCADE) & ~is_fixation
         is_smooth_pursuit = ~is_fixation & ~is_saccade
 
-        labels = np.asarray(copy.deepcopy(labels), dtype=object)
+        labels = np.asarray(copy.deepcopy(labels), dtype=np.int8)
         labels[(labels == EventLabelEnum.UNDEFINED) & is_fixation] = EventLabelEnum.FIXATION
         labels[(labels == EventLabelEnum.UNDEFINED) & is_saccade] = EventLabelEnum.SACCADE
         labels[(labels == EventLabelEnum.UNDEFINED) & is_smooth_pursuit] = EventLabelEnum.SMOOTH_PURSUIT
@@ -729,7 +734,7 @@ class EngbertDetector(BaseDetector):
             viewer_distance_cm: float,
             pixel_size_cm: float,
     ) -> np.ndarray:
-        labels = np.asarray(copy.deepcopy(labels), dtype=object)
+        labels = np.asarray(copy.deepcopy(labels), dtype=np.int8)
         x_velocity = self._axial_velocities_px(x, self.sr, self.deriv_window_size)
         y_velocity = self._axial_velocities_px(y, self.sr, self.deriv_window_size)
         x_thresh = self._median_standard_deviation(x_velocity) * self.lambda_param
@@ -1307,7 +1312,7 @@ class NHDetector(BaseDetector):
         :param pso_info: dict of saccade -> (PSO start-idx, PSO end-idx and PSO type (high or low))
         :return: array of classified samples
         """
-        labels = np.asarray(copy.deepcopy(labels), dtype=object)
+        labels = np.asarray(copy.deepcopy(labels), dtype=np.int8)
         for val in saccade_info.values():
             onset_idx, _, offset_idx, _ = val
             labels[onset_idx: offset_idx] = EventLabelEnum.SACCADE
@@ -1580,7 +1585,7 @@ class REMoDNaVDetector(BaseDetector):
             dilate_nan=self.pad_blinks_ms / cnst.MILLISECONDS_PER_SECOND,
         )
         detected_events = classifier(pp, classify_isp=True, sort_events=True)   # returns a list of dicts, each dict is a single gaze event
-        labels = np.asarray(copy.deepcopy(labels), dtype=object)
+        labels = np.asarray(copy.deepcopy(labels), dtype=np.int8)
         for i, event in enumerate(detected_events):  # noqa: B007  # `i` unused; left as-is, REMoDNaV is article-facing
             start_sample = round(event["start_time"] * self.sr)
             end_sample = round(event["end_time"] * self.sr)

@@ -99,6 +99,17 @@ class TestBaseDetectorPipeline(unittest.TestCase):
         with self.assertWarns(UserWarning):
             det.detect(t, x, y, _VIEWER_DISTANCE_CM, _PIXEL_SIZE_CM)
 
+    def test_output_labels_are_real_eventlabelenum_instances(self):
+        """
+        D-27: internal label arrays now carry a real int dtype (np.int8) instead of `object`, materializing
+        EventLabelEnum only at the end via parse_label. The public return value must still be actual
+        EventLabelEnum objects, not raw ints that merely compare equal to one.
+        """
+        det = IVTDetector(missing_value=np.nan, min_event_duration=4, pad_blinks_ms=0)
+        t, x, y = _make_trial(fixation_samples=150, saccade_amplitude_deg=10.0, num_saccades=1)
+        labels, _ = det.detect(t, x, y, _VIEWER_DISTANCE_CM, _PIXEL_SIZE_CM)
+        self.assertTrue(all(isinstance(l, EventLabelEnum) for l in labels))
+
     def test_short_chunks_are_dropped_or_merged(self):
         # A single-sample "fixation" between two saccade-adjacent samples is shorter than min_event_duration
         # and must not survive as its own labeled chunk.

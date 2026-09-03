@@ -85,7 +85,7 @@ def add_scarfplot_to_figure(
     scarfplot = go.Heatmap(
         x=t,
         y=[bottom, top],
-        z=[np.asarray(labels, dtype=EventLabelEnum)],
+        z=[np.asarray(labels, dtype=np.int8)],  # D-27: dtype=EventLabelEnum isn't a real numpy dtype
         zmin=min(EventLabelEnum),
         zmax=max(EventLabelEnum),
         colorscale=colormap,
