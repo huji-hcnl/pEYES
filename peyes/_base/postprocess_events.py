@@ -1,3 +1,5 @@
+from typing import Optional
+
 import numpy as np
 import pandas as pd
 
@@ -20,7 +22,10 @@ def summarize_events(
     return pd.DataFrame(summaries)
 
 
-def events_to_labels(events: EventSequenceType, sampling_rate: float, min_num_samples=None) -> EventLabelSequenceType:
+def events_to_labels(
+        events: EventSequenceType, sampling_rate: float, min_num_samples=None,
+        t_start: Optional[float] = None, t_end: Optional[float] = None,
+) -> EventLabelSequenceType:
     """
     Converts the given events to a sequence of labels, where each event is mapped to a sequence of labels with length
     matching the number of samples in the event's duration (rounded up to the nearest integer).
@@ -30,15 +35,37 @@ def events_to_labels(events: EventSequenceType, sampling_rate: float, min_num_sa
     :param sampling_rate: the sampling rate of the output labels
     :param min_num_samples: the minimal number of samples in the output sequence. If None, the number of samples is
         determined by the total duration of the provided events.
+    :param t_start: the recording's true start time (same time units/origin as each event's `start_time`), used to
+        anchor sample 0 of the output (C-27). If None (default), sample 0 anchors to the earliest event's own
+        start time instead, same as before this parameter existed - a caller who needs the output aligned to the
+        full recording's timeline (e.g. a leading gap before the first event) must pass it explicitly.
+    :param t_end: the recording's true end time (same time units/origin as each event's `end_time`), used to
+        extend the output through a trailing gap after the last event (C-27). If None (default), the output ends
+        at the latest event's own end time instead, same as before this parameter existed.
 
     :return: array of label values (integers matching `EventLabelEnum`), one per sample
 
-    :raises ValueError: if `events` is empty
+    :raises ValueError: if `events` is empty, if `t_start` is after the earliest event's start time, or if
+        `t_end` is before the latest event's end time - either would truncate real event data (some event's
+        samples would land outside the output array) rather than just padding around it, so both raise instead
+        of silently dropping labels
     """
     if len(events) == 0:
         raise ValueError("Cannot convert an empty event sequence to labels")
-    global_start_time = min(e.start_time for e in events)
-    global_end_time = max(e.end_time for e in events)
+    earliest_start_time = min(e.start_time for e in events)
+    if t_start is None:
+        global_start_time = earliest_start_time
+    elif t_start > earliest_start_time:
+        raise ValueError(f"t_start ({t_start}) is after the earliest event's start time ({earliest_start_time})")
+    else:
+        global_start_time = t_start
+    latest_end_time = max(e.end_time for e in events)
+    if t_end is None:
+        global_end_time = latest_end_time
+    elif t_end < latest_end_time:
+        raise ValueError(f"t_end ({t_end}) is before the latest event's end time ({latest_end_time})")
+    else:
+        global_end_time = t_end
     # +1 because `duration` is end_time - start_time, so an n-sample event spans (n-1) * dt
     # (see BaseEvent.duration); without it the output is one sample short of the input.
     num_samples = calculate_num_samples(global_start_time, global_end_time, sampling_rate, 1) + 1

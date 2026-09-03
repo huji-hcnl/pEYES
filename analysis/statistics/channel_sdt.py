@@ -10,7 +10,7 @@ import peyes
 import analysis.utils as u
 import analysis.statistics._helpers as h
 from peyes._utils.visualization_utils import make_empty_figure
-from peyes._DataModels.UnparsedEventLabel import UnparsedEventLabelType, UnparsedEventLabelSequenceType
+from peyes import UnparsedEventLabelType, UnparsedEventLabelSequenceType
 
 ###################
 

@@ -4,7 +4,7 @@ import numpy as np
 
 import peyes._utils.constants as cnst
 from peyes._DataModels.EventLabelEnum import EventLabelEnum
-from peyes._DataModels.Event import BaseEvent, EventSequenceType
+from peyes._DataModels.Event import BaseEvent
 from peyes._DataModels.UnparsedEventLabel import UnparsedEventLabelType
 
 
@@ -88,17 +88,3 @@ def parse_label(
         if safe and (isinstance(err, ValueError) or isinstance(err, KeyError) or isinstance(err, TypeError)):
             return EventLabelEnum.UNDEFINED
         raise err
-
-
-def microsaccade_ratio(events: EventSequenceType, amplitude_threshold) -> float:
-    """
-    Calculates the ratio of microsaccades to saccades. Returns NaN if there are no saccades.
-    :param events: sequence of events
-    :param amplitude_threshold: threshold for microsaccades (degrees)
-    :return: the ratio of microsaccades to saccades
-    """
-    saccades = [e for e in events if e.label == EventLabelEnum.SACCADE]
-    if len(saccades) == 0:
-        return np.nan
-    microsaccades = [e for e in saccades if e.amplitude < amplitude_threshold]
-    return len(microsaccades) / len(saccades)

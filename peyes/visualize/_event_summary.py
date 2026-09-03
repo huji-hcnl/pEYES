@@ -19,7 +19,7 @@ __INLIERS_STR, __OUTLIERS_STR = "inliers", "outliers"
 
 def event_summary(events: EventSequenceType, **kwargs) -> go.Figure:
     """
-    Creates a summary figure of the provided events. The figure contains four panels:
+    Creates a summary figure of the provided events. The figure contains five panels:
         1. A bar plot of the count of each event label.
         2. A violin plot showing the distribution of durations, per event label.
         3. A violin plot showing the distribution of amplitudes, per event label.
