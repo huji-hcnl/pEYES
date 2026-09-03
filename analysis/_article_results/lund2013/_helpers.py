@@ -57,11 +57,15 @@ for key, detector in DETECTORS.items():
     detector.name = key
 
 ## FIGURE CONFIG ##
+# A-9: annotator colors are literal indices into DEFAULT_DISCRETE_COLORMAP, not derived from len(DETECTORS) - a
+# future change to DETECTORS' size would otherwise silently shift every annotator color (and risk colliding with
+# a detector's color) without anyone noticing. These are exactly the indices len(DETECTORS)+1..+2 resolved to
+# today (7 detectors), kept byte-identical to the current published figures.
 LABELER_PLOTTING_CONFIG = {
     # labeler -> (order, color, line-style)
     'Other Human': (0, "#bab0ac", 'dot'),
-    'RA': (1, u.DEFAULT_DISCRETE_COLORMAP[len(DETECTORS) + 1], 'dot'),
-    'MN': (2, u.DEFAULT_DISCRETE_COLORMAP[len(DETECTORS) + 2], 'dot'),
+    'RA': (1, u.DEFAULT_DISCRETE_COLORMAP[8], 'dot'),
+    'MN': (2, u.DEFAULT_DISCRETE_COLORMAP[9], 'dot'),
     **{key: (i+2 ,u.DEFAULT_DISCRETE_COLORMAP[i], None) for i, key in enumerate(DETECTORS.keys())}
 }
 
