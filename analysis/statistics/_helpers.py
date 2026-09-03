@@ -11,7 +11,7 @@ import peyes
 
 import analysis.utils as u
 from peyes._utils.visualization_utils import make_empty_figure
-from peyes._DataModels.UnparsedEventLabel import UnparsedEventLabelType, UnparsedEventLabelSequenceType
+from peyes import UnparsedEventLabelType, UnparsedEventLabelSequenceType
 
 
 def extract_subframe(

@@ -5,7 +5,7 @@ import pandas as pd
 from tqdm import tqdm
 
 import peyes
-from peyes._DataModels.UnparsedEventLabel import UnparsedEventLabelType, UnparsedEventLabelSequenceType
+from peyes import UnparsedEventLabelType, UnparsedEventLabelSequenceType
 from peyes.sample_metrics._calculate_metrics import _GLOBAL_METRICS, _SDT_METRICS
 
 import analysis.utils as u
