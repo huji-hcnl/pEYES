@@ -1,3 +1,4 @@
+import enum
 
 ## NUMERICAL CONSTANTS ##
 ####  Time  ####
@@ -44,10 +45,18 @@ STIMULUS_NAME_STR = f"{STIMULUS_STR}_{NAME_STR}"
 CHANNEL_STR = "channel"
 CHANNEL_TYPE_STR = f"{CHANNEL_STR}_{TYPE_STR}"
 
-# TODO: replace these with enum
-IMAGE_STR = "image"
-VIDEO_STR = "video"
-MOVING_DOT_STR = "moving_dot"
+class StimulusTypeEnum(enum.StrEnum):
+    IMAGE = "image"
+    VIDEO = "video"
+    MOVING_DOT = "moving_dot"
+
+
+# P-3: kept as module-level names (not just the enum class) since these are already public API surface
+# (`peyes.constants.IMAGE_STR` etc.) - StrEnum members equal their string value and are real `str` instances,
+# so every existing `==`/`.isin()`/`.str.lower()` comparison against these keeps working unchanged.
+IMAGE_STR = StimulusTypeEnum.IMAGE
+VIDEO_STR = StimulusTypeEnum.VIDEO
+MOVING_DOT_STR = StimulusTypeEnum.MOVING_DOT
 
 ####  Eye Tracking Field Names  ####
 TIME_STR = "time"

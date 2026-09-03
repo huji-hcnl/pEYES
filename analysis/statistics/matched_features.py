@@ -6,7 +6,7 @@ import statsmodels.stats.multitest as multi
 import plotly.graph_objects as go
 
 import peyes
-from peyes._DataModels.UnparsedEventLabel import UnparsedEventLabelType, UnparsedEventLabelSequenceType
+from peyes import UnparsedEventLabelType, UnparsedEventLabelSequenceType
 
 import analysis.utils as u
 import analysis.statistics._helpers as h

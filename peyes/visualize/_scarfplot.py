@@ -71,15 +71,21 @@ def add_scarfplot_to_figure(
     if len(t) != len(labels):
         raise ValueError(f"Length mismatch: len(t)={len(t)} != {len(labels)}=len(labels)")
     label_colors = vis_utils.get_label_colormap(label_colors)
-    label_colors = {k: v for k, v in label_colors.items() if k in labels}   # Remove unused colors
-    colormap, tick_centers = _discrete_colormap(label_colors)
+    # V-4/V-5: band colors over the full, fixed EventLabelEnum range (matching zmin/zmax below), not just the
+    # labels present in this row. `get_label_colormap` also carries non-label keys (detector/annotator names,
+    # reused from the same default colormap) - filter to real labels only, keeping all 6 regardless of presence,
+    # so band placement never depends on which labels happen to appear in this particular row's data.
+    label_colors = {k: v for k, v in label_colors.items() if isinstance(k, EventLabelEnum)}
+    present_labels = sorted(k for k in label_colors if k in labels)   # for the colorbar legend only
+    colormap, all_centers = _discrete_colormap(label_colors)
     # # Normalize tick centers to [0, 1]
     # see https://community.plotly.com/t/heatmap-colorbar-displays-ticks-in-incorrect-locations/84278/3?u=jonnir
-    tick_centers = tick_centers * colorbar_length * (np.max(tick_centers) - np.min(tick_centers)) / len(tick_centers)
+    all_centers = all_centers * colorbar_length * (np.max(all_centers) - np.min(all_centers)) / len(all_centers)
+    tick_centers = all_centers[present_labels]
     scarfplot = go.Heatmap(
         x=t,
         y=[bottom, top],
-        z=[np.asarray(labels, dtype=EventLabelEnum)],
+        z=[np.asarray(labels, dtype=np.int8)],  # D-27: dtype=EventLabelEnum isn't a real numpy dtype
         zmin=min(EventLabelEnum),
         zmax=max(EventLabelEnum),
         colorscale=colormap,
@@ -87,7 +93,7 @@ def add_scarfplot_to_figure(
             len=colorbar_length,
             thickness=colorbar_thickness,
             tickvals=tick_centers,
-            ticktext=list(map(lambda lbl: EventLabelEnum(lbl).name, label_colors.keys())),
+            ticktext=[EventLabelEnum(lbl).name for lbl in present_labels],
         ),
         showscale=show_colorbar,
     )

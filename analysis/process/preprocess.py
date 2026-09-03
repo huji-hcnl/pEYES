@@ -1,16 +1,22 @@
+from __future__ import annotations
+
 import os
 import time
 import copy
 import warnings
-from typing import List, Dict, Union
+from typing import List, Dict, Union, TYPE_CHECKING
 
 import numpy as np
 import pandas as pd
 from tqdm import tqdm, trange
 
 import peyes
-from peyes._DataModels.Detector import BaseDetector
-from peyes._DataModels.UnparsedEventLabel import UnparsedEventLabelType, UnparsedEventLabelSequenceType
+from peyes import UnparsedEventLabelType, UnparsedEventLabelSequenceType
+
+if TYPE_CHECKING:
+    # A-4: BaseDetector is only ever used as a type hint here, never instantiated - guarding the import keeps
+    # this file from reaching into a private peyes module at runtime without publicizing the whole ABC.
+    from peyes._DataModels.Detector import BaseDetector
 
 import analysis.utils as u
 import analysis.process._helpers as h

@@ -319,10 +319,14 @@ class IRFDatasetLoader(BaseDatasetLoader):
     ]
 
     __PREFIX = 'irf-master/etdata/lookAtPoint_EL'
-    __STIMULUS_TYPE_VAL = "moving_dot"  # all subjects were shown the same 13-point moving dot stimulus
+    __STIMULUS_TYPE_VAL = cnst.MOVING_DOT_STR  # all subjects were shown the same 13-point moving dot stimulus
     __VIEWER_DISTANCE_CM_VAL = 56.5
     __MONITOR_WIDTH_CM_VAL, __MONITOR_HEIGHT_CM_VAL = 37.5, 30.2
     __MONITOR_RESOLUTION_VAL = (1280, 1024)
+    # Diagonal-based square pixel size, not per-axis (width_cm/width_px vs height_cm/height_px would differ
+    # here) - every pixel_size calculation in this package uses the diagonal size by design, for consistency
+    # across datasets, even though IRF's own metadata happens to carry per-axis sizes too (S-3, confirmed
+    # intentional).
     __PIXEL_SIZE_CM_VAL = calculate_pixel_size(
         __MONITOR_WIDTH_CM_VAL, __MONITOR_HEIGHT_CM_VAL, __MONITOR_RESOLUTION_VAL
     )

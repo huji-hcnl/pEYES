@@ -6,7 +6,7 @@ import pandas as pd
 from tqdm import tqdm
 
 import peyes
-from peyes._DataModels.UnparsedEventLabel import UnparsedEventLabelType, UnparsedEventLabelSequenceType
+from peyes import UnparsedEventLabelType, UnparsedEventLabelSequenceType
 from peyes._DataModels.EventLabelEnum import EventLabelEnum
 
 import analysis.utils as u

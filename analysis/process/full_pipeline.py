@@ -7,7 +7,7 @@ import pandas as pd
 
 import peyes
 from peyes._DataModels.Detector import BaseDetector
-from peyes._DataModels.UnparsedEventLabel import UnparsedEventLabelType, UnparsedEventLabelSequenceType
+from peyes import UnparsedEventLabelType, UnparsedEventLabelSequenceType
 
 import analysis.utils as u
 import analysis.process.preprocess as preprocess
