@@ -601,14 +601,24 @@ class IDVTDetector(IDTDetector, IVTDetector):
             pad_blinks_ms: float,
             name: str = None,
             dispersion_threshold: float = IDTDetector._DEFAULT_DISPERSION_THRESHOLD,
-            window_duration: float = IDTDetector._DEFAULT_WINDOW_DURATION,
+            window_duration: Optional[float] = None,
             saccade_velocity_threshold: float = IVTDetector._DEFAULT_SACCADE_VELOCITY_THRESHOLD,
     ):
-        super(IDVTDetector, self).__init__(
-            missing_value, min_event_duration, pad_blinks_ms, name, dispersion_threshold, window_duration
-        )
-        # assigned directly rather than through IVTDetector.__init__, which the MRO reaches with defaults,
-        # so the validation that constructor performs has to be repeated here
+        # D-12: constructs directly via BaseDetector instead of relying on super() chaining through
+        # IDTDetector/IVTDetector. The old chain (IDVTDetector -> IDTDetector -> IVTDetector -> BaseDetector)
+        # meant IDTDetector.__init__'s own bare `super().__init__(...)` call resolved against *this* class's
+        # MRO and landed on IVTDetector.__init__ with ITS defaults, silently discarding whatever
+        # saccade_velocity_threshold was passed here until it got overwritten below - fragile, and needed
+        # duplicated validation to paper over it. Setting every attribute directly removes that dependency.
+        BaseDetector.__init__(self, missing_value, min_event_duration, pad_blinks_ms, name)
+        if dispersion_threshold <= 0:
+            raise ValueError("Dispersion threshold must be positive")
+        self._dispersion_threshold = dispersion_threshold
+        # D-13-style live resolution (was bound to IDTDetector._DEFAULT_WINDOW_DURATION, frozen at
+        # class-definition time; now reads the same live config IDTDetector itself resolves to).
+        if window_duration is None:
+            window_duration = cnfg.EVENT_MAPPING[EventLabelEnum.FIXATION][cnst.MIN_DURATION_STR]
+        self._window_duration = window_duration
         if saccade_velocity_threshold <= 0:
             raise ValueError("Saccade velocity threshold must be positive")
         self._saccade_velocity_threshold = saccade_velocity_threshold

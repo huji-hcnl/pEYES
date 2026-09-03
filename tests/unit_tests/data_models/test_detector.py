@@ -191,6 +191,29 @@ class TestIDVTDetector(unittest.TestCase):
         labels, _ = det.detect(t, x, y, _VIEWER_DISTANCE_CM, _PIXEL_SIZE_CM)
         self.assertTrue(any(l != EventLabelEnum.FIXATION for l in labels[150:156]))
 
+    def test_explicit_saccade_velocity_threshold_is_actually_applied(self):
+        """
+        D-12: the diamond-inheritance MRO used to land IDTDetector.__init__'s super() call on
+        IVTDetector.__init__ WITH ITS OWN DEFAULT, silently discarding whatever saccade_velocity_threshold was
+        passed here - only correct end-to-end because IDVTDetector.__init__ then overwrote it directly right
+        after. This exercises exactly that path with a non-default value, not incidentally with the default.
+        """
+        det = IDVTDetector(
+            missing_value=np.nan, min_event_duration=4, pad_blinks_ms=0,
+            dispersion_threshold=2.7, saccade_velocity_threshold=99.0,
+        )
+        self.assertEqual(99.0, det._saccade_velocity_threshold)
+        self.assertNotEqual(IVTDetector._DEFAULT_SACCADE_VELOCITY_THRESHOLD, det._saccade_velocity_threshold)
+
+    def test_all_three_thresholds_set_correctly_together(self):
+        det = IDVTDetector(
+            missing_value=np.nan, min_event_duration=4, pad_blinks_ms=0,
+            dispersion_threshold=1.5, window_duration=80.0, saccade_velocity_threshold=50.0,
+        )
+        self.assertEqual(1.5, det._dispersion_threshold)
+        self.assertEqual(80.0, det._window_duration)
+        self.assertEqual(50.0, det._saccade_velocity_threshold)
+
 
 class TestEngbertDetector(unittest.TestCase):
 
