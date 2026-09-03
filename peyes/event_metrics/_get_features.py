@@ -27,45 +27,42 @@ def features_by_labels(events: EventSequenceType) -> pd.DataFrame:
     return aggregated.sort_index()
 
 
+# M-14: aliases for the handful of summary columns whose common/short name differs from BaseEvent.summary_columns()'s
+# own name for them. Every other feature name is looked up as-is against summary_columns().
+_ALIASES = {"onset": cnst.START_TIME_STR, "offset": cnst.END_TIME_STR, "center": cnst.CENTER_PIXEL_STR}
+
+
 def get_features(
         events: EventSequenceType, *features: str, verbose: bool = False
 ) -> Dict[str, np.ndarray]:
     """
     Extracts the specified features from the given events.
     :param events: the events to extract features from
-    :param features: the features to extract. Supported features are:
-        - 'start_time' or 'onset': the start time of the event (ms)
-        - 'end_time' or 'offset': the end time of the event (ms)
-        - 'duration': the duration of the event (ms)
-        - 'amplitude': the amplitude of the event (deg)
-        - 'azimuth': the azimuth of the event (deg)
-        - 'center_pixel' or 'center': the center pixel of the event
+    :param features: the features to extract - any name from `BaseEvent.summary_columns()` (event_type, label,
+        start_time, end_time, duration, distance, amplitude, azimuth, peak_velocity, median_velocity,
+        min_velocity, cumulative_distance, cumulative_amplitude, start_x, start_y, end_x, end_y, center_pixel,
+        pixel_std, dispersion, ellipse_area, is_outlier, outlier_reasons), plus the aliases 'onset' (start_time),
+        'offset' (end_time), and 'center' (center_pixel)
     :param verbose: if True, display a progress bar while extracting the features
     :return: a dictionary mapping each requested feature name to its numpy array of values
+    :raises ValueError: if a requested feature name isn't recognized
     """
-    results: Dict[str, np.ndarray] = {}
-    for feat in tqdm(features, desc="Event Features", disable=not verbose):
-        results[feat] = _get_features_impl(events, feat)
-    return results
+    resolved_names = [_resolve_feature_name(feat) for feat in features]
+    # summarize each event once, regardless of how many features are requested, rather than recomputing a
+    # full summary per requested feature
+    summaries = [event.summary() for event in tqdm(events, desc="Event Features", disable=not verbose)]
+    return {
+        feat: np.array([s[name] for s in summaries]) for feat, name in zip(features, resolved_names)
+    }
 
 
-def _get_features_impl(events: EventSequenceType, feature: str) -> np.ndarray:
+def _resolve_feature_name(feature: str) -> str:
     feature_lower = feature.lower().strip().replace(" ", "_").replace("-", "_")
-    _recognized = {"start_time", "onset", "end_time", "offset", "duration", "amplitude", "azimuth", "center_pixel", "center"}
-    if feature_lower not in _recognized:
-        # only strip a trailing plural "s" as a fallback, so a future feature name that legitimately ends
+    if feature_lower not in BaseEvent.summary_columns() and feature_lower not in _ALIASES:
+        # only strip a trailing plural "s" as a fallback, so a feature name that legitimately ends
         # in "s" isn't silently mangled if it's already an exact match (M-15)
         feature_lower = feature_lower.removesuffix('s')
-    if feature_lower == "start_time" or feature_lower == "onset":
-        return np.array([event.start_time for event in events])
-    if feature_lower == "end_time" or feature_lower == "offset":
-        return np.array([event.end_time for event in events])
-    if feature_lower == "duration":
-        return np.array([event.duration for event in events])
-    if feature_lower == "amplitude":
-        return np.array([event.amplitude for event in events])
-    if feature_lower == "azimuth":
-        return np.array([event.azimuth for event in events])
-    if feature_lower == "center_pixel" or feature_lower == "center":
-        return np.array([event.center_pixel for event in events])
-    raise ValueError(f"Unknown event feature '{feature}'")
+    resolved = _ALIASES.get(feature_lower, feature_lower)
+    if resolved not in BaseEvent.summary_columns():
+        raise ValueError(f"Unknown event feature '{feature}'")
+    return resolved
