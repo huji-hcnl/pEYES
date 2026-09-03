@@ -63,6 +63,36 @@ class TestEventsToLabels(unittest.TestCase):
         """ C-13: this used to raise an opaque ValueError from min() on an empty generator. """
         self.assertRaises(ValueError, peyes.events_to_labels, [], sampling_rate=self.SR)
 
+    def test_t_start_none_matches_default_behavior(self):
+        """ C-27: the default (no t_start) must stay anchored to the earliest event's own start time. """
+        labels = [EventLabelEnum.FIXATION] * 5 + [EventLabelEnum.SACCADE] * 3
+        events = self._events(labels, self.SR)
+        out_default = peyes.events_to_labels(events, sampling_rate=self.SR)
+        out_explicit_none = peyes.events_to_labels(events, sampling_rate=self.SR, t_start=None)
+        np.testing.assert_array_equal(out_default, out_explicit_none)
+
+    def test_t_start_before_earliest_event_pads_with_undefined(self):
+        """ C-27: a leading gap before the first event must show up as leading UNDEFINED samples. """
+        labels = [EventLabelEnum.FIXATION] * 5
+        events = self._events(labels, self.SR)
+        earliest_start_time = events[0].start_time
+        lead_samples = 4
+        t_start = earliest_start_time - lead_samples * (1000.0 / self.SR)
+        out = peyes.events_to_labels(events, sampling_rate=self.SR, t_start=t_start)
+        self.assertEqual(lead_samples + len(labels), len(out))
+        self.assertTrue(all(int(v) == EventLabelEnum.UNDEFINED for v in out[:lead_samples]))
+        self.assertEqual([int(l) for l in labels], [int(v) for v in out[lead_samples:]])
+
+    def test_t_start_after_earliest_event_raises(self):
+        """ C-27: a t_start later than the earliest event would place its samples before index 0. """
+        labels = [EventLabelEnum.FIXATION] * 5
+        events = self._events(labels, self.SR)
+        earliest_start_time = events[0].start_time
+        self.assertRaises(
+            ValueError, peyes.events_to_labels, events, sampling_rate=self.SR,
+            t_start=earliest_start_time + 1.0,
+        )
+
 
 class TestSummarizeEvents(unittest.TestCase):
 
