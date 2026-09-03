@@ -23,7 +23,8 @@ def summarize_events(
 
 
 def events_to_labels(
-        events: EventSequenceType, sampling_rate: float, min_num_samples=None, t_start: Optional[float] = None,
+        events: EventSequenceType, sampling_rate: float, min_num_samples=None,
+        t_start: Optional[float] = None, t_end: Optional[float] = None,
 ) -> EventLabelSequenceType:
     """
     Converts the given events to a sequence of labels, where each event is mapped to a sequence of labels with length
@@ -38,11 +39,16 @@ def events_to_labels(
         anchor sample 0 of the output (C-27). If None (default), sample 0 anchors to the earliest event's own
         start time instead, same as before this parameter existed - a caller who needs the output aligned to the
         full recording's timeline (e.g. a leading gap before the first event) must pass it explicitly.
+    :param t_end: the recording's true end time (same time units/origin as each event's `end_time`), used to
+        extend the output through a trailing gap after the last event (C-27). If None (default), the output ends
+        at the latest event's own end time instead, same as before this parameter existed.
 
     :return: array of label values (integers matching `EventLabelEnum`), one per sample
 
-    :raises ValueError: if `events` is empty, or if `t_start` is after the earliest event's start time (which
-        would place that event's samples before index 0)
+    :raises ValueError: if `events` is empty, if `t_start` is after the earliest event's start time, or if
+        `t_end` is before the latest event's end time - either would truncate real event data (some event's
+        samples would land outside the output array) rather than just padding around it, so both raise instead
+        of silently dropping labels
     """
     if len(events) == 0:
         raise ValueError("Cannot convert an empty event sequence to labels")
@@ -53,7 +59,13 @@ def events_to_labels(
         raise ValueError(f"t_start ({t_start}) is after the earliest event's start time ({earliest_start_time})")
     else:
         global_start_time = t_start
-    global_end_time = max(e.end_time for e in events)
+    latest_end_time = max(e.end_time for e in events)
+    if t_end is None:
+        global_end_time = latest_end_time
+    elif t_end < latest_end_time:
+        raise ValueError(f"t_end ({t_end}) is before the latest event's end time ({latest_end_time})")
+    else:
+        global_end_time = t_end
     # +1 because `duration` is end_time - start_time, so an n-sample event spans (n-1) * dt
     # (see BaseEvent.duration); without it the output is one sample short of the input.
     num_samples = calculate_num_samples(global_start_time, global_end_time, sampling_rate, 1) + 1
