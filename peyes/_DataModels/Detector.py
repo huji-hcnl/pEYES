@@ -775,7 +775,10 @@ class EngbertDetector(BaseDetector):
         """ Calculates the median-based standard-deviation of the input array """
         squared_median = np.power(np.nanmedian(arr), 2)
         median_of_squares = np.nanmedian(np.power(arr, 2))
-        sd = np.sqrt(median_of_squares - squared_median)
+        # D-17: radicand isn't guaranteed >= 0 (unlike true variance); sqrt of a negative value gives NaN, and
+        # `nanmax([nan, 1e-10])` below silently ignores that NaN and floors to 1e-10 rather than flagging it.
+        radicand = max(median_of_squares - squared_median, 0)
+        sd = np.sqrt(radicand)
         return float(np.nanmax([sd, 1e-10]))  # avoid division by zero in case of no variance
 
     @override

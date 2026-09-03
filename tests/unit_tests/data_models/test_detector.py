@@ -1,4 +1,6 @@
 import unittest
+import warnings
+from unittest import mock
 
 import numpy as np
 
@@ -204,6 +206,20 @@ class TestEngbertDetector(unittest.TestCase):
         self.assertRaises(
             ValueError, EngbertDetector, missing_value=np.nan, min_event_duration=4, pad_blinks_ms=0, lambda_param=0,
         )
+
+    def test_median_standard_deviation_clamps_a_negative_radicand(self):
+        """
+        D-17: `median(x)**2` can exceed `median(x**2)` by a hair due to floating-point cancellation (confirmed
+        empirically: ~1 in 200k random arrays), even though the true radicand is mathematically >= 0 always -
+        sqrt of that tiny negative silently produced NaN before. Forcing it via mock.patch since the real
+        floating-point trigger is a fragile, platform-sensitive edge case unsuitable for a deterministic test.
+        """
+        with mock.patch("numpy.nanmedian", side_effect=[10.0, 99.0]):  # squared_median=100 > median_of_squares=99
+            with warnings.catch_warnings():
+                warnings.simplefilter("error")
+                sd = EngbertDetector._median_standard_deviation(np.array([1.0, 2.0, 3.0]))
+        self.assertFalse(np.isnan(sd))
+        self.assertEqual(sd, 1e-10)
 
 
 class TestNHDetector(unittest.TestCase):
