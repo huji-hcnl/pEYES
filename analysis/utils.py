@@ -6,7 +6,7 @@ import pandas as pd
 import plotly.express as px
 
 import peyes
-from peyes._DataModels.UnparsedEventLabel import UnparsedEventLabelType, UnparsedEventLabelSequenceType
+from peyes import UnparsedEventLabelType, UnparsedEventLabelSequenceType
 
 ###########################
 

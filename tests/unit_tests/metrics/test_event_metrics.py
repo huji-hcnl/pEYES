@@ -34,6 +34,37 @@ class TestGetFeatures(unittest.TestCase):
         result = peyes.event_metrics.durations(self.EVENTS)
         self.assertIsInstance(result, np.ndarray)
 
+    def test_all_23_summary_columns_are_now_supported(self):
+        """ M-14: get_features used to support only 6 of BaseEvent.summary_columns()'s 23 names. """
+        for column in BaseEvent.summary_columns():
+            with self.subTest(feature=column):
+                result = get_features(self.EVENTS, column, verbose=False)[column]
+                expected = np.array([e.summary()[column] for e in self.EVENTS])
+                np.testing.assert_array_equal(result, expected)
+
+    def test_previously_supported_names_still_match_direct_attribute_access(self):
+        """ M-14: the original 6 (plus their aliases) must return byte-identical values after the rewrite. """
+        direct_attrs = {
+            "start_time": "start_time", "onset": "start_time", "end_time": "end_time", "offset": "end_time",
+            "duration": "duration", "amplitude": "amplitude", "azimuth": "azimuth",
+            "center_pixel": "center_pixel", "center": "center_pixel",
+        }
+        for name, attr in direct_attrs.items():
+            with self.subTest(feature=name):
+                result = get_features(self.EVENTS, name, verbose=False)[name]
+                expected = np.array([getattr(e, attr) for e in self.EVENTS])
+                np.testing.assert_array_equal(result, expected)
+
+    def test_plural_fallback_still_works(self):
+        """ M-15: a plural feature name falls back to the singular. """
+        np.testing.assert_array_equal(
+            get_features(self.EVENTS, "durations", verbose=False)["durations"],
+            get_features(self.EVENTS, "duration", verbose=False)["duration"],
+        )
+
+    def test_unknown_feature_still_raises(self):
+        self.assertRaises(ValueError, get_features, self.EVENTS, "not_a_real_feature", verbose=False)
+
 
 if __name__ == "__main__":
     unittest.main()

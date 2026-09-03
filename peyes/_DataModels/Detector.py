@@ -2,7 +2,7 @@ import copy
 import time
 import warnings
 from abc import ABC, abstractmethod
-from typing import final, Dict, List, Tuple
+from typing import final, Dict, List, Tuple, Optional
 import logging
 
 import numpy as np
@@ -90,7 +90,12 @@ class BaseDetector(ABC):
         # ever writes a fixed, unconditional set of keys, but that's incidental, not guaranteed.
         self._metadata = {}
         self._sr = calculate_sampling_rate(t)
-        labels = np.full_like(t, EventLabelEnum.UNDEFINED, dtype=object)
+        # D-27: a real int dtype instead of `object` (holding EventLabelEnum instances) - int8 covers
+        # EventLabelEnum's 6 values with room to spare. Every array op downstream (==, boolean-mask
+        # assignment, np.diff-based chunking in merge_chunks/reset_short_chunks) works identically either
+        # way; `parse_label` (called at the very end of this method) already normalizes numpy int scalars of
+        # any dtype into real EventLabelEnum objects before this function returns, verified directly.
+        labels = np.full_like(t, EventLabelEnum.UNDEFINED, dtype=np.int8)
         is_blink = self._detect_blinks(x, y)
         # detect blinks and replace blink-samples with NaN
         labels[is_blink] = EventLabelEnum.BLINK
@@ -328,7 +333,7 @@ class IVTDetector(BaseDetector, IGlobalThresholdDetector):
             raise ValueError("Viewer distance must be a positive finite number")
         if not np.isfinite(pixel_size_cm) or pixel_size_cm <= 0:
             raise ValueError("Pixel size must be a positive finite number")
-        labels = np.asarray(copy.deepcopy(labels), dtype=object)
+        labels = np.asarray(copy.deepcopy(labels), dtype=np.int8)
         px_velocities = calculate_velocities(x, y, t)
         px_threshold = self._get_global_threshold(self.saccade_velocity_threshold_deg, "px", viewer_distance_cm,
                                                   pixel_size_cm)
@@ -472,19 +477,23 @@ class IDTDetector(BaseDetector, IGlobalThresholdDetector):
             pad_blinks_ms: float,
             name: str = None,
             dispersion_threshold: float = _DEFAULT_DISPERSION_THRESHOLD,
-            window_duration: float = _DEFAULT_WINDOW_DURATION,
+            window_duration: Optional[float] = None,
     ):
         super().__init__(missing_value, min_event_duration, pad_blinks_ms, name)
         if dispersion_threshold <= 0:
             raise ValueError("Dispersion threshold must be positive")
         self._dispersion_threshold = dispersion_threshold
+        # D-13: resolved here (not bound as a default value) so set_event_configurations reaches it - a class
+        # attribute default is evaluated once at class-definition time (same fix as C-26 in Event.py).
+        if window_duration is None:
+            window_duration = cnfg.EVENT_MAPPING[EventLabelEnum.FIXATION][cnst.MIN_DURATION_STR]
         self._window_duration = window_duration
 
     @classmethod
     def get_default_params(cls) -> Dict[str, float]:
         return {
             cls.__DISPERSION_THRESHOLD_STR: cls._DEFAULT_DISPERSION_THRESHOLD,
-            cls.__DEFAULT_WINDOW_DURATION_STR: cls._DEFAULT_WINDOW_DURATION,
+            cls.__DEFAULT_WINDOW_DURATION_STR: cnfg.EVENT_MAPPING[EventLabelEnum.FIXATION][cnst.MIN_DURATION_STR],
         }
 
     def _detect_impl(
@@ -496,7 +505,7 @@ class IDTDetector(BaseDetector, IGlobalThresholdDetector):
             viewer_distance_cm: float,
             pixel_size_cm: float,
     ) -> np.ndarray:
-        labels = np.asarray(copy.deepcopy(labels), dtype=object)
+        labels = np.asarray(copy.deepcopy(labels), dtype=np.int8)
         ws = self._calculate_window_size_samples(t)
         px_threshold = self._get_global_threshold(self.dispersion_threshold_deg, "px", viewer_distance_cm,
                                                   pixel_size_cm)
@@ -597,14 +606,24 @@ class IDVTDetector(IDTDetector, IVTDetector):
             pad_blinks_ms: float,
             name: str = None,
             dispersion_threshold: float = IDTDetector._DEFAULT_DISPERSION_THRESHOLD,
-            window_duration: float = IDTDetector._DEFAULT_WINDOW_DURATION,
+            window_duration: Optional[float] = None,
             saccade_velocity_threshold: float = IVTDetector._DEFAULT_SACCADE_VELOCITY_THRESHOLD,
     ):
-        super(IDVTDetector, self).__init__(
-            missing_value, min_event_duration, pad_blinks_ms, name, dispersion_threshold, window_duration
-        )
-        # assigned directly rather than through IVTDetector.__init__, which the MRO reaches with defaults,
-        # so the validation that constructor performs has to be repeated here
+        # D-12: constructs directly via BaseDetector instead of relying on super() chaining through
+        # IDTDetector/IVTDetector. The old chain (IDVTDetector -> IDTDetector -> IVTDetector -> BaseDetector)
+        # meant IDTDetector.__init__'s own bare `super().__init__(...)` call resolved against *this* class's
+        # MRO and landed on IVTDetector.__init__ with ITS defaults, silently discarding whatever
+        # saccade_velocity_threshold was passed here until it got overwritten below - fragile, and needed
+        # duplicated validation to paper over it. Setting every attribute directly removes that dependency.
+        BaseDetector.__init__(self, missing_value, min_event_duration, pad_blinks_ms, name)
+        if dispersion_threshold <= 0:
+            raise ValueError("Dispersion threshold must be positive")
+        self._dispersion_threshold = dispersion_threshold
+        # D-13-style live resolution (was bound to IDTDetector._DEFAULT_WINDOW_DURATION, frozen at
+        # class-definition time; now reads the same live config IDTDetector itself resolves to).
+        if window_duration is None:
+            window_duration = cnfg.EVENT_MAPPING[EventLabelEnum.FIXATION][cnst.MIN_DURATION_STR]
+        self._window_duration = window_duration
         if saccade_velocity_threshold <= 0:
             raise ValueError("Saccade velocity threshold must be positive")
         self._saccade_velocity_threshold = saccade_velocity_threshold
@@ -635,7 +654,7 @@ class IDVTDetector(IDTDetector, IVTDetector):
         is_saccade = (ivt_labels == EventLabelEnum.SACCADE) & ~is_fixation
         is_smooth_pursuit = ~is_fixation & ~is_saccade
 
-        labels = np.asarray(copy.deepcopy(labels), dtype=object)
+        labels = np.asarray(copy.deepcopy(labels), dtype=np.int8)
         labels[(labels == EventLabelEnum.UNDEFINED) & is_fixation] = EventLabelEnum.FIXATION
         labels[(labels == EventLabelEnum.UNDEFINED) & is_saccade] = EventLabelEnum.SACCADE
         labels[(labels == EventLabelEnum.UNDEFINED) & is_smooth_pursuit] = EventLabelEnum.SMOOTH_PURSUIT
@@ -715,7 +734,7 @@ class EngbertDetector(BaseDetector):
             viewer_distance_cm: float,
             pixel_size_cm: float,
     ) -> np.ndarray:
-        labels = np.asarray(copy.deepcopy(labels), dtype=object)
+        labels = np.asarray(copy.deepcopy(labels), dtype=np.int8)
         x_velocity = self._axial_velocities_px(x, self.sr, self.deriv_window_size)
         y_velocity = self._axial_velocities_px(y, self.sr, self.deriv_window_size)
         x_thresh = self._median_standard_deviation(x_velocity) * self.lambda_param
@@ -763,11 +782,16 @@ class EngbertDetector(BaseDetector):
         assert window_size > 0, "Window size must be positive"
         half_ws = window_size // 2 if window_size % 2 == 0 else window_size // 2 + 1
         velocities = np.full_like(arr, np.nan, dtype=float)
-        for idx in range(half_ws, len(arr) - half_ws):
-            sum_before = np.sum(arr[idx - half_ws:idx])
-            sum_after = np.sum(arr[idx + 1:idx + half_ws + 1])
-            diff = sum_after - sum_before
-            velocities[idx] = diff * sr / window_size
+        # D-18: vectorized via a sliding-window sum instead of a per-sample Python loop. Each window's sum must
+        # stay local (NaN in one window shouldn't poison unrelated windows), which rules out a global cumsum -
+        # `sliding_window_view(...).sum(axis=-1)` runs the exact same per-window `np.sum` as the original loop,
+        # just batched, so it reproduces the original NaN placement and float rounding exactly (verified directly).
+        if len(arr) > 2 * half_ws:
+            window_sums = np.lib.stride_tricks.sliding_window_view(arr, half_ws).sum(axis=-1)
+            idx = np.arange(half_ws, len(arr) - half_ws)
+            sum_before = window_sums[idx - half_ws]
+            sum_after = window_sums[idx + 1]
+            velocities[idx] = (sum_after - sum_before) * sr / window_size
         return velocities
 
     @staticmethod
@@ -775,7 +799,10 @@ class EngbertDetector(BaseDetector):
         """ Calculates the median-based standard-deviation of the input array """
         squared_median = np.power(np.nanmedian(arr), 2)
         median_of_squares = np.nanmedian(np.power(arr, 2))
-        sd = np.sqrt(median_of_squares - squared_median)
+        # D-17: radicand isn't guaranteed >= 0 (unlike true variance); sqrt of a negative value gives NaN, and
+        # `nanmax([nan, 1e-10])` below silently ignores that NaN and floors to 1e-10 rather than flagging it.
+        radicand = max(median_of_squares - squared_median, 0)
+        sd = np.sqrt(radicand)
         return float(np.nanmax([sd, 1e-10]))  # avoid division by zero in case of no variance
 
     @override
@@ -864,13 +891,13 @@ class NHDetector(BaseDetector):
             min_event_duration: float,
             pad_blinks_ms: float,
             name: str = None,
-            filter_duration_ms: float = _DEFAULT_FILTER_DURATION_MS,
+            filter_duration_ms: Optional[float] = None,
             filter_polyorder: int = _DEFAULT_FILTER_POLYORDER,
             saccade_max_velocity: float = _DEFAULT_SACCADE_MAX_VELOCITY,
             saccade_max_acceleration: float = _DEFAULT_SACCADE_MAX_ACCELERATION,
-            min_saccade_duration: float = _DEFAULT_MIN_SACCADE_DURATION_MS,
-            min_fixation_duration: float = _DEFAULT_MIN_FIXATION_DURATION_MS,
-            max_pso_duration: float = _DEFAULT_MAX_PSO_DURATION_MS,
+            min_saccade_duration: Optional[float] = None,
+            min_fixation_duration: Optional[float] = None,
+            max_pso_duration: Optional[float] = None,
             alpha_param: float = _DEFAULT_ALPHA_PARAM,
             ignore_short_peak_durations: bool = True,   # whether to exclude sporadic samples from the calculation (default is True)
             allow_high_psos: bool = True,
@@ -894,6 +921,16 @@ class NHDetector(BaseDetector):
         :param pad_blinks_ms: padding duration for blinks (ms), default is 0 ms
         """
         super().__init__(missing_value, min_event_duration, pad_blinks_ms, name)
+        # D-13: each resolved here (not bound as a default value) so set_event_configurations reaches it - a
+        # class attribute default is evaluated once at class-definition time (same fix as C-26 in Event.py).
+        if filter_duration_ms is None:
+            filter_duration_ms = 2 * cnfg.EVENT_MAPPING[EventLabelEnum.SACCADE][cnst.MIN_DURATION_STR]
+        if min_saccade_duration is None:
+            min_saccade_duration = cnfg.EVENT_MAPPING[EventLabelEnum.SACCADE][cnst.MIN_DURATION_STR]
+        if min_fixation_duration is None:
+            min_fixation_duration = cnfg.EVENT_MAPPING[EventLabelEnum.FIXATION][cnst.MIN_DURATION_STR]
+        if max_pso_duration is None:
+            max_pso_duration = cnfg.EVENT_MAPPING[EventLabelEnum.PSO][cnst.MAX_DURATION_STR]
         self._filter_duration = filter_duration_ms
         if self._filter_duration <= 0:
             raise ValueError("Filter duration must be positive")
@@ -925,13 +962,13 @@ class NHDetector(BaseDetector):
     @classmethod
     def get_default_params(cls) -> Dict[str, float]:
         return {
-            cls.__FILTER_DURATION_MS_STR: cls._DEFAULT_FILTER_DURATION_MS,
+            cls.__FILTER_DURATION_MS_STR: 2 * cnfg.EVENT_MAPPING[EventLabelEnum.SACCADE][cnst.MIN_DURATION_STR],
             cls.__FILTER_POLYORDER_STR: cls._DEFAULT_FILTER_POLYORDER,
             cls.__SACCADE_MAX_VELOCITY_STR: cls._DEFAULT_SACCADE_MAX_VELOCITY,
             cls.__SACCADE_MAX_ACCELERATION_STR: cls._DEFAULT_SACCADE_MAX_ACCELERATION,
-            cls.__MIN_SACCADE_DURATION_STR: cls._DEFAULT_MIN_SACCADE_DURATION_MS,
-            cls.__MIN_FIXATION_DURATION_STR: cls._DEFAULT_MIN_FIXATION_DURATION_MS,
-            cls.__MAX_PSO_DURATION_STR: cls._DEFAULT_MAX_PSO_DURATION_MS,
+            cls.__MIN_SACCADE_DURATION_STR: cnfg.EVENT_MAPPING[EventLabelEnum.SACCADE][cnst.MIN_DURATION_STR],
+            cls.__MIN_FIXATION_DURATION_STR: cnfg.EVENT_MAPPING[EventLabelEnum.FIXATION][cnst.MIN_DURATION_STR],
+            cls.__MAX_PSO_DURATION_STR: cnfg.EVENT_MAPPING[EventLabelEnum.PSO][cnst.MAX_DURATION_STR],
             cls.__ALPHA_PARAM_STR: cls._DEFAULT_ALPHA_PARAM,
             cls.__IGNORE_SHORT_PEAK_DURATIONS_STR: True,
             cls.__ALLOW_HIGH_PSOS_STR: True,
@@ -1275,7 +1312,7 @@ class NHDetector(BaseDetector):
         :param pso_info: dict of saccade -> (PSO start-idx, PSO end-idx and PSO type (high or low))
         :return: array of classified samples
         """
-        labels = np.asarray(copy.deepcopy(labels), dtype=object)
+        labels = np.asarray(copy.deepcopy(labels), dtype=np.int8)
         for val in saccade_info.values():
             onset_idx, _, offset_idx, _ = val
             labels[onset_idx: offset_idx] = EventLabelEnum.SACCADE
@@ -1414,20 +1451,32 @@ class REMoDNaVDetector(BaseDetector):
             savgol_filter_polyorder: int = _DEFAULT_SAVGOL_POLYORDER,
             savgol_filter_duration_ms: float = _DEFAULT_SAVGOL_DURATION_MS,
             max_velocity: float = _DEFAULT_MAX_VELOCITY_DEG,
-            min_saccade_duration: float = _DEFAULT_MIN_SACCADE_DURATION_MS,
+            min_saccade_duration: Optional[float] = None,
             saccade_initial_velocity_threshold: float = _DEFAULT_SACCADE_INITIAL_VELOCITY_THRESHOLD,
             saccade_context_window_duration: float = _DEFAULT_SACCADE_CONTEXT_WINDOW_DURATION_MS,
             saccade_initial_max_freq: float = _DEFAULT_SACCADE_INITIAL_MAX_FREQ,
             saccade_onset_threshold_noise_factor: float = _DEFAULT_SACCADE_ONSET_THRESHOLD_NOISE_FACTOR,
-            min_smooth_pursuit_duration: float = _DEFAULT_MIN_SMOOTH_PURSUIT_DURATION_MS,
+            min_smooth_pursuit_duration: Optional[float] = None,
             smooth_pursuits_lowpass_cutoff_freq: float = _DEFAULT_SMOOTH_PURSUIT_LOWPASS_CUTOFF_FREQ,
             smooth_pursuit_drift_velocity_threshold: float = _DEFAULT_SMOOTH_PURSUIT_DRIFT_VELOCITY_THRESHOLD,
-            min_fixation_duration: float = _DEFAULT_MIN_FIXATION_DURATION_MS,
-            min_blink_duration: float = _DEFAULT_MIN_BLINK_DURATION_MS,
-            max_pso_duration: float = _DEFAULT_MAX_PSO_DURATION_MS,
+            min_fixation_duration: Optional[float] = None,
+            min_blink_duration: Optional[float] = None,
+            max_pso_duration: Optional[float] = None,
             show_warnings: bool = True,
     ):
         super().__init__(missing_value, min_event_duration, pad_blinks_ms, name)
+        # D-13: each resolved here (not bound as a default value) so set_event_configurations reaches it - a
+        # class attribute default is evaluated once at class-definition time (same fix as C-26 in Event.py).
+        if min_saccade_duration is None:
+            min_saccade_duration = cnfg.EVENT_MAPPING[EventLabelEnum.SACCADE][cnst.MIN_DURATION_STR]
+        if min_smooth_pursuit_duration is None:
+            min_smooth_pursuit_duration = cnfg.EVENT_MAPPING[EventLabelEnum.SMOOTH_PURSUIT][cnst.MIN_DURATION_STR]
+        if min_fixation_duration is None:
+            min_fixation_duration = cnfg.EVENT_MAPPING[EventLabelEnum.FIXATION][cnst.MIN_DURATION_STR]
+        if min_blink_duration is None:
+            min_blink_duration = cnfg.EVENT_MAPPING[EventLabelEnum.BLINK][cnst.MIN_DURATION_STR]
+        if max_pso_duration is None:
+            max_pso_duration = cnfg.EVENT_MAPPING[EventLabelEnum.PSO][cnst.MAX_DURATION_STR]
         self._median_filter_length = median_filter_duration_ms
         self._min_saccade_duration_ms = max(min_saccade_duration, self._min_event_duration)
         self._saccade_initial_velocity_threshold = saccade_initial_velocity_threshold
@@ -1465,17 +1514,17 @@ class REMoDNaVDetector(BaseDetector):
     @classmethod
     def get_default_params(cls) -> Dict[str, float]:
         return {
-            cls.__MIN_SACCADE_DURATION_STR: cls._DEFAULT_MIN_SACCADE_DURATION_MS,
+            cls.__MIN_SACCADE_DURATION_STR: cnfg.EVENT_MAPPING[EventLabelEnum.SACCADE][cnst.MIN_DURATION_STR],
             cls.__SACCADE_INITIAL_VELOCITY_THRESHOLD_STR: cls._DEFAULT_SACCADE_INITIAL_VELOCITY_THRESHOLD,
             cls.__SACCADE_CONTEXT_WINDOW_DURATION_STR: cls._DEFAULT_SACCADE_CONTEXT_WINDOW_DURATION_MS,
             cls.__SACCADE_INITIAL_MAX_FREQ_STR: cls._DEFAULT_SACCADE_INITIAL_MAX_FREQ,
             cls.__SACCADE_ONSET_THRESHOLD_NOISE_FACTOR_STR: cls._DEFAULT_SACCADE_ONSET_THRESHOLD_NOISE_FACTOR,
-            cls.__MIN_SMOOTH_PURSUIT_DURATION_STR: cls._DEFAULT_MIN_SMOOTH_PURSUIT_DURATION_MS,
+            cls.__MIN_SMOOTH_PURSUIT_DURATION_STR: cnfg.EVENT_MAPPING[EventLabelEnum.SMOOTH_PURSUIT][cnst.MIN_DURATION_STR],
             cls.__SMOOTH_PURSUIT_LOWPASS_CUTOFF_FREQ_STR: cls._DEFAULT_SMOOTH_PURSUIT_LOWPASS_CUTOFF_FREQ,
             cls.__SMOOTH_PURSUIT_DRIFT_VELOCITY_THRESHOLD_STR: cls._DEFAULT_SMOOTH_PURSUIT_DRIFT_VELOCITY_THRESHOLD,
-            cls.__MIN_FIXATION_DURATION_STR: cls._DEFAULT_MIN_FIXATION_DURATION_MS,
-            cls.__MIN_BLINK_DURATION_STR: cls._DEFAULT_MIN_BLINK_DURATION_MS,
-            cls.__MAX_PSO_DURATION_STR: cls._DEFAULT_MAX_PSO_DURATION_MS,
+            cls.__MIN_FIXATION_DURATION_STR: cnfg.EVENT_MAPPING[EventLabelEnum.FIXATION][cnst.MIN_DURATION_STR],
+            cls.__MIN_BLINK_DURATION_STR: cnfg.EVENT_MAPPING[EventLabelEnum.BLINK][cnst.MIN_DURATION_STR],
+            cls.__MAX_PSO_DURATION_STR: cnfg.EVENT_MAPPING[EventLabelEnum.PSO][cnst.MAX_DURATION_STR],
             cls.__SAVGOL_POLYORDER_STR: cls._DEFAULT_SAVGOL_POLYORDER,
             cls.__SAVGOL_DURATION_MS_STR: cls._DEFAULT_SAVGOL_DURATION_MS,
             cls.__MEDIAN_FILTER_DURATION_MS_STR: cls._DEFAULT_MEDIAN_FILTER_DURATION_MS,
@@ -1536,7 +1585,7 @@ class REMoDNaVDetector(BaseDetector):
             dilate_nan=self.pad_blinks_ms / cnst.MILLISECONDS_PER_SECOND,
         )
         detected_events = classifier(pp, classify_isp=True, sort_events=True)   # returns a list of dicts, each dict is a single gaze event
-        labels = np.asarray(copy.deepcopy(labels), dtype=object)
+        labels = np.asarray(copy.deepcopy(labels), dtype=np.int8)
         for i, event in enumerate(detected_events):  # noqa: B007  # `i` unused; left as-is, REMoDNaV is article-facing
             start_sample = round(event["start_time"] * self.sr)
             end_sample = round(event["end_time"] * self.sr)

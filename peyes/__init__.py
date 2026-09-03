@@ -3,6 +3,7 @@ __version__ = "0.2.1"   # keep in sync with [project].version in pyproject.toml
 import peyes._utils.constants as constants
 
 from peyes._utils.event_utils import parse_label
+from peyes._DataModels.UnparsedEventLabel import UnparsedEventLabelType, UnparsedEventLabelSequenceType
 from peyes._base.parse import parse as parse_data
 from peyes._base.set_config import set_viewer_distance, set_screen_monitor, set_event_configurations
 from peyes._base.create import create_detector, create_events, create_boolean_channel
