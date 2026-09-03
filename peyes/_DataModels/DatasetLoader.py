@@ -319,7 +319,7 @@ class IRFDatasetLoader(BaseDatasetLoader):
     ]
 
     __PREFIX = 'irf-master/etdata/lookAtPoint_EL'
-    __STIMULUS_TYPE_VAL = "moving_dot"  # all subjects were shown the same 13-point moving dot stimulus
+    __STIMULUS_TYPE_VAL = cnst.MOVING_DOT_STR  # all subjects were shown the same 13-point moving dot stimulus
     __VIEWER_DISTANCE_CM_VAL = 56.5
     __MONITOR_WIDTH_CM_VAL, __MONITOR_HEIGHT_CM_VAL = 37.5, 30.2
     __MONITOR_RESOLUTION_VAL = (1280, 1024)
