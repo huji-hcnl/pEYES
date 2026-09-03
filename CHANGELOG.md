@@ -10,9 +10,9 @@ while the major version is `0`, breaking changes bump the **minor** version.
 Closes out a batch of 15 findings from the code review that were previously deferred for being article-facing,
 each individually proven safe (real-data or extensive randomized regression checks, not just unit tests) before
 being fixed rather than left deferred indefinitely. No breaking changes. Publication results
-([Nir & Deouell, 2026](https://doi.org/10.3758/s13428-026-02983-5)) are expected to be unchanged from v0.1.0,
-same as every prior 0.2.x release - **pending independent re-verification against the real Lund2013/HFC article
-pipeline, same process used for 0.2.0; update this line with the confirmed outcome before actually releasing.**
+([Nir & Deouell, 2026](https://doi.org/10.3758/s13428-026-02983-5)) are unchanged from v0.1.0, same as every
+prior 0.2.x release - independently re-verified bit-for-bit against the real Lund2013/HFC article pipeline
+(docs/CODE_REVIEW.md §13b), same process used for 0.2.0.
 
 ### Fixed
 - `events_to_labels` gained `t_start`/`t_end` parameters to anchor reconstructed labels to a recording's true
