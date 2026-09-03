@@ -1,4 +1,4 @@
-__version__ = "0.2.1"   # keep in sync with [project].version in pyproject.toml
+__version__ = "0.2.2"   # keep in sync with [project].version in pyproject.toml
 
 import peyes._utils.constants as constants
 

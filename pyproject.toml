@@ -1,7 +1,7 @@
 [project]
 name = "peyes"
 # keep in sync with peyes/__init__.py::__version__ (tests/unit_tests/test_version.py checks this)
-version = "0.2.1"
+version = "0.2.2"
 authors = [
     {name="Human Cognitive Neuroscience Lab @ HUJI", email="hcnl@mail.huji.ac.il"},
     {name="Jonathan Nir", email="jonathan.nir@mail.huji.ac.il"},

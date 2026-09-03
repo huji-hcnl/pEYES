@@ -5,7 +5,36 @@ while the major version is `0`, breaking changes bump the **minor** version.
 
 ## [Unreleased]
 
-## [0.2.1] - not yet released
+## [0.2.2] - not yet released
+
+Closes out a batch of 15 findings from the code review that were previously deferred for being article-facing,
+each individually proven safe (real-data or extensive randomized regression checks, not just unit tests) before
+being fixed rather than left deferred indefinitely. No breaking changes. Publication results
+([Nir & Deouell, 2026](https://doi.org/10.3758/s13428-026-02983-5)) are expected to be unchanged from v0.1.0,
+same as every prior 0.2.x release - **pending independent re-verification against the real Lund2013/HFC article
+pipeline, same process used for 0.2.0; update this line with the confirmed outcome before actually releasing.**
+
+### Fixed
+- `events_to_labels` gained `t_start`/`t_end` parameters to anchor reconstructed labels to a recording's true
+  start/end time (previously no way to detect a leading/trailing gap before/after the first/last event).
+- Detector defaults (`IDTDetector`/`NHDetector`/`REMoDNaVDetector`) now respond to `set_event_configurations`
+  when constructed with default arguments - previously frozen at class-definition time.
+- `IDVTDetector`'s `__init__` no longer depends on a fragile MRO chain.
+- Scarfplot colors are now correct regardless of which labels are present in a given row.
+- `event_metrics.get_features` now supports all 23 event-summary features (was 6).
+- Stimulus-type constants are now a real `enum.StrEnum` instead of bare strings.
+- Several lower-severity fixes: Engbert's negative-variance edge case, annotator plot colors decoupled from
+  detector-list length, more robust matching-scheme parsing in `analysis/`.
+
+### Changed
+- Internal detection-pipeline label arrays use a real integer dtype instead of `object` (no behavior change).
+- Engbert's axial-velocity computation is vectorized (no behavior change).
+- `UnparsedEventLabelType`/`UnparsedEventLabelSequenceType` are now public (`peyes.UnparsedEventLabelType`).
+
+### Added
+- Unit test coverage for `EventMatcher` and `DatasetLoader` (previously untested).
+
+## [0.2.1] - 2026-09-02
 
 Declares and validates Python 3.14 support alongside the existing 3.12 floor. No breaking changes, no
 dependency floor changes, and no functional code changes at all relative to 0.2.0 - confirmed by diff: only
