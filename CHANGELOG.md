@@ -5,7 +5,7 @@ while the major version is `0`, breaking changes bump the **minor** version.
 
 ## [Unreleased]
 
-## [0.2.2] - not yet released
+## [0.2.2] - 2026-09-10
 
 Closes out a batch of 15 findings from the code review that were previously deferred for being article-facing,
 each individually proven safe (real-data or extensive randomized regression checks, not just unit tests) before
