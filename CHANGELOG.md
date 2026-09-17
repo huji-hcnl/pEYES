@@ -5,6 +5,11 @@ while the major version is `0`, breaking changes bump the **minor** version.
 
 ## [Unreleased]
 
+### Fixed
+- `IDTDetector` (and `IDVTDetector`, which builds on it) now labels every sample in a trial, including the
+  last few that a windowing off-by-one previously left unlabeled. No effect on any reported result: checked
+  against the real article pipeline and against both human raters on the full Lund2013 dataset.
+
 ## [0.2.2] - 2026-09-10
 
 Closes out a batch of 15 findings from the code review that were previously deferred for being article-facing,
