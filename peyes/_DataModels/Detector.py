@@ -528,6 +528,15 @@ class IDTDetector(BaseDetector, IGlobalThresholdDetector):
                 labels[start_idx] = EventLabelEnum.SACCADE
                 start_idx += 1
                 end_idx += 1
+        if start_idx < len(t):
+            # the loop condition never evaluates a window ending exactly at len(t), so the trailing
+            # start_idx:len(t) samples would otherwise be left unlabeled - evaluate and label them the
+            # same way the loop body does instead of dropping them by omission.
+            dispersion = line_dispersion(x[start_idx:len(t)], y[start_idx:len(t)])
+            if dispersion < px_threshold:
+                labels[start_idx:len(t)] = EventLabelEnum.FIXATION
+            else:
+                labels[start_idx:len(t)] = EventLabelEnum.SACCADE
         self._metadata.update({
             f"{self.__DISPERSION_THRESHOLD_STR}_deg": self.dispersion_threshold_deg,
             f"{self.__DISPERSION_THRESHOLD_STR}_px": px_threshold,
