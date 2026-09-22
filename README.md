@@ -47,7 +47,8 @@ pip install -e .
 ```
 
 Upgrading from 0.1.0? Read [CHANGELOG.md](CHANGELOG.md) first: 0.2.0 is a correctness release, and some
-of its fixes change values that earlier versions returned.
+of its fixes change values that earlier versions returned. Known issues, including any deferred fixes, are
+also tracked there and cross-referenced to GitHub issues.
 
 ## Usage
 This package is intended for scientific use, and is designed to be easy to use for anyone with basic python knowledge.  
