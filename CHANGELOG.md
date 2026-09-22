@@ -10,6 +10,14 @@ while the major version is `0`, breaking changes bump the **minor** version.
   last few that a windowing off-by-one previously left unlabeled. No effect on any reported result: checked
   against the real article pipeline and against both human raters on the full Lund2013 dataset.
 
+### Known issues
+- `NHDetector` crashes on blink-adjacent NaN samples near a trial's start/end, under recent scipy versions
+  (`savgol_filter` can't tolerate a NaN inside its edge-fitting window). Dependency-version-drift: not present
+  under the CI floor pin. `REMoDNaVDetector` inherits the same unresolved issue from the upstream `remodnav`
+  package it wraps ([psychoinformatics-de/remodnav#13](https://github.com/psychoinformatics-de/remodnav/issues/13)).
+  Deferred rather than patched, since a real fix would change computed values around every blink in every
+  trial, not just the ones that currently crash. Tracked at [#35].
+
 ## [0.2.2] - 2026-09-10
 
 Closes out a batch of 15 findings from the code review that were previously deferred for being article-facing,
@@ -192,3 +200,4 @@ Initial release, as used for [Nir & Deouell (2026)](https://doi.org/10.3758/s134
 [#25]: https://github.com/huji-hcnl/pEYES/issues/25
 [#26]: https://github.com/huji-hcnl/pEYES/issues/26
 [#27]: https://github.com/huji-hcnl/pEYES/issues/27
+[#35]: https://github.com/huji-hcnl/pEYES/issues/35
